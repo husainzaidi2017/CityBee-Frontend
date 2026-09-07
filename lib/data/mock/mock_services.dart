@@ -1,0 +1,140 @@
+import '../../domain/models/service_item.dart';
+
+/// Emergency & civic helplines shown in the "Urgent & City Helplines" card.
+const mockHelplines = <Helpline>[
+  Helpline(label: '108 Ambulance', number: '108', colorValue: 0xFFE23A2E),
+  Helpline(label: '112 Police', number: '112', colorValue: 0xFF2563EB),
+  Helpline(label: '1912 Bijli Board', number: '1912', colorValue: 0xFFF4711F),
+  Helpline(label: 'Nagar Nigam', number: '155213', colorValue: 0xFF0E6B4F),
+  Helpline(label: '24x7 Pharmacy', number: '1800180152', colorValue: 0xFF0D9488),
+];
+
+/// Section order for the Services hub.
+const serviceSectionTitles = <String>[
+  'Home & Appliance Experts',
+  'Moradabad Brass & Artisan Masters',
+  'Health & Home Wellness',
+  'Vehicle & Highway Roadside Care',
+];
+
+final mockServices = <ServiceItem>[
+  const ServiceItem(
+    id: 'ac-care',
+    name: 'Mister Singh AC Care',
+    badge: '342 jobs',
+    rating: '4.9',
+    servicesSummary: 'AC service, gas refill, copper wiring',
+    priceText: 'From ₹299',
+    etaText: '⚡ 45 min arrival',
+    statsText: '24 hr warranty on all repairs',
+    trustNote: 'Certified electricians',
+    image: 'https://picsum.photos/seed/localgo-ac/600/400',
+    actionLabel: 'Book Slot',
+    phone: '+919876500111',
+  ),
+  const ServiceItem(
+    id: 'plumbing',
+    name: 'Kumar Plumbing & Pipes',
+    badge: '150 jobs',
+    rating: '4.7',
+    servicesSummary: 'Tap leakage, tank cleaning, pipe fitting',
+    priceText: 'From ₹149',
+    etaText: '⚡ 60 min arrival',
+    statsText: '30-day service warranty',
+    trustNote: 'Background verified',
+    image: 'https://picsum.photos/seed/localgo-plumb/600/400',
+    actionLabel: 'Book Slot',
+    phone: '+919876500222',
+  ),
+  const ServiceItem(
+    id: 'brass-guild',
+    name: 'Peetal Nagri Artisan Guild',
+    badge: '47 workshops',
+    rating: '5.0',
+    servicesSummary: 'Brass polish, repair & custom casting by local karigars',
+    priceText: 'Price by quote',
+    etaText: '⚡ Same-day visit',
+    statsText: '47 legacy workshops on LocalGo',
+    trustNote: 'Heritage certified',
+    image: 'https://picsum.photos/seed/localgo-guild/600/400',
+    actionLabel: 'Get Quote',
+    phone: '+919876500333',
+    citySpecialty: true,
+  ),
+  const ServiceItem(
+    id: 'homecare',
+    name: "Dr. Anjali's HomeCare",
+    badge: 'Expert',
+    rating: '4.9',
+    servicesSummary: 'Elder care, nursing, injections at home',
+    priceText: 'From ₹499',
+    etaText: '⚡ Same day',
+    statsText: 'Certified nurses · 24x7',
+    trustNote: 'Clinic supervised',
+    image: 'https://picsum.photos/seed/localgo-homecare/600/400',
+    actionLabel: 'Book Visit',
+    phone: '+919876500444',
+  ),
+  const ServiceItem(
+    id: 'roadside',
+    name: 'Highway Rescue Moradabad',
+    badge: '24x7',
+    rating: '4.8',
+    servicesSummary: 'Flat tyre, battery jump, fuel delivery on NH-24',
+    priceText: 'From ₹250',
+    etaText: '⚡ 30 min reach',
+    statsText: 'Serves Delhi–Bareilly highway',
+    trustNote: 'GPS-tracked vans',
+    image: 'https://picsum.photos/seed/localgo-rescue/600/400',
+    actionLabel: 'Send Rescue',
+    phone: '+919876500555',
+  ),
+];
+
+/// "Events, Weddings & Religious" two-column cards.
+final mockEventServices = <ServiceItem>[
+  const ServiceItem(
+    id: 'pandit-ji',
+    name: 'Pandit Ji for Griha Pravesh',
+    badge: 'Puja at home',
+    rating: '4.9',
+    servicesSummary: 'Vedic rituals & havan',
+    priceText: '₹310 for booking',
+    etaText: 'Same-day slots',
+    statsText: 'Sanskrit certified',
+    trustNote: 'Samagri included',
+    image: 'https://picsum.photos/seed/localgo-pandit/600/400',
+    actionLabel: 'Book',
+    phone: '+919876500666',
+  ),
+  const ServiceItem(
+    id: 'bridal-mehndi',
+    name: 'Bridal Mehndi Artist',
+    badge: 'Premium designs',
+    rating: '4.8',
+    servicesSummary: 'Bridal & party mehndi',
+    priceText: '₹1,100 onwards',
+    etaText: 'Home visit',
+    statsText: '120+ brides styled',
+    trustNote: 'Organic cone',
+    image: 'https://picsum.photos/seed/localgo-mehndi/600/400',
+    actionLabel: 'Book',
+    phone: '+919876500777',
+  ),
+];
+
+/// "Professional & Legal Aid" wide card.
+const mockLegalService = ServiceItem(
+  id: 'notary',
+  name: 'Notary & Documentation Desk — Moradabad',
+  badge: 'Same-day',
+  rating: '4.7',
+  servicesSummary: 'Notary, affidavits, rent agreements & stamp paper',
+  priceText: 'From ₹99',
+  etaText: '⚡ 2 hr delivery',
+  statsText: 'Court Road · 12 years in practice',
+  trustNote: 'Advocate verified',
+  image: 'https://picsum.photos/seed/localgo-notary/600/300',
+  actionLabel: 'Inquire',
+  phone: '+919876500888',
+);

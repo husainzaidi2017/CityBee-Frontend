@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
 import '../theme/app_typography.dart';
 
 /// Chip selection styles used across the app.
@@ -45,10 +46,13 @@ class SelectChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        curve: Curves.easeOut,
+        height: 34,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           color: selected ? activeBg : AppColors.surface,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
           border: Border.all(
             color: selected ? activeBg : AppColors.border,
             width: 1.1,
@@ -56,6 +60,7 @@ class SelectChip extends StatelessWidget {
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (showCheck && selected) ...[
               Icon(Icons.check, size: 14, color: fg),
@@ -63,9 +68,11 @@ class SelectChip extends StatelessWidget {
             ],
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: fg,
               ),
             ),
@@ -90,10 +97,12 @@ class RemovableFilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.only(left: 12, top: 7, bottom: 7),
+      height: 34,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.only(left: 12, right: 2),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(color: AppColors.border, width: 1.1),
       ),
       child: Row(
@@ -107,7 +116,7 @@ class RemovableFilterChip extends StatelessWidget {
             onTap: onRemoved,
             borderRadius: BorderRadius.circular(20),
             child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               child: Icon(Icons.close, size: 14, color: AppColors.textSecondary),
             ),
           ),
@@ -117,7 +126,8 @@ class RemovableFilterChip extends StatelessWidget {
   }
 }
 
-/// Horizontal scrolling chip rail.
+/// Horizontal scrolling chip rail. Height leaves breathing room above and
+/// below the 34px chip so borders/shadows are never clipped.
 class ChipRail extends StatelessWidget {
   const ChipRail({
     super.key,
@@ -131,13 +141,13 @@ class ChipRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 36,
+      height: 38,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: padding,
         itemCount: children.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (_, index) => children[index],
+        itemBuilder: (_, index) => Center(child: children[index]),
       ),
     );
   }

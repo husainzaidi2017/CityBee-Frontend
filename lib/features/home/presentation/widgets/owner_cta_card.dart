@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_config.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/app_launcher.dart';
 
-/// "For Owners" CTA card at the bottom of the Home screen.
+/// "For Owners" CTA card at the bottom of the Home screen. The CTA opens
+/// the business-registration portal (temporary Google link) externally.
 class OwnerCtaCard extends StatelessWidget {
   const OwnerCtaCard({super.key});
+
+  Future<void> _openListing(BuildContext context) async {
+    final ok = await AppLauncher.openWebsite(AppConfig.businessListingUrl);
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the browser.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +24,7 @@ class OwnerCtaCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppColors.bannerGreenTop, AppColors.bannerGreenBottom],
+          colors: [AppColors.bannerOrangeTop, AppColors.bannerOrangeBottom],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -37,14 +48,15 @@ class OwnerCtaCard extends StatelessWidget {
               const Expanded(
                 child: Text(
                   'Own a Business in Moradabad?',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
+                  style: TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 9),
           Text(
-            'Get your shop online with LocalGo — free listings, offers & more customers.',
+            'Get your shop online with CityBee — free listings, offers & more customers.',
             style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w600,
@@ -53,7 +65,7 @@ class OwnerCtaCard extends StatelessWidget {
           ),
           const SizedBox(height: 13),
           GestureDetector(
-            onTap: () => context.go('/more'),
+            onTap: () => _openListing(context),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
               decoration: BoxDecoration(
@@ -65,10 +77,13 @@ class OwnerCtaCard extends StatelessWidget {
                 children: [
                   Text(
                     'List Your Business',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.primaryDark),
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primaryDark),
                   ),
                   SizedBox(width: 4),
-                  Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.primaryDark),
+                  Icon(Icons.open_in_new, size: 13, color: AppColors.primaryDark),
                 ],
               ),
             ),

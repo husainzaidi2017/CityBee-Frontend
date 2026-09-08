@@ -8,6 +8,7 @@ import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/buttons.dart';
 import '../../../../core/widgets/map_preview.dart';
+import '../../../../core/widgets/pressable.dart';
 import '../../../../domain/models/business.dart';
 
 /// Full-width business card used by listing screens: image with badges,
@@ -19,8 +20,8 @@ class ListingBusinessCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.go('/business/${business.id}'),
+    return Pressable(
+      onTap: () => context.push('/business/${business.id}'),
       child: Container(
         margin: const EdgeInsets.only(bottom: 13),
         decoration: BoxDecoration(
@@ -153,10 +154,11 @@ class ListingBusinessCard extends StatelessWidget {
         _ => '₹200–₹600 for two',
       };
 
-  void _onAction(BuildContext context, String action) {
+  Future<void> _onAction(BuildContext context, String action) async {
     switch (action) {
       case 'Call':
-        AppLauncher.call(business.phone);
+        final ok = await AppLauncher.call(business.phone);
+        if (!ok && context.mounted) _showUnavailable(context, 'dialer');
       case 'Route':
         AppLauncher.directions(
           business.latitude,
@@ -166,10 +168,17 @@ class ListingBusinessCard extends StatelessWidget {
       case 'Menu':
       case 'Book Visit':
       case 'Website':
-        context.go('/business/${business.id}');
+        if (context.mounted) context.push('/business/${business.id}');
       case 'WhatsApp':
-        AppLauncher.whatsapp(business.whatsapp);
+        final ok = await AppLauncher.whatsapp(business.whatsapp);
+        if (!ok && context.mounted) _showUnavailable(context, 'WhatsApp');
     }
+  }
+
+  void _showUnavailable(BuildContext context, String what) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$what is not available on this device.')),
+    );
   }
 }
 
@@ -203,7 +212,7 @@ class BusinessesMapPage extends StatelessWidget {
                   left: 40.0 + (index % 3) * 100,
                   top: 60.0 + (index % 4) * 90,
                   child: GestureDetector(
-                    onTap: () => context.go('/business/${b.id}'),
+                    onTap: () => context.push('/business/${b.id}'),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 6),

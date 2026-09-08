@@ -2,13 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_config.dart';
+import '../../../core/services/share_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/app_launcher.dart';
 import '../../../core/widgets/app_image.dart';
+import '../../../core/widgets/city_picker_sheet.dart';
+import '../../../core/widgets/map_preview.dart';
+import '../../../core/widgets/pressable.dart';
+import '../../../domain/models/user_profile.dart';
 import '../../../providers/app_providers.dart';
 
-/// More tab: profile card with level badge, savings stats, LocalGo for
-/// Business, city tools, referral, support links and logout.
+/// More tab — the unified Account + More experience.
+///
+/// The top section shows the signed-in profile (tap → Edit Profile) or a
+/// "Sign in or Register" card for guests; everything below is the standard
+/// More content available to guests and members alike.
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
 
@@ -16,39 +26,39 @@ class MoreScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(userProfileProvider);
     final city = ref.watch(selectedCityProvider);
+    final isLoggedIn = ref.watch(authStateProvider);
     final favorites = ref.watch(favoritesProvider);
+    final bookmarkCount =
+        favorites.isEmpty ? profile.bookmarkCount : favorites.length;
 
     return ColoredBox(
       color: AppColors.background,
       child: SafeArea(
         bottom: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
           children: [
             Text('More', style: AppTypography.headline),
-            const SizedBox(height: 14),
+            const SizedBox(height: 8),
 
-            // ── Profile card ──────────────────────────────────────
-            _ProfileCard(
-              name: profile.name,
-              handle: profile.handle,
-              levelTitle: profile.levelTitle,
-              topPercent: profile.topPercent,
-              avatar: profile.avatarImage,
-            ),
-            const SizedBox(height: 12),
+            // ── Account section ───────────────────────────────────
+            if (isLoggedIn) ...[
+              _SignedInCard(
+                profile: profile,
+                bookmarkCount: bookmarkCount,
+                onEdit: () => context.push('/profile/edit'),
+                onFavorites: () => context.push('/favorites'),
+                onCoupons: () => context.go('/offers'),
+              ),
+            ] else
+              _GuestCard(
+                onLogin: () => context.push('/login'),
+              ),
+            const SizedBox(height: 10),
 
-            // ── Savings stats ─────────────────────────────────────
-            _StatsRow(
-              savedAmount: profile.savedAmount,
-              bookmarkCount: favorites.isEmpty ? profile.bookmarkCount : favorites.length,
-              reviewsGiven: profile.reviewsGiven,
-            ),
-            const SizedBox(height: 16),
-
-            // ── LocalGo for Business ──────────────────────────────
-            const _BusinessPromoCard(),
-            const SizedBox(height: 16),
+            // ── CityBee for Business ──────────────────────────────
+            _BusinessPromoCard(onListBusiness: () => _openBusinessListing(context)),
+            const SizedBox(height: 10),
 
             // ── Your city tools ───────────────────────────────────
             _MenuCard(
@@ -60,15 +70,15 @@ class MoreScreen extends ConsumerWidget {
                   iconBg: AppColors.primarySoft,
                   label: 'Change City',
                   value: '${city.name}, ${city.state}',
-                  onTap: () => context.go('/'),
+                  onTap: () => showCityPickerSheet(context),
                 ),
                 _MenuTile(
                   icon: Icons.favorite_border_rounded,
                   iconColor: AppColors.brandRed,
                   iconBg: const Color(0xFFFDECEC),
                   label: 'My Favorites',
-                  value: '${favorites.isEmpty ? profile.bookmarkCount : favorites.length} saved places',
-                  onTap: () => context.go('/favorites'),
+                  value: '$bookmarkCount saved places',
+                  onTap: () => context.push('/favorites'),
                 ),
                 _MenuTile(
                   icon: Icons.map_outlined,
@@ -76,11 +86,19 @@ class MoreScreen extends ConsumerWidget {
                   iconBg: AppColors.catHotelSoft,
                   label: 'Download City Map',
                   value: 'Offline map of ${city.name}',
-                  onTap: () {},
+                  onTap: () => _showMapDownloadSheet(context, city.name),
+                ),
+                _MenuTile(
+                  icon: Icons.settings_outlined,
+                  iconColor: AppColors.catDoctor,
+                  iconBg: AppColors.catDoctorSoft,
+                  label: 'Settings',
+                  value: 'Notifications & location',
+                  onTap: () => context.push('/settings'),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
 
             // ── Refer & earn ──────────────────────────────────────
             _MenuCard(
@@ -92,22 +110,25 @@ class MoreScreen extends ConsumerWidget {
                   iconBg: AppColors.accentSoft,
                   label: 'Invite Friends',
                   value: 'Get ₹100 per verified friend',
-                  onTap: () {},
+                  onTap: () => ShareService.shareApp(
+                    note: 'Join me on ${AppConfig.appName} — we both get ₹100 '
+                        'in city savings when you sign up!',
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
 
-            // ── Support ───────────────────────────────────────────
+            // ── Support & about ───────────────────────────────────
             _MenuCard(
-              title: 'Support',
+              title: 'Support & About',
               children: [
                 _MenuTile(
                   icon: Icons.help_outline_rounded,
                   iconColor: AppColors.catDoctor,
                   iconBg: AppColors.catDoctorSoft,
                   label: 'Help & FAQ',
-                  onTap: () {},
+                  onTap: () => context.push('/faq'),
                 ),
                 _MenuTile(
                   icon: Icons.chat_bubble_outline_rounded,
@@ -115,32 +136,49 @@ class MoreScreen extends ConsumerWidget {
                   iconBg: AppColors.primarySoft,
                   label: 'Contact Support',
                   value: 'WhatsApp us anytime',
-                  onTap: () {},
+                  onTap: () => context.push('/support'),
                 ),
                 _MenuTile(
-                  icon: Icons.star_border_rounded,
-                  iconColor: AppColors.starAmber,
-                  iconBg: const Color(0xFFFEF5E3),
-                  label: 'Rate LocalGo',
-                  onTap: () {},
+                  icon: Icons.info_outline_rounded,
+                  iconColor: AppColors.catHotel,
+                  iconBg: AppColors.catHotelSoft,
+                  label: 'About CityBee',
+                  onTap: () => context.push('/about'),
+                ),
+                _MenuTile(
+                  icon: Icons.shield_outlined,
+                  iconColor: AppColors.primary,
+                  iconBg: AppColors.primarySoft,
+                  label: 'Privacy Policy',
+                  onTap: () => context.push('/privacy'),
                 ),
                 _MenuTile(
                   icon: Icons.description_outlined,
                   iconColor: AppColors.textSecondary,
                   iconBg: AppColors.background,
-                  label: 'Terms & Privacy',
-                  onTap: () {},
+                  label: 'Terms & Conditions',
+                  onTap: () => context.push('/terms'),
+                ),
+                _MenuTile(
+                  icon: Icons.star_border_rounded,
+                  iconColor: AppColors.starAmber,
+                  iconBg: const Color(0xFFFEF5E3),
+                  label: 'Rate CityBee',
+                  onTap: () => _openPlayStore(context),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
 
-            // ── Logout ────────────────────────────────────────────
-            _LogoutTile(onTap: () {}),
-            const SizedBox(height: 14),
+            // ── Logout / Login ────────────────────────────────────
+            const SizedBox(height: 10),
+            if (isLoggedIn)
+              _LogoutTile(onTap: () => _logout(context, ref))
+            else
+              _LoginTile(onTap: () => context.push('/login')),
+            const SizedBox(height: 8),
             Center(
               child: Text(
-                'LocalGo v1.0.0 · Made in ${city.nickname} 💚',
+                'CityBee v1.0.0 · Made in ${city.nickname} 💚',
                 style: AppTypography.label.copyWith(fontSize: 9.5),
               ),
             ),
@@ -149,22 +187,299 @@ class MoreScreen extends ConsumerWidget {
       ),
     );
   }
+
+  // ── Actions ────────────────────────────────────────────────────────────
+  Future<void> _openBusinessListing(BuildContext context) async {
+    final ok = await AppLauncher.openWebsite(AppConfig.businessListingUrl);
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the browser.')),
+      );
+    }
+  }
+
+  Future<void> _openPlayStore(BuildContext context) async {
+    final ok = await AppLauncher.openWebsite(AppConfig.playStoreUrl);
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open Play Store.')),
+      );
+    }
+  }
+
+  Future<void> _logout(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text('Log out?', style: AppTypography.titleSm),
+        content: Text(
+          'You can continue browsing as a guest and sign in again anytime.',
+          style: AppTypography.caption,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.brandRed,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Log Out'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    await ref.read(authStateProvider.notifier).logout();
+    if (!context.mounted) return;
+    // Replace the stack with Login — the app never closes on logout, and
+    // "Browse as Guest" on the login screen returns straight to Home.
+    context.go('/login');
+  }
+
+  Future<void> _showMapDownloadSheet(BuildContext context, String cityName) {
+    return showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Offline City Map', style: AppTypography.title),
+              const SizedBox(height: 4),
+              Text('Explore $cityName without internet — places, bazaars & streets.',
+                  style: AppTypography.caption),
+              const SizedBox(height: 8),
+              MapPreview(
+                latitude: 28.8386,
+                longitude: 78.7733,
+                height: 140,
+                pinLabel: '$cityName · 24 MB',
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(999)),
+                  ),
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '$cityName map download queued (offline maps arrive in a future update)',
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text('Download Map',
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-class _ProfileCard extends StatelessWidget {
-  const _ProfileCard({
-    required this.name,
-    required this.handle,
-    required this.levelTitle,
-    required this.topPercent,
-    required this.avatar,
+/// ── Signed-in account card: identity, stats and quick links ────────────
+class _SignedInCard extends StatelessWidget {
+  const _SignedInCard({
+    required this.profile,
+    required this.bookmarkCount,
+    required this.onEdit,
+    required this.onFavorites,
+    required this.onCoupons,
   });
 
-  final String name;
-  final String handle;
-  final String levelTitle;
-  final String topPercent;
-  final String avatar;
+  final UserProfile profile;
+  final int bookmarkCount;
+  final VoidCallback onEdit;
+  final VoidCallback onFavorites;
+  final VoidCallback onCoupons;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Tappable identity row → Edit Profile (press feedback + ripple).
+        Pressable(
+          onTap: onEdit,
+          ripple: true,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.primary, width: 2.5),
+                  ),
+                  child: AppAvatar(url: profile.avatarImage, radius: 28),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(profile.name, style: AppTypography.title),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${profile.email} · ${profile.phone}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.label,
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                  colors: [AppColors.primary, AppColors.primaryDark]),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.military_tech_rounded,
+                                    size: 12, color: Colors.white),
+                                const SizedBox(width: 4),
+                                Text(
+                                  profile.levelTitle,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 9, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.accentSoft,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                profile.topPercent,
+                                maxLines: 1,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.accent,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded,
+                    color: AppColors.textMuted),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // Stats + account quick links.
+        Row(
+          children: [
+            Expanded(
+              child: _StatTile(
+                value: profile.savedAmount,
+                label: 'Saved',
+                icon: Icons.savings_outlined,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _StatTile(
+                value: '$bookmarkCount',
+                label: 'Bookmarks',
+                icon: Icons.bookmark_border_rounded,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _StatTile(
+                value: '${profile.reviewsGiven}',
+                label: 'Reviews',
+                icon: Icons.rate_review_outlined,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _QuickLinkButton(
+                icon: Icons.edit_rounded,
+                label: 'Edit Profile',
+                onTap: onEdit,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _QuickLinkButton(
+                icon: Icons.favorite_border_rounded,
+                label: 'Favorites',
+                onTap: onFavorites,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _QuickLinkButton(
+                icon: Icons.local_offer_outlined,
+                label: 'My Offers',
+                onTap: onCoupons,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// ── Guest card: sign-in prompt, browsing stays fully available ─────────
+class _GuestCard extends StatelessWidget {
+  const _GuestCard({required this.onLogin});
+
+  final VoidCallback onLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -178,116 +493,48 @@ class _ProfileCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(2),
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
+              color: AppColors.primarySoft,
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary, width: 2.5),
             ),
-            child: AppAvatar(url: avatar, radius: 28),
+            child: const Icon(Icons.person_rounded,
+                size: 26, color: AppColors.primary),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: AppTypography.title),
+                Text('Sign in or Register',
+                    style: AppTypography.titleSm),
                 const SizedBox(height: 2),
-                Text(handle, style: AppTypography.label),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppColors.primary, AppColors.primaryDark],
-                        ),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.military_tech_rounded,
-                              size: 12, color: Colors.white),
-                          const SizedBox(width: 4),
-                          Text(
-                            levelTitle,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.accentSoft,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        topPercent,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.accent,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  'Save favorites, claim coupons & sync across devices.',
+                  style: AppTypography.label.copyWith(fontSize: 10.5),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: onLogin,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                'Login',
+                style: AppTypography.bodyStrong
+                    .copyWith(color: Colors.white, fontSize: 12.5),
+              ),
+            ),
+          ),
         ],
       ),
-    );
-  }
-}
-
-class _StatsRow extends StatelessWidget {
-  const _StatsRow({
-    required this.savedAmount,
-    required this.bookmarkCount,
-    required this.reviewsGiven,
-  });
-
-  final String savedAmount;
-  final int bookmarkCount;
-  final int reviewsGiven;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatTile(
-            value: savedAmount,
-            label: 'Saved with LocalGo',
-            icon: Icons.savings_outlined,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatTile(
-            value: '$bookmarkCount',
-            label: 'Bookmarks',
-            icon: Icons.bookmark_border_rounded,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatTile(
-            value: '$reviewsGiven',
-            label: 'Reviews Given',
-            icon: Icons.rate_review_outlined,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -302,7 +549,7 @@ class _StatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
@@ -311,11 +558,8 @@ class _StatTile extends StatelessWidget {
       child: Column(
         children: [
           Icon(icon, size: 18, color: AppColors.primary),
-          const SizedBox(height: 5),
-          Text(
-            value,
-            style: AppTypography.titleSm.copyWith(fontSize: 14),
-          ),
+          const SizedBox(height: 3),
+          Text(value, style: AppTypography.titleSm.copyWith(fontSize: 14)),
           const SizedBox(height: 2),
           Text(
             label,
@@ -328,16 +572,62 @@ class _StatTile extends StatelessWidget {
   }
 }
 
+class _QuickLinkButton extends StatelessWidget {
+  const _QuickLinkButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      ripple: true,
+      borderRadius: BorderRadius.circular(13),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 18, color: AppColors.primary),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.label.copyWith(
+                fontSize: 10,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _BusinessPromoCard extends StatelessWidget {
-  const _BusinessPromoCard();
+  const _BusinessPromoCard({required this.onListBusiness});
+
+  final VoidCallback onListBusiness;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppColors.bannerGreenTop, AppColors.bannerGreenBottom],
+          colors: [AppColors.bannerOrangeTop, AppColors.bannerOrangeBottom],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -360,8 +650,9 @@ class _BusinessPromoCard extends StatelessWidget {
               const SizedBox(width: 11),
               const Expanded(
                 child: Text(
-                  'LocalGo for Business',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
+                  'CityBee for Business',
+                  style: TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
                 ),
               ),
               Container(
@@ -393,7 +684,7 @@ class _BusinessPromoCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           GestureDetector(
-            onTap: () {},
+            onTap: onListBusiness,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
               decoration: BoxDecoration(
@@ -412,7 +703,7 @@ class _BusinessPromoCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 4),
-                  Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.primaryDark),
+                  Icon(Icons.open_in_new, size: 13, color: AppColors.primaryDark),
                 ],
               ),
             ),
@@ -435,7 +726,7 @@ class _MenuCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(title, style: AppTypography.titleSm),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
@@ -468,10 +759,14 @@ class _MenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Compact tile: dense vertical padding keeps rows comfortable (>48dp
+    // with leading icon) while showing more content per screen.
     return ListTile(
       onTap: onTap,
+      dense: true,
+      visualDensity: VisualDensity.compact,
       contentPadding: const EdgeInsets.symmetric(horizontal: 13),
-      shape: Border.all(color: Colors.transparent),
+      minLeadingWidth: 34,
       leading: Container(
         width: 34,
         height: 34,
@@ -498,10 +793,12 @@ class _LogoutTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
+      ripple: true,
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(14),
@@ -518,6 +815,43 @@ class _LogoutTile extends StatelessWidget {
                 fontSize: 13.5,
                 fontWeight: FontWeight.w800,
                 color: AppColors.brandRed,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LoginTile extends StatelessWidget {
+  const _LoginTile({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      ripple: true,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.login_rounded, size: 17, color: Colors.white),
+            SizedBox(width: 7),
+            Text(
+              'Sign in / Register',
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
               ),
             ),
           ],

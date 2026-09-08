@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_animation.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/pressable.dart';
 import '../../../../domain/models/app_category.dart';
 import 'category_visual.dart';
 
@@ -42,19 +44,30 @@ class _CategoryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final visual = CategoryVisual.of(category.id);
-    return GestureDetector(
-      onTap: () => context.go('/category/${category.id}'),
+    return Pressable(
+      onTap: () => context.push('/category/${category.id}'),
+      pressedScale: 0.96,
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(color: AppColors.border, width: 1),
+          boxShadow: const [
+            // Hairline ambient shadow so tiles feel tappable, not floating.
+            BoxShadow(
+              color: Color(0x080F172A),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
+            AnimatedContainer(
+              duration: AppAnimation.normal,
+              curve: AppAnimation.curve,
               width: 42,
               height: 42,
               decoration: BoxDecoration(

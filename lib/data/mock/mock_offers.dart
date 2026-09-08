@@ -9,7 +9,7 @@ final mockOffers = <Offer>[
     subtitle: 'on All Boutique',
     description:
         'Handicraft & handloom showroom — now get flat 25% off on your first '
-        'online order. Scan the LocalGo QR at the counter to redeem.',
+        'online order. Scan the CityBee QR at the counter to redeem.',
     couponCode: 'PINZE129',
     validityText: 'Valid till 30 Sep 2026',
     image: 'https://picsum.photos/seed/localgo-emporium/1000/640',
@@ -63,7 +63,7 @@ final mockOffers = <Offer>[
     subtitle: 'on first consultation & cleaning',
     description:
         'Painless dentistry in the heart of Moradabad — 30% off for first-time '
-        'LocalGo patients with code SMILE20.',
+        'CityBee patients with code SMILE20.',
     couponCode: 'SMILE20',
     validityText: 'Valid till 31 Aug 2026',
     image: 'https://picsum.photos/seed/localgo-dental-offer/800/560',
@@ -97,7 +97,7 @@ final mockOffers = <Offer>[
     subtitle: 'on bridal makeup packages',
     description:
         'Look stunning on your big day — 25% off bridal packages booked '
-        'through LocalGo with code BRIDAL25.',
+        'through CityBee with code BRIDAL25.',
     couponCode: 'BRIDAL25',
     validityText: 'Valid till 15 Oct 2026',
     image: 'https://picsum.photos/seed/localgo-glam-offer/800/560',

@@ -7,6 +7,16 @@ import '../../domain/models/user_profile.dart';
 String mockImage(String seed, {int w = 800, int h = 560}) =>
     'https://picsum.photos/seed/$seed/$w/$h';
 
+/// Preset avatars offered in the Edit Profile screen.
+const mockAvatarChoices = <String>[
+  'https://picsum.photos/seed/localgo-avatar/200/200',
+  'https://picsum.photos/seed/citybee-avatar-2/200/200',
+  'https://picsum.photos/seed/citybee-avatar-3/200/200',
+  'https://picsum.photos/seed/citybee-avatar-4/200/200',
+  'https://picsum.photos/seed/citybee-avatar-5/200/200',
+  'https://picsum.photos/seed/citybee-avatar-6/200/200',
+];
+
 /// ── Cities ───────────────────────────────────────────────────────────────
 const mockCities = <City>[
   City(
@@ -49,11 +59,12 @@ const mockCategories = <AppCategory>[
   AppCategory(id: 'heritage', name: 'Heritage', listingTitle: 'Heritage & Culture'),
   AppCategory(id: 'salons', name: 'Salons', listingTitle: 'Beauty & Salons'),
   AppCategory(id: 'malls', name: 'Malls', listingTitle: 'Malls & Markets'),
+  AppCategory(id: 'cinemas', name: 'Cinemas', listingTitle: 'Cinemas Open Now'),
 ];
 
 /// ── Home quick chips under the search bar ────────────────────────────────
 const homeQuickChips = <String>[
-  '⚡ Igniting Deals',
+  '⚡ Lightning Deals',
   'Cinemas Open',
   'Biryani & Food',
 ];
@@ -62,6 +73,8 @@ const homeQuickChips = <String>[
 const mockProfile = UserProfile(
   name: 'Amit Sharma',
   handle: '@amit.moradabad',
+  email: 'amit.sharma@example.com',
+  phone: '+91 98765 43210',
   levelTitle: 'Level 3 Pioneer',
   topPercent: 'Top 5% Saver',
   savedAmount: '₹2,450',
@@ -74,6 +87,6 @@ const mockProfile = UserProfile(
 const mockCommunityStats = (
   saved: '₹6.8 Lakhs',
   headline: 'Moradabad Saved',
-  subline: 'Join LocalGo to unlock deals & city savings.',
+  subline: 'Join CityBee to unlock deals & city savings.',
   cta: 'Claim Your First Deal',
 );

@@ -1,25 +1,44 @@
 import 'package:go_router/go_router.dart';
 
+import '../features/auth/presentation/login_screen.dart';
+import '../features/auth/presentation/splash_screen.dart';
 import '../features/businesses/presentation/business_detail_screen.dart';
 import '../features/businesses/presentation/business_listing_screen.dart';
 import '../features/explore/presentation/explore_screen.dart';
 import '../features/explore/presentation/place_detail_screen.dart';
+import '../features/home/presentation/all_categories_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/offers/presentation/offer_detail_screen.dart';
 import '../features/offers/presentation/offers_screen.dart';
+import '../features/profile/presentation/about_screen.dart';
+import '../features/profile/presentation/contact_support_screen.dart';
+import '../features/profile/presentation/edit_profile_screen.dart';
 import '../features/profile/presentation/favorites_screen.dart';
+import '../features/profile/presentation/faq_screen.dart';
+import '../features/profile/presentation/legal_screen.dart';
 import '../features/profile/presentation/more_screen.dart';
+import '../features/profile/presentation/settings_screen.dart';
 import '../features/search/presentation/search_screen.dart';
 import '../features/services/presentation/services_screen.dart';
 import '../features/shell/presentation/main_shell.dart';
 
 /// App navigation graph.
 ///
+/// The splash route starts the app, then hands off to the tab shell.
 /// Tab branches live inside a StatefulShellRoute so each tab keeps its
-/// scroll position; detail routes push above the shell.
+/// scroll position; detail routes are pushed above the shell so system back
+/// and the AppBar back button pop them one at a time.
 final appRouter = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/splash',
   routes: [
+    GoRoute(
+      path: '/splash',
+      builder: (_, __) => const SplashScreen(),
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (_, __) => const LoginScreen(),
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) => MainShell(navigationShell: navigationShell),
       branches: [
@@ -39,6 +58,10 @@ final appRouter = GoRouter(
           GoRoute(path: '/more', builder: (_, __) => const MoreScreen()),
         ]),
       ],
+    ),
+    GoRoute(
+      path: '/categories',
+      builder: (_, __) => const AllCategoriesScreen(),
     ),
     GoRoute(
       path: '/category/:id',
@@ -71,6 +94,34 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/favorites',
       builder: (_, __) => const FavoritesScreen(),
+    ),
+    GoRoute(
+      path: '/profile/edit',
+      builder: (_, __) => const EditProfileScreen(),
+    ),
+    GoRoute(
+      path: '/support',
+      builder: (_, __) => const ContactSupportScreen(),
+    ),
+    GoRoute(
+      path: '/faq',
+      builder: (_, __) => const FaqScreen(),
+    ),
+    GoRoute(
+      path: '/about',
+      builder: (_, __) => const AboutScreen(),
+    ),
+    GoRoute(
+      path: '/privacy',
+      builder: (_, __) => const LegalScreen.privacy(),
+    ),
+    GoRoute(
+      path: '/terms',
+      builder: (_, __) => const LegalScreen.terms(),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (_, __) => const SettingsScreen(),
     ),
   ],
 );

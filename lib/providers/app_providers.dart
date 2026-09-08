@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/services/location_service.dart';
+import '../data/repositories/auth_repository.dart';
 import '../data/repositories/business_repository.dart';
 import '../data/repositories/city_repository.dart';
 import '../data/repositories/offer_repository.dart';
 import '../data/repositories/place_repository.dart';
+import '../data/repositories/profile_repository.dart';
 import '../data/repositories/service_repository.dart';
 import '../domain/models/app_category.dart';
 import '../domain/models/business.dart';
@@ -21,6 +23,35 @@ final offerRepositoryProvider = Provider<OfferRepository>((ref) => MockOfferRepo
 final placeRepositoryProvider = Provider<PlaceRepository>((ref) => MockPlaceRepository());
 final serviceRepositoryProvider = Provider<ServiceRepository>((ref) => MockServiceRepository());
 final locationServiceProvider = Provider((ref) => const LocationService());
+final authRepositoryProvider = Provider<AuthRepository>((ref) => MockAuthRepository());
+
+// ── Authentication (guest browsing is always allowed) ────────────────────
+/// Whether the user has an active session. Login is never mandatory —
+/// the whole app works as a guest with `false`.
+class AuthController extends Notifier<bool> {
+  @override
+  bool build() => ref.read(authRepositoryProvider).isSignedIn;
+
+  Future<void> sendOtp(String phone, {OtpChannel channel = OtpChannel.sms}) =>
+      ref.read(authRepositoryProvider).sendOtp(phone, channel: channel);
+
+  Future<void> verifyOtp(String phone, String otp) async {
+    await ref.read(authRepositoryProvider).verifyOtp(phone, otp);
+    state = true;
+  }
+
+  Future<void> signInWithGoogle() async {
+    await ref.read(authRepositoryProvider).signInWithGoogle();
+    state = true;
+  }
+
+  Future<void> logout() async {
+    await ref.read(authRepositoryProvider).signOut();
+    state = false;
+  }
+}
+
+final authStateProvider = NotifierProvider<AuthController, bool>(AuthController.new);
 
 // ── Cities & selected city ───────────────────────────────────────────────
 final citiesProvider = FutureProvider<List<City>>((ref) async {
@@ -66,19 +97,34 @@ class CityController extends Notifier<City> {
 
 final selectedCityProvider = NotifierProvider<CityController, City>(CityController.new);
 
-// ── Profile (mock until Supabase Auth) ───────────────────────────────────
-const _mockProfile = UserProfile(
-  name: 'Amit Sharma',
-  handle: '@amit.moradabad',
-  levelTitle: 'Level 3 Pioneer',
-  topPercent: 'Top 5% Saver',
-  savedAmount: '₹2,450',
-  bookmarkCount: 12,
-  reviewsGiven: 5,
-  avatarImage: 'https://picsum.photos/seed/localgo-avatar/200/200',
-);
+// ── Profile (mock repository until Supabase Auth) ────────────────────────
+final profileRepositoryProvider = Provider<ProfileRepository>((ref) => MockProfileRepository());
 
-final userProfileProvider = Provider<UserProfile>((ref) => _mockProfile);
+/// Editable user profile. [save] persists through the repository so the
+/// Supabase implementation can drop in without UI changes.
+class UserProfileController extends Notifier<UserProfile> {
+  @override
+  UserProfile build() => const UserProfile(
+        name: 'Amit Sharma',
+        handle: '@amit.moradabad',
+        email: 'amit.sharma@example.com',
+        phone: '+91 98765 43210',
+        levelTitle: 'Level 3 Pioneer',
+        topPercent: 'Top 5% Saver',
+        savedAmount: '₹2,450',
+        bookmarkCount: 12,
+        reviewsGiven: 5,
+        avatarImage: 'https://picsum.photos/seed/localgo-avatar/200/200',
+      );
+
+  Future<void> save(UserProfile profile) async {
+    final saved = await ref.read(profileRepositoryProvider).saveProfile(profile);
+    state = saved;
+  }
+}
+
+final userProfileProvider =
+    NotifierProvider<UserProfileController, UserProfile>(UserProfileController.new);
 
 // ── Favorites ────────────────────────────────────────────────────────────
 /// Bookmarked business ids + saved offer ids in one notifier so the More

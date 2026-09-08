@@ -22,8 +22,14 @@ dependencies:
   # Images
   cached_network_image: ^3.4.1
 
+  # Official CityBee SVG logo
+  flutter_svg: ^2.0.10+1
+
   # Platform integrations (calls, WhatsApp, maps)
   url_launcher: ^6.3.1
+
+  # Native share sheet
+  share_plus: ^10.1.4
 
   # Location
   geolocator: ^13.0.3
@@ -39,3 +45,26 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/brand/
+
+  fonts:
+    # Outfit — headings, section titles, display text (600/700/800).
+    - family: Outfit
+      fonts:
+        - asset: assets/fonts/Outfit-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Outfit-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Outfit-ExtraBold.ttf
+          weight: 800
+    # Hanken Grotesk — body, labels, buttons, inputs (400/600/700).
+    - family: HankenGrotesk
+      fonts:
+        - asset: assets/fonts/HankenGrotesk-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/HankenGrotesk-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/HankenGrotesk-Bold.ttf
+          weight: 700

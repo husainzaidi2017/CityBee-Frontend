@@ -7,6 +7,7 @@ import '../../../../core/utils/app_launcher.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/buttons.dart';
+import '../../../../core/widgets/pressable.dart';
 import '../../../../domain/models/business.dart';
 
 /// Compact vertical business card used by "Popular Near You" on Home.
@@ -17,8 +18,8 @@ class PopularBusinessCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.go('/business/${business.id}'),
+    return Pressable(
+      onTap: () => context.push('/business/${business.id}'),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(10),

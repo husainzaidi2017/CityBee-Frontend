@@ -1,4 +1,4 @@
-# LocalGo — City & Local Discovery App
+# CityBee — City & Local Discovery App
 
 A Flutter application for discovering local offers, businesses (restaurants, doctors, hotels, salons, shops, malls), city services and places — built city-first around Moradabad (Peetal Nagri) but architected for any city.
 
@@ -39,7 +39,8 @@ lib/
     repositories/              # Abstract contracts + Mock implementations
   features/
     shell/                     # Bottom-nav shell (Home · Offers · Services · Explore · More)
-    home/ offers/ services/ explore/ businesses/ search/ profile/
+    shell/ home/ offers/ services/ explore/ businesses/ search/
+    auth/ (splash, login) · profile/ (account-more, edit, settings, legal)
       presentation/            # Screens + feature-local widgets
 ```
 
@@ -67,7 +68,8 @@ No widget queries mock data or Supabase directly.
 | `/category/:id` | Business listing — filters, sort, list ↔ map toggle |
 | `/business/:id` | Business detail — carousel, actions, deal banner, highlights, menu, map, reviews, sticky booking bar |
 | `/search` | Live search with trending terms |
-| `/more`, `/favorites` | Profile/stats/city tools/support · bookmarks |
+| `/splash`, `/login` | Branded splash · phone OTP / WhatsApp / Google login with guest browsing |
+| `/more`, `/favorites`, `/profile/edit` | Account+More (merged) · bookmarks · edit profile |
 
 ## Next steps (backend wiring)
 

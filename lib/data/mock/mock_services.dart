@@ -54,7 +54,7 @@ final mockServices = <ServiceItem>[
     servicesSummary: 'Brass polish, repair & custom casting by local karigars',
     priceText: 'Price by quote',
     etaText: '⚡ Same-day visit',
-    statsText: '47 legacy workshops on LocalGo',
+    statsText: '47 legacy workshops on CityBee',
     trustNote: 'Heritage certified',
     image: 'https://picsum.photos/seed/localgo-guild/600/400',
     actionLabel: 'Get Quote',

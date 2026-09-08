@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/badges.dart';
+import '../../../../core/widgets/pressable.dart';
 import '../../../../domain/models/offer.dart';
 
 /// Horizontal rail of "Offers Near You" cards on the Home screen.
@@ -35,8 +36,8 @@ class _HomeOfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.go('/offer/${offer.id}'),
+    return Pressable(
+      onTap: () => context.push('/offer/${offer.id}'),
       child: Container(
         width: 236,
         decoration: BoxDecoration(
@@ -149,7 +150,7 @@ class _HomeOfferCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: () => context.go('/offer/${offer.id}'),
+                    onTap: () => context.push('/offer/${offer.id}'),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                       decoration: BoxDecoration(

@@ -24,20 +24,20 @@ class RatingPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: soft ? AppColors.ratingGreenSoft : AppColors.ratingGreen,
+        color: soft ? AppColors.verifiedGreenSoft : AppColors.verifiedGreen,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.star_rounded, size: 13, color: soft ? AppColors.ratingGreen : Colors.white),
+          Icon(Icons.star_rounded, size: 13, color: soft ? AppColors.verifiedGreen : Colors.white),
           const SizedBox(width: 3),
           Text(
             count == null ? rating : '$rating ($count)',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,
-              color: soft ? AppColors.ratingGreen : Colors.white,
+              color: soft ? AppColors.verifiedGreen : Colors.white,
             ),
           ),
         ],
@@ -46,9 +46,9 @@ class RatingPill extends StatelessWidget {
   }
 }
 
-/// "✓ LocalGo Verified" green pill.
+/// "✓ CityBee Verified" green pill.
 class VerifiedBadge extends StatelessWidget {
-  const VerifiedBadge({super.key, this.label = 'LocalGo Verified'});
+  const VerifiedBadge({super.key, this.label = 'CityBee Verified'});
 
   final String label;
 
@@ -57,7 +57,7 @@ class VerifiedBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.ratingGreenSoft,
+        color: AppColors.verifiedGreenSoft,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

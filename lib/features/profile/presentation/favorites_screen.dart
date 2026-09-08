@@ -104,7 +104,7 @@ class _FavoriteBusinessTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.go('/business/${business.id}'),
+      onTap: () => context.push('/business/${business.id}'),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(10),
@@ -154,7 +154,7 @@ class _FavoritePlaceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.go('/place/${place.id}'),
+      onTap: () => context.push('/place/${place.id}'),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(10),

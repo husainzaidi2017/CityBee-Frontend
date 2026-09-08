@@ -246,7 +246,7 @@ class _BrassShieldBanner extends StatelessWidget {
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppColors.bannerGreenTop, AppColors.bannerGreenBottom],
+          colors: [AppColors.bannerOrangeTop, AppColors.bannerOrangeBottom],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

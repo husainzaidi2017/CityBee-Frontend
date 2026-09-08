@@ -26,7 +26,7 @@ class MainShell extends StatelessWidget {
             child: Row(
               children: [
                 _NavItem(
-                  icon: Icons.home_rounded,
+                  icon: Icons.home_outlined,
                   activeIcon: Icons.home_rounded,
                   label: 'Home',
                   selected: navigationShell.currentIndex == 0,
@@ -54,8 +54,8 @@ class MainShell extends StatelessWidget {
                   onTap: () => _goBranch(3),
                 ),
                 _NavItem(
-                  icon: Icons.more_horiz_rounded,
-                  activeIcon: Icons.more_horiz_rounded,
+                  icon: Icons.person_outline_rounded,
+                  activeIcon: Icons.person_rounded,
                   label: 'More',
                   selected: navigationShell.currentIndex == 4,
                   onTap: () => _goBranch(4),
@@ -98,20 +98,43 @@ class _NavItem extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(selected ? activeIcon : icon, size: 23, color: color),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                color: color,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Icon pops up slightly when selected.
+              AnimatedScale(
+                scale: selected ? 1.12 : 1.0,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutBack,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  transitionBuilder: (child, animation) =>
+                      ScaleTransition(scale: animation, child: child),
+                  child: Icon(
+                    selected ? activeIcon : icon,
+                    key: ValueKey(selected),
+                    size: 23,
+                    color: color,
+                  ),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 3),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  color: color,
+                ),
+                child: Text(label, maxLines: 1),
+              ),
+            ],
+          ),
         ),
       ),
     );

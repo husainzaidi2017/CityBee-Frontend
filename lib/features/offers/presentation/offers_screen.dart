@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/app_image.dart';
 import '../../../core/widgets/badges.dart';
 import '../../../core/widgets/chips.dart';
+import '../../../core/widgets/pressable.dart';
 import '../../../core/widgets/search_bar.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/states_view.dart';
@@ -18,6 +19,10 @@ const _tags = ['All', 'Dining', 'Beauty & Salon', 'Fashion', 'Wellness & Health'
 
 /// Offers tab: coupon search, filter chips, featured hero deal, the
 /// "Verified City Deals" list and the community savings banner.
+///
+/// The chip row and page content are driven by a single PageController:
+/// swiping content changes the selected chip and tapping a chip animates
+/// the content — one source of truth, always in sync.
 class OffersScreen extends ConsumerStatefulWidget {
   const OffersScreen({super.key});
 
@@ -26,20 +31,31 @@ class OffersScreen extends ConsumerStatefulWidget {
 }
 
 class _OffersScreenState extends ConsumerState<OffersScreen> {
-  String _tag = 'All';
-  String _query = '';
   final _searchController = TextEditingController();
+  final _pageController = PageController();
+
+  String _query = '';
+  int _pageIndex = 0;
 
   @override
   void dispose() {
     _searchController.dispose();
+    _pageController.dispose();
     super.dispose();
+  }
+
+  void _onChipTap(int index) {
+    // Chip tap drives the PageView; onPageChanged then updates _pageIndex.
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final city = ref.watch(selectedCityProvider);
-    final offers = ref.watch(offersByTagProvider(_tag));
 
     return ColoredBox(
       color: AppColors.background,
@@ -51,10 +67,7 @@ class _OffersScreenState extends ConsumerState<OffersScreen> {
             // ── Header ──────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-              child: Text(
-                'Offers & Deals',
-                style: AppTypography.headline,
-              ),
+              child: Text('Offers & Deals', style: AppTypography.headline),
             ),
             const SizedBox(height: 12),
             Padding(
@@ -67,80 +80,122 @@ class _OffersScreenState extends ConsumerState<OffersScreen> {
             ),
             const SizedBox(height: 10),
             SizedBox(
-              height: 34,
+              height: 38,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: _tags.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (_, index) => SelectChip(
-                  label: index == _tags.length - 1 && index > 2
-                      ? '${_tags[index]} +3'
-                      : _tags[index],
-                  selected: _tags[index] == _tag,
-                  onTap: () => setState(() => _tag = _tags[index]),
+                itemBuilder: (_, index) => Center(
+                  child: SelectChip(
+                    label: _tags[index],
+                    selected: index == _pageIndex,
+                    onTap: () => _onChipTap(index),
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 6),
 
-            // ── Content ─────────────────────────────────────────────
+            // ── Swipeable pages, one per category ───────────────────
             Expanded(
-              child: offers.when(
-                data: (list) {
-                  final filtered = _query.trim().isEmpty
-                      ? list
-                      : list
-                          .where((o) =>
-                              o.title.toLowerCase().contains(_query.toLowerCase()) ||
-                              o.subtitle.toLowerCase().contains(_query.toLowerCase()))
-                          .toList();
-                  if (filtered.isEmpty) {
-                    return StatesView.empty(
-                      message: 'No deals match "$_query".',
-                      actionLabel: 'Clear search',
-                      onAction: () {
-                        _searchController.clear();
-                        setState(() => _query = '');
-                      },
-                    );
-                  }
-                  return ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-                    children: [
-                      ...filtered.where((o) => o.featured).map(
-                            (offer) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: FeaturedOfferCard(offer: offer),
-                            ),
-                          ),
-                      SectionHeader(
-                        title: 'Verified ${city.name} Deals',
-                        underline: true,
-                        subtitle:
-                            '${filtered.where((o) => !o.featured).length} live offers · updated today',
-                      ),
-                      const SizedBox(height: 12),
-                      ...filtered
-                          .where((o) => !o.featured)
-                          .map((offer) => Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: DealCard(offer: offer),
-                              )),
-                      const SizedBox(height: 8),
-                      const SavingsBanner(),
-                    ],
-                  );
-                },
-                loading: () => StatesView.loading(message: 'Fetching live deals…'),
-                error: (e, _) => StatesView.error(
-                  message: 'Could not load offers. Check your connection.',
-                  onRetry: () => ref.invalidate(offersByTagProvider(_tag)),
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: _tags.length,
+                onPageChanged: (index) => setState(() => _pageIndex = index),
+                itemBuilder: (context, index) => _OffersPage(
+                  key: ValueKey(_tags[index]),
+                  tag: _tags[index],
+                  cityName: city.name,
+                  query: _query,
+                  onErrorRetry: () => ref.invalidate(offersByTagProvider(_tags[index])),
                 ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// One category page inside the offers PageView. Keeps its scroll position
+/// alive while the user swipes between categories.
+class _OffersPage extends ConsumerStatefulWidget {
+  const _OffersPage({
+    super.key,
+    required this.tag,
+    required this.cityName,
+    required this.query,
+    required this.onErrorRetry,
+  });
+
+  final String tag;
+  final String cityName;
+  final String query;
+  final VoidCallback onErrorRetry;
+
+  @override
+  ConsumerState<_OffersPage> createState() => _OffersPageState();
+}
+
+class _OffersPageState extends ConsumerState<_OffersPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context); // keep-alive
+    final offers = ref.watch(offersByTagProvider(widget.tag));
+
+    return offers.when(
+      data: (list) {
+        final filtered = widget.query.trim().isEmpty
+            ? list
+            : list
+                .where((o) =>
+                    o.title.toLowerCase().contains(widget.query.toLowerCase()) ||
+                    o.subtitle.toLowerCase().contains(widget.query.toLowerCase()))
+                .toList();
+        if (filtered.isEmpty) {
+          return StatesView.empty(
+            icon: Icons.local_offer_outlined,
+            message: widget.query.trim().isEmpty
+                ? 'No ${widget.tag == 'All' ? '' : widget.tag} deals live right now.'
+                : 'No deals match "${widget.query}".',
+          );
+        }
+        final featured = filtered.where((o) => o.featured).toList();
+        final deals = filtered.where((o) => !o.featured).toList();
+
+        return ListView(
+          key: PageStorageKey('offers-${widget.tag}'),
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+          children: [
+            ...featured.map((offer) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: FeaturedOfferCard(offer: offer),
+                )),
+            SectionHeader(
+              title: 'Verified ${widget.cityName} Deals',
+              underline: true,
+              subtitle: '${deals.length} live offers · updated today',
+            ),
+            const SizedBox(height: 12),
+            ...deals.map((offer) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: DealCard(offer: offer),
+                )),
+            const SizedBox(height: 8),
+            const SavingsBanner(),
+          ],
+        );
+      },
+      loading: () => StatesView.loading(message: 'Fetching live deals…'),
+      error: (e, _) => StatesView.error(
+        message: 'Could not load offers. Check your connection.',
+        onRetry: widget.onErrorRetry,
       ),
     );
   }
@@ -154,8 +209,8 @@ class FeaturedOfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.go('/offer/${offer.id}'),
+    return Pressable(
+      onTap: () => context.push('/offer/${offer.id}'),
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
@@ -252,26 +307,19 @@ class FeaturedOfferCard extends StatelessWidget {
                           style: AppTypography.label,
                         ),
                         const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            _CouponCodeChip(code: offer.couponCode),
-                            if (offer.leftCount != null) ...[
-                              const SizedBox(width: 8),
-                              Text(
-                                'Only ${offer.leftCount} Left',
-                                style: AppTypography.label.copyWith(
-                                  color: AppColors.brandRed,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
+                        if (offer.leftCount != null)
+                          Text(
+                            'Only ${offer.leftCount} Left',
+                            style: AppTypography.label.copyWith(
+                              color: AppColors.brandRed,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 10),
-                  _ClaimButton(offer: offer),
+                  _ViewOfferButton(offer: offer),
                 ],
               ),
             ),
@@ -290,8 +338,8 @@ class DealCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.go('/offer/${offer.id}'),
+    return Pressable(
+      onTap: () => context.push('/offer/${offer.id}'),
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
@@ -362,7 +410,8 @@ class DealCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_outlined, size: 11, color: AppColors.textSecondary),
+                      const Icon(Icons.location_on_outlined,
+                          size: 11, color: AppColors.textSecondary),
                       const SizedBox(width: 2),
                       Expanded(
                         child: Text(
@@ -377,9 +426,16 @@ class DealCard extends StatelessWidget {
                   const SizedBox(height: 7),
                   Row(
                     children: [
-                      _CouponCodeChip(code: offer.couponCode),
+                      if (offer.leftCount != null)
+                        Text(
+                          'Only ${offer.leftCount} Left',
+                          style: AppTypography.label.copyWith(
+                            color: AppColors.brandRed,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                       const Spacer(),
-                      _ClaimButton(offer: offer),
+                      _ViewOfferButton(offer: offer),
                     ],
                   ),
                 ],
@@ -392,65 +448,23 @@ class DealCard extends StatelessWidget {
   }
 }
 
-class _CouponCodeChip extends StatelessWidget {
-  const _CouponCodeChip({required this.code});
-
-  final String code;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Clipboard.setData(ClipboardData(text: code));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Coupon code $code copied')),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: AppColors.primarySoft,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              code,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: AppColors.primaryDark,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(width: 5),
-            const Icon(Icons.copy_rounded, size: 12, color: AppColors.primary),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ClaimButton extends StatelessWidget {
-  const _ClaimButton({required this.offer});
+class _ViewOfferButton extends StatelessWidget {
+  const _ViewOfferButton({required this.offer});
 
   final Offer offer;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.go('/offer/${offer.id}'),
+    return Pressable(
+      onTap: () => context.push('/offer/${offer.id}'),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
         decoration: BoxDecoration(
           color: AppColors.primary,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: const Text(
-          'Claim Coupon',
+          'View Offer',
           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
         ),
       ),
@@ -501,7 +515,7 @@ class SavingsBanner extends ConsumerWidget {
           ),
           const SizedBox(height: 3),
           const Text(
-            'Join LocalGo to unlock deals & city savings.',
+            'Join CityBee to unlock deals & city savings.',
             style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w500,
@@ -509,17 +523,18 @@ class SavingsBanner extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () {},
+          Pressable(
+            onTap: () => context.go('/offers'),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
               decoration: BoxDecoration(
                 color: AppColors.primary,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
               child: const Text(
                 'Claim Your First Deal',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
+                style:
+                    TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
               ),
             ),
           ),

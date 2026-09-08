@@ -59,21 +59,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: AppSearchBar(
                       hint: 'Search anything in ${city.name}…',
                       readOnly: true,
-                      onTap: () => context.go('/search'),
+                      onTap: () => context.push('/search'),
                     ),
                   ),
                   const SizedBox(height: 10),
+                  // Quick-shortcut chips: 38px rail so the 34px chips never clip.
                   SizedBox(
-                    height: 30,
+                    height: 38,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: homeQuickChips.length,
                       separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (_, index) => SelectChip(
-                        label: homeQuickChips[index],
-                        selected: index == 0,
-                        onTap: () => context.go('/offers'),
+                      itemBuilder: (_, index) => Center(
+                        child: SelectChip(
+                          label: homeQuickChips[index],
+                          selected: false,
+                          onTap: () => switch (index) {
+                            // ⚡ Lightning Deals → Offers tab.
+                            0 => context.go('/offers'),
+                            // Cinemas Open → cinemas listing.
+                            1 => context.push('/category/cinemas'),
+                            // Biryani & Food → restaurants & dining listing.
+                            _ => context.push('/category/dining'),
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -88,8 +98,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _Section(
                     header: SectionHeader(
                       title: 'Explore Near You',
-                      trailingLabel: 'View All (9) >',
-                      onTrailingTap: () => context.go('/category/all'),
+                      trailingLabel: 'View All (10) >',
+                      onTrailingTap: () => context.push('/categories'),
                     ),
                     child: categories.when(
                       data: (list) => ExploreNearbyGrid(categories: list),
@@ -202,7 +212,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 4),
                   Center(
                     child: Text(
-                      'LocalGo · Made in ${city.name} 💚',
+                      'CityBee · Made in ${city.name} 💚',
                       style: AppTypography.label.copyWith(fontSize: 9.5),
                     ),
                   ),
@@ -257,7 +267,7 @@ class _CityPlacesRail extends StatelessWidget {
         itemBuilder: (context, index) {
           final place = places[index];
           return GestureDetector(
-            onTap: () => context.go('/place/${place.id}'),
+            onTap: () => context.push('/place/${place.id}'),
             child: Container(
               width: 190,
               clipBehavior: Clip.antiAlias,

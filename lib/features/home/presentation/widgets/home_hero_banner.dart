@@ -16,7 +16,7 @@ class HomeHeroBanner extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.bannerGreenTop, AppColors.bannerGreenBottom],
+          colors: [AppColors.bannerOrangeTop, AppColors.bannerOrangeBottom],
         ),
         borderRadius: BorderRadius.circular(18),
       ),

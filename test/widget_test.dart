@@ -4,11 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:localgo/app.dart';
 
 void main() {
-  testWidgets('App boots and renders the Home tab', (WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: LocalGoApp()));
+  testWidgets('App boots through splash and renders the Home tab',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const ProviderScope(child: CityBeeApp()));
 
-    // Pump past the mock repository delays (200–250 ms each); fixed pumps
-    // instead of pumpAndSettle because loading spinners animate forever.
+    // Splash shows the brand + tagline first.
+    expect(find.text("Discover What's Around You"), findsOneWidget);
+
+    // Advance past the splash hold (~700 ms) so navigation to Home runs.
+    await tester.pump(const Duration(milliseconds: 900));
     await tester.pump(const Duration(seconds: 2));
 
     // Home screen sections are present.

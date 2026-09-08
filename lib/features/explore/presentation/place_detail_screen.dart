@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
+import '../../../core/services/share_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_launcher.dart';
-import '../../../core/widgets/app_image.dart';
 import '../../../core/widgets/badges.dart';
 import '../../../core/widgets/buttons.dart';
+import '../../../core/widgets/collapsing_detail_header.dart';
 import '../../../core/widgets/map_preview.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/place.dart';
@@ -62,140 +62,113 @@ class _MissingPlace extends StatelessWidget {
   }
 }
 
-class _PlaceDetailBody extends StatelessWidget {
+class _PlaceDetailBody extends ConsumerWidget {
   const _PlaceDetailBody({required this.place});
 
   final Place place;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isSaved = ref.watch(favoritesProvider).contains(place.id);
     return Column(
       children: [
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Hero ─────────────────────────────────────────────
-                SizedBox(
-                  height: 250,
-                  width: double.infinity,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      AppImage(url: place.image, fallbackIcon: Icons.photo_camera_outlined),
-                      const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            stops: [0, 0.5, 1],
-                            colors: [Color(0x66000000), Colors.transparent, Color(0x99000000)],
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 40,
-                        left: 12,
-                        child: CircleIconButton(
-                          icon: Icons.arrow_back,
-                          onTap: () => context.pop(),
-                        ),
-                      ),
-                      Positioned(
-                        top: 40,
-                        right: 12,
-                        child: CircleIconButton(
-                          icon: Icons.bookmark_border_rounded,
-                          onTap: () {},
-                        ),
-                      ),
-                      Positioned(
-                        left: 16,
-                        right: 16,
-                        bottom: 14,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              place.name,
+          child: CustomScrollView(
+            slivers: [
+              // ── Immersive collapsing hero (back · favorite · share) ──
+              CollapsingDetailHeader(
+                title: place.name,
+                image: place.image,
+                fallbackIcon: Icons.photo_camera_outlined,
+                isFavorite: isSaved,
+                onFavoriteTap: () {
+                  ref.read(favoritesProvider.notifier).toggle(place.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          isSaved ? 'Removed from favorites' : 'Saved to favorites'),
+                    ),
+                  );
+                },
+                onShareTap: () => ShareService.sharePlace(place),
+                badge: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    RatingPill.soft(rating: place.ratingText.split(' ').first),
+                    const SizedBox(width: 6),
+                    ...place.tags.take(2).map((tag) => Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white24,
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                            child: Text(
+                              tag,
                               style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
                                 color: Colors.white,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                RatingPill.soft(rating: place.ratingText.split(' ').first),
-                                const SizedBox(width: 8),
-                                ...place.tags.map((tag) => Padding(
-                                      padding: const EdgeInsets.only(right: 6),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 9, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white24,
-                                          borderRadius: BorderRadius.circular(7),
-                                        ),
-                                        child: Text(
-                                          tag,
-                                          style: const TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    )),
-                              ],
-                            ),
-                          ],
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                sliver: SliverList.list(
+                  children: [
+                    // ── Title + meta strip ────────────────────────────
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          place.name,
+                          style: AppTypography.headline.copyWith(fontSize: 20),
                         ),
+                        const SizedBox(height: 8),
+                        _MetaStrip(place: place),
+                      ],
+                    ),
+
+                    // ── Description ───────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('About this place', style: AppTypography.titleSm),
+                          const SizedBox(height: 6),
+                          Text(place.description, style: AppTypography.body),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
+                    ),
 
-                // ── Meta strip ───────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 13, 16, 0),
-                  child: _MetaStrip(place: place),
-                ),
+                    // ── Info card ─────────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: _InfoCard(place: place),
+                    ),
 
-                // ── Description ─────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('About this place', style: AppTypography.titleSm),
-                      const SizedBox(height: 6),
-                      Text(place.description, style: AppTypography.body),
-                    ],
-                  ),
+                    // ── Map ───────────────────────────────────────────
+                    const Padding(
+                      padding: EdgeInsets.only(top: 16),
+                      child: MapPreview(
+                        latitude: 28.8386,
+                        longitude: 78.7733,
+                        height: 150,
+                        pinLabel: 'City Center',
+                      ),
+                    ),
+                  ],
                 ),
-
-                // ── Info card ────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  child: _InfoCard(place: place),
-                ),
-
-                // ── Map ─────────────────────────────────────────────
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  child: MapPreview(
-                    latitude: 28.8386,
-                    longitude: 78.7733,
-                    height: 150,
-                    pinLabel: 'City Center',
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
 

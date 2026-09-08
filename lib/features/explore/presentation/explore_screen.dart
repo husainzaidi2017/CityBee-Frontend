@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/services/share_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/app_image.dart';
 import '../../../core/widgets/badges.dart';
+import '../../../core/widgets/pressable.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/place.dart';
@@ -58,11 +60,7 @@ class ExploreScreen extends ConsumerWidget {
                     const SizedBox(height: 20),
 
                     // ── Curated spotlights ──────────────────────────
-                    SectionHeader(
-                      title: 'Curated City Spotlights',
-                      trailingLabel: 'See All >',
-                      onTrailingTap: () {},
-                    ),
+                    const SectionHeader(title: 'Curated City Spotlights'),
                     const SizedBox(height: 10),
                     ...placeList.map((place) => Padding(
                           padding: const EdgeInsets.only(bottom: 11),
@@ -112,10 +110,52 @@ class _GuideCard extends StatelessWidget {
 
   final CityGuide guide;
 
+  void _openGuide(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(guide.title, style: AppTypography.title),
+              const SizedBox(height: 5),
+              Text('By ${guide.author}', style: AppTypography.label),
+              const SizedBox(height: 10),
+              Text(guide.subtitle, style: AppTypography.body),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(999)),
+                  ),
+                  onPressed: () => ShareService.shareApp(
+                    note: '${guide.title} — ${guide.subtitle}',
+                  ),
+                  icon: const Icon(Icons.share_outlined, size: 16),
+                  label: const Text('Share This Guide',
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {},
+    return Pressable(
+      onTap: () => _openGuide(context),
       child: Container(
         height: 200,
         clipBehavior: Clip.antiAlias,
@@ -208,8 +248,8 @@ class _PlaceSpotlightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.go('/place/${place.id}'),
+    return Pressable(
+      onTap: () => context.push('/place/${place.id}'),
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
@@ -452,7 +492,7 @@ class _PlanTripCta extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppColors.bannerGreenTop, AppColors.bannerGreenBottom],
+          colors: [AppColors.bannerOrangeTop, AppColors.bannerOrangeBottom],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -482,7 +522,10 @@ class _PlanTripCta extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           GestureDetector(
-            onTap: () {},
+            onTap: () => ShareService.shareApp(
+              note: 'I am planning a trip to Peetal Nagri (Moradabad) with CityBee — '
+                  'brass bazaars, biryani and heritage walks!',
+            ),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(

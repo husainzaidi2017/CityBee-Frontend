@@ -48,7 +48,7 @@ class _CityPickerSheet extends ConsumerWidget {
                 child: const Icon(Icons.my_location, color: AppColors.primary, size: 20),
               ),
               title: Text('Use my current location', style: AppTypography.bodyStrong),
-              subtitle: Text('Detects the nearest LocalGo city', style: AppTypography.label),
+              subtitle: Text('Detects the nearest CityBee city', style: AppTypography.label),
               onTap: () async {
                 final ok = await ref.read(selectedCityProvider.notifier).useMyLocation();
                 if (context.mounted) {

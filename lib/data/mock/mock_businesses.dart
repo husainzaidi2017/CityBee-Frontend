@@ -6,7 +6,7 @@ const _royalReviews = [
   Review(
     id: 'r1',
     author: 'Priya Sharma',
-    authorMeta: 'LocalGo Pioneer · Level 3',
+    authorMeta: 'CityBee Pioneer · Level 3',
     rating: 5,
     text:
         'Mughlai was rich & authentic. Banquet hall is perfect for functions — '
@@ -16,7 +16,7 @@ const _royalReviews = [
   Review(
     id: 'r2',
     author: 'Aamir Khan',
-    authorMeta: 'LocalGo Explorer',
+    authorMeta: 'CityBee Explorer',
     rating: 4,
     text:
         'Great biryani and kebabs. Weekend dinners get crowded, book ahead. '
@@ -176,7 +176,7 @@ final mockBusinesses = <Business>[
     tagline: 'Dentist · BDS, MDS (Prosthodontics)',
     description:
         'Painless dentistry — cleaning, fillings, braces and implants. '
-        'Walk-ins welcome, first consultation discounted via LocalGo.',
+        'Walk-ins welcome, first consultation discounted via CityBee.',
     images: ['https://picsum.photos/seed/localgo-dental/1000/700'],
     rating: 4.8,
     ratingCount: 490,
@@ -360,5 +360,59 @@ final mockBusinesses = <Business>[
     actionButtons: ['Call', 'Route', 'Book Visit'],
     latitude: 28.8188,
     longitude: 78.7822,
+  ),
+  Business(
+    id: 'wave-cinemas',
+    name: 'Wave Cinemas — City Central',
+    kind: BusinessKind.service,
+    categoryId: 'cinemas',
+    tagline: 'Multiplex · 4 Screens · Dolby Atmos',
+    description:
+        'First-run Hindi & English films on four screens with recliner seating, '
+        'Dolby Atmos sound and an in-house snack bar.',
+    images: ['https://picsum.photos/seed/citybee-cinema-1/1000/700'],
+    rating: 4.4,
+    ratingCount: 920,
+    address: '3rd Floor, City Central Mall, Sambhal Road, Moradabad',
+    area: 'Sambhal Road',
+    distanceKm: 3.6,
+    phone: '+915912401252',
+    whatsapp: '919812345678',
+    openingHours: '10:30 AM – 11:30 PM',
+    isOpen: true,
+    isVerified: true,
+    isPureVeg: false,
+    imageBadges: ['NOW SHOWING'],
+    featureChips: ['Recliner Seats', 'Dolby Atmos', 'Online Booking'],
+    actionButtons: ['Call', 'Route', 'Book Visit'],
+    latitude: 28.8189,
+    longitude: 78.7823,
+  ),
+  Business(
+    id: 'pvr-moradabad',
+    name: 'PVR: Moradabad Central',
+    kind: BusinessKind.service,
+    categoryId: 'cinemas',
+    tagline: 'Multiplex · 3 Screens · 4K Laser',
+    description:
+        'Premium multiplex with 4K laser projection, luxury loungers and a '
+        'gourmet counter. Morning shows from ₹149.',
+    images: ['https://picsum.photos/seed/citybee-cinema-2/1000/700'],
+    rating: 4.6,
+    ratingCount: 1360,
+    address: '2nd Floor, Moradabad Central, Delhi Road, Moradabad',
+    area: 'Delhi Road',
+    distanceKm: 2.2,
+    phone: '+915912401363',
+    whatsapp: '919812345678',
+    openingHours: '9:30 AM – 12:00 AM',
+    isOpen: true,
+    isVerified: true,
+    isPureVeg: false,
+    imageBadges: ['POPULAR'],
+    featureChips: ['4K Laser', 'Luxury Loungers', 'Parking'],
+    actionButtons: ['Call', 'Route', 'Book Visit'],
+    latitude: 28.8465,
+    longitude: 78.7798,
   ),
 ];

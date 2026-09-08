@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/services/share_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_launcher.dart';
 import '../../../core/widgets/app_image.dart';
 import '../../../core/widgets/badges.dart';
 import '../../../core/widgets/buttons.dart';
+import '../../../core/widgets/collapsing_detail_header.dart';
 import '../../../core/widgets/map_preview.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/business.dart';
@@ -65,25 +66,28 @@ class _MissingBusiness extends StatelessWidget {
   }
 }
 
-class BusinessDetailBody extends StatefulWidget {
+class BusinessDetailBody extends ConsumerStatefulWidget {
   const BusinessDetailBody({super.key, required this.business});
 
   final Business business;
 
   @override
-  State<BusinessDetailBody> createState() => _BusinessDetailBodyState();
+  ConsumerState<BusinessDetailBody> createState() => _BusinessDetailBodyState();
 }
 
-class _BusinessDetailBodyState extends State<BusinessDetailBody> {
-  final _photoController = PageController();
+class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
   int _photoIndex = 0;
 
   Business get business => widget.business;
 
-  void _copyCoupon(String code) {
-    Clipboard.setData(ClipboardData(text: code));
+  void _toggleFavorite() {
+    ref.read(favoritesProvider.notifier).toggle(business.id);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Coupon code $code copied — show it at billing!')),
+      SnackBar(
+        content: Text(ref.read(favoritesProvider).contains(business.id)
+            ? 'Added to favorites'
+            : 'Removed from favorites'),
+      ),
     );
   }
 
@@ -91,180 +95,190 @@ class _BusinessDetailBodyState extends State<BusinessDetailBody> {
   Widget build(BuildContext context) {
     final isDoctor = business.kind == BusinessKind.doctor;
     final isHotel = business.kind == BusinessKind.hotel;
+    final isFavorite = ref.watch(favoritesProvider).contains(business.id);
 
     return Column(
       children: [
         Expanded(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              _PhotoCarousel(
-                controller: _photoController,
-                images: business.images,
-                index: _photoIndex,
-                onChanged: (i) => setState(() => _photoIndex = i),
-                badge: business.imageBadges.firstOrNull,
+          child: CustomScrollView(
+            slivers: [
+              // ── Immersive collapsing hero (photos · back · heart · share)
+              CollapsingDetailHeader(
+                title: business.name,
+                image: business.images.first,
+                imageList: business.images,
+                fallbackIcon: Icons.storefront_outlined,
+                isFavorite: isFavorite,
+                onFavoriteTap: _toggleFavorite,
+                onShareTap: () => ShareService.shareBusiness(business),
+                badge: business.imageBadges.firstOrNull != null
+                    ? ImageBadgeRow(
+                        badges: [
+                          if (business.isVerified) 'VERIFIED',
+                          ...business.imageBadges.where((b) => b != 'VERIFIED'),
+                        ],
+                      )
+                    : null,
+                onPageChanged: (i) => setState(() => _photoIndex = i),
+                pageIndex: _photoIndex,
               ),
 
-              // ── Header block ─────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 13, 16, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                sliver: SliverList.list(
                   children: [
-                    Row(
+                    // ── Header block ─────────────────────────────────
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Text(
-                            business.name,
-                            style: AppTypography.headline.copyWith(fontSize: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                business.name,
+                                style: AppTypography.headline.copyWith(fontSize: 20),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        Row(
+                          children: [
+                            if (business.isVerified) const VerifiedBadge(),
+                            const SizedBox(width: 7),
+                            OpenStatusPill(
+                                isOpen: business.isOpen,
+                                closedText: 'Opens at 11:00 AM'),
+                          ],
+                        ),
+                        const SizedBox(height: 7),
+                        Row(
+                          children: [
+                            RatingPill.green(rating: business.ratingLabel),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${business.ratingCountLabel} ratings',
+                              style: AppTypography.label,
+                            ),
+                            const SizedBox(width: 10),
+                            const Icon(Icons.location_on_outlined,
+                                size: 12, color: AppColors.textSecondary),
+                            const SizedBox(width: 2),
+                            Expanded(
+                              child: Text(
+                                '${business.distanceLabel} km · ${business.area}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.label,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          isDoctor
+                              ? '${business.qualification ?? ''} · ${business.experienceYears ?? 0} yrs exp'
+                              : business.tagline,
+                          style: AppTypography.caption.copyWith(
+                            fontSize: 12.5,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 5),
-                    Row(
-                      children: [
-                        if (business.isVerified) const VerifiedBadge(),
-                        const SizedBox(width: 7),
-                        OpenStatusPill(isOpen: business.isOpen, closedText: 'Opens at 11:00 AM'),
-                      ],
+
+                    // ── Action row ───────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.only(top: 13),
+                      child: _ActionRow(business: business),
                     ),
-                    const SizedBox(height: 7),
-                    Row(
-                      children: [
-                        RatingPill.green(rating: business.ratingLabel),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${business.ratingCountLabel} ratings',
-                          style: AppTypography.label,
-                        ),
-                        const SizedBox(width: 10),
-                        const Icon(Icons.location_on_outlined,
-                            size: 12, color: AppColors.textSecondary),
-                        const SizedBox(width: 2),
-                        Text(
-                          '${business.distanceLabel} km · ${business.area}',
-                          style: AppTypography.label,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      isDoctor
-                          ? '${business.qualification ?? ''} · ${business.experienceYears ?? 0} yrs exp'
-                          : business.tagline,
-                      style: AppTypography.caption.copyWith(
-                        fontSize: 12.5,
-                        color: AppColors.textPrimary,
+
+                    // ── Highlights ───────────────────────────────────
+                    if (business.featureChips.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 15),
+                        child: _HighlightsRow(chips: business.featureChips),
+                      ),
+
+                    // ── Doctor / hotel specifics ─────────────────────
+                    if (isDoctor)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 15),
+                        child: _DoctorInfoCard(business: business),
+                      ),
+                    if (isHotel)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 15),
+                        child: _AmenitiesCard(amenities: business.amenities),
+                      ),
+
+                    // ── About ────────────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.only(top: 15),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('About', style: AppTypography.titleSm),
+                          const SizedBox(height: 5),
+                          Text(business.description, style: AppTypography.body),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
 
-              // ── Action row ───────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 13, 16, 0),
-                child: _ActionRow(business: business),
-              ),
+                    // ── Info card ────────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.only(top: 14),
+                      child: _InfoCard(business: business),
+                    ),
 
-              // ── LocalGo deal banner ──────────────────────────────
-              if (business.hasCoupon)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 13, 16, 0),
-                  child: _DealBanner(
-                    code: business.couponCode!,
-                    title: business.couponTitle!,
-                    subtitle: business.couponSubtitle!,
-                    note: business.couponNote,
-                    onCopy: () => _copyCoupon(business.couponCode!),
-                  ),
-                ),
-
-              // ── Highlights ───────────────────────────────────────
-              if (business.featureChips.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
-                  child: _HighlightsRow(chips: business.featureChips),
-                ),
-
-              // ── Doctor / hotel specifics ─────────────────────────
-              if (isDoctor)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
-                  child: _DoctorInfoCard(business: business),
-                ),
-              if (isHotel) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
-                  child: _AmenitiesCard(amenities: business.amenities),
-                ),
-              ],
-
-              // ── About ────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('About', style: AppTypography.titleSm),
-                    const SizedBox(height: 5),
-                    Text(business.description, style: AppTypography.body),
-                  ],
-                ),
-              ),
-
-              // ── Info card ────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                child: _InfoCard(business: business),
-              ),
-
-              // ── Menu specialties ─────────────────────────────────
-              if (business.menu.isNotEmpty) ...[
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 18, 16, 10),
-                  child: _MenuHeader(),
-                ),
-                ...business.menu.map((item) => Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                      child: _MenuItemRow(item: item),
-                    )),
-              ],
-
-              // ── Map ──────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
-                child: _LocationSection(business: business),
-              ),
-
-              // ── Reviews ──────────────────────────────────────────
-              if (business.reviews.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-                  child: Row(
-                    children: [
-                      Text('Reviews', style: AppTypography.titleSm),
-                      const SizedBox(width: 6),
-                      RatingPill.soft(
-                        rating: business.ratingLabel,
-                        count: business.ratingCountLabel,
+                    // ── Menu specialties ─────────────────────────────
+                    if (business.menu.isNotEmpty) ...[
+                      const Padding(
+                        padding: EdgeInsets.only(top: 18, bottom: 10),
+                        child: _MenuHeader(),
                       ),
-                      const Spacer(),
-                      Text(
-                        'View All (${business.reviews.length})',
-                        style: AppTypography.label.copyWith(color: AppColors.primary),
-                      ),
+                      ...business.menu.map((item) => Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: _MenuItemRow(item: item),
+                          )),
                     ],
-                  ),
+
+                    // ── Map ──────────────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8, bottom: 10),
+                      child: _LocationSection(business: business),
+                    ),
+
+                    // ── Reviews ──────────────────────────────────────
+                    if (business.reviews.isNotEmpty) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12, bottom: 10),
+                        child: Row(
+                          children: [
+                            Text('Reviews', style: AppTypography.titleSm),
+                            const SizedBox(width: 6),
+                            RatingPill.soft(
+                              rating: business.ratingLabel,
+                              count: business.ratingCountLabel,
+                            ),
+                            const Spacer(),
+                            Text(
+                              'View All (${business.reviews.length})',
+                              style: AppTypography.label
+                                  .copyWith(color: AppColors.primary),
+                            ),
+                          ],
+                        ),
+                      ),
+                      ...business.reviews.map((review) => Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: _ReviewCard(review: review),
+                          )),
+                    ],
+                    const SizedBox(height: 8),
+                  ],
                 ),
-                ...business.reviews.map((review) => Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                      child: _ReviewCard(review: review),
-                    )),
-              ],
-              const SizedBox(height: 8),
+              ),
             ],
           ),
         ),
@@ -352,124 +366,29 @@ class _BusinessDetailBodyState extends State<BusinessDetailBody> {
   }
 }
 
-/// ── Photo carousel with page dots ──────────────────────────────────────
-class _PhotoCarousel extends StatelessWidget {
-  const _PhotoCarousel({
-    required this.controller,
-    required this.images,
-    required this.index,
-    required this.onChanged,
-    this.badge,
-  });
-
-  final PageController controller;
-  final List<String> images;
-  final int index;
-  final ValueChanged<int> onChanged;
-  final String? badge;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 240,
-      child: Stack(
-        children: [
-          PageView.builder(
-            controller: controller,
-            itemCount: images.length,
-            onPageChanged: onChanged,
-            itemBuilder: (context, i) => AppImage(url: images[i]),
-          ),
-          // Gradient + badges + dots
-          const Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: [0, 0.55, 1],
-                  colors: [Color(0x55000000), Colors.transparent, Color(0x66000000)],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 40,
-            left: 12,
-            child: CircleIconButton(
-              icon: Icons.arrow_back,
-              onTap: () => Navigator.of(context).maybePop(),
-            ),
-          ),
-          Positioned(
-            top: 40,
-            right: 12,
-            child: CircleIconButton(
-              icon: Icons.share_outlined,
-              onTap: () {},
-            ),
-          ),
-          if (badge != null)
-            Positioned(
-              top: 40,
-              left: 60,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                decoration: BoxDecoration(
-                  color: imageBadgeColor(badge!),
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: Text(
-                  badge!,
-                  style: const TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ),
-          if (images.length > 1)
-            Positioned(
-              bottom: 10,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  for (var i = 0; i < images.length; i++)
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: i == index ? 18 : 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: i == index ? Colors.white : Colors.white54,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
 /// ── Action row: Call · WhatsApp · Directions · Website ─────────────────
 class _ActionRow extends StatelessWidget {
   const _ActionRow({required this.business});
 
   final Business business;
 
+  Future<void> _whatsapp(BuildContext context) async {
+    final ok = await AppLauncher.whatsapp(
+      business.whatsapp,
+      message: 'Hi ${business.name}, I found you on CityBee and have a question.',
+    );
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('WhatsApp is not available on this device.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final actions = <_ActionData>[
       _ActionData(Icons.call_outlined, 'Call', () => AppLauncher.call(business.phone)),
-      _ActionData(Icons.chat_bubble_outline_rounded, 'WhatsApp',
-          () => AppLauncher.whatsapp(business.whatsapp)),
+      _ActionData(Icons.chat_bubble_outline_rounded, 'WhatsApp', () => _whatsapp(context)),
       _ActionData(Icons.directions_outlined, 'Directions',
           () => AppLauncher.directions(business.latitude, business.longitude, label: business.name)),
       if (business.website != null)
@@ -542,110 +461,6 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-/// ── LocalGo deal banner ────────────────────────────────────────────────
-class _DealBanner extends StatelessWidget {
-  const _DealBanner({
-    required this.code,
-    required this.title,
-    required this.subtitle,
-    required this.onCopy,
-    this.note,
-  });
-
-  final String code;
-  final String title;
-  final String subtitle;
-  final String? note;
-  final VoidCallback onCopy;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(13),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFF3E8), Color(0xFFFFE8D2)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: const Color(0xFFF7CBA3)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppColors.accent,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.local_offer_rounded, color: Colors.white, size: 21),
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: AppTypography.bodyStrong.copyWith(fontSize: 12.5)),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.label.copyWith(fontSize: 10),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              GestureDetector(
-                onTap: onCopy,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        code,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: 0.4,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.copy_rounded, size: 12, color: Colors.white),
-                    ],
-                  ),
-                ),
-              ),
-              if (note != null) ...[
-                const SizedBox(height: 3),
-                Text(
-                  note!,
-                  style: AppTypography.label.copyWith(
-                    fontSize: 9,
-                    color: AppColors.accent,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 /// ── Highlights chips row ───────────────────────────────────────────────
 class _HighlightsRow extends StatelessWidget {
@@ -850,7 +665,7 @@ class _MenuHeader extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: AppColors.ratingGreenSoft,
+            color: AppColors.verifiedGreenSoft,
             borderRadius: BorderRadius.circular(7),
           ),
           child: const Text(
@@ -858,7 +673,7 @@ class _MenuHeader extends StatelessWidget {
             style: TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.w800,
-              color: AppColors.ratingGreen,
+              color: AppColors.verifiedGreen,
             ),
           ),
         ),
@@ -926,7 +741,10 @@ class _MenuItemRow extends StatelessWidget {
                     Text(item.price, style: AppTypography.bodyStrong),
                     const Spacer(),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text('${item.name} added to your order')),
+                      ),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
                         decoration: BoxDecoration(

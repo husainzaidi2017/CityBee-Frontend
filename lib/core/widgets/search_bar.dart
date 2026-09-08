@@ -8,10 +8,11 @@ import '../theme/app_typography.dart';
 /// Rounded pill search bar used on Home, Offers, Services, Explore and
 /// Listing screens.
 ///
-/// Premium and lightweight: soft surface, hairline border, an extremely
-/// subtle shadow, and an animated focus state (border tint + faint glow
-/// lift) instead of any heavy dark outline. Pass [onTap] for read-only
-/// bars that navigate to search.
+/// Clean and lightweight: white surface on the soft background with a
+/// hairline border — no resting shadow at all. On focus the border tint
+/// shifts to brand orange, the search icon scales up and turns orange, and
+/// an extremely soft orange glow appears. Pass [onTap] for read-only bars
+/// that navigate to search.
 class AppSearchBar extends StatefulWidget {
   const AppSearchBar({
     super.key,
@@ -62,35 +63,48 @@ class _AppSearchBarState extends State<AppSearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = _focused
-        ? AppColors.primary.withValues(alpha: 0.55)
-        : AppColors.border;
     return AnimatedContainer(
-      duration: AppAnimation.fast,
-      curve: Curves.easeOut,
+      duration: AppAnimation.normal,
+      curve: AppAnimation.curve,
       height: 46,
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: borderColor, width: _focused ? 1.4 : 1.1),
-        // Extremely subtle lift on focus — never a dark shadow.
-        boxShadow: [
-          BoxShadow(
-            color: _focused
-                ? AppColors.primary.withValues(alpha: 0.10)
-                : const Color(0x0A0F172A),
-            blurRadius: _focused ? 14 : 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        border: Border.all(
+          color: _focused
+              ? AppColors.primary.withValues(alpha: 0.55)
+              : AppColors.border,
+          width: _focused ? 1.4 : 1.1,
+        ),
+        // Only a whisper of warm glow while focused — never at rest.
+        boxShadow: _focused
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 3),
+                ),
+              ]
+            : null,
       ),
       child: Row(
         children: [
           const SizedBox(width: 14),
-          Icon(
-            Icons.search_rounded,
-            size: 20,
-            color: _focused ? AppColors.primary : AppColors.textMuted,
+          AnimatedScale(
+            scale: _focused ? 1.1 : 1.0,
+            duration: AppAnimation.normal,
+            curve: AppAnimation.releaseCurve,
+            child: AnimatedSwitcher(
+              duration: AppAnimation.fast,
+              transitionBuilder: (child, animation) =>
+                  FadeTransition(opacity: animation, child: child),
+              child: Icon(
+                Icons.search_rounded,
+                key: ValueKey(_focused),
+                size: 20,
+                color: _focused ? AppColors.primary : AppColors.textMuted,
+              ),
+            ),
           ),
           const SizedBox(width: 9),
           Expanded(
@@ -110,8 +124,16 @@ class _AppSearchBarState extends State<AppSearchBar> {
                   fontWeight: FontWeight.w600,
                   color: AppColors.textMuted,
                 ),
+                // Fully opt out of the app-wide InputDecorationTheme — its
+                // outline + fill would draw a second box inside the pill.
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
+                filled: false,
                 isCollapsed: true,
+                contentPadding: EdgeInsets.zero,
               ),
             ),
           ),

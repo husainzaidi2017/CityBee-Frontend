@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_animation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/fade_slide_in.dart';
 import '../../../core/widgets/pressable.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/app_category.dart';
@@ -60,8 +61,10 @@ class AllCategoriesScreen extends ConsumerWidget {
                     childAspectRatio: 1.05,
                   ),
                   itemCount: list.length,
-                  itemBuilder: (context, index) =>
-                      _CategoryTile(category: list[index]),
+                  itemBuilder: (context, index) => FadeSlideIn(
+                    delay: Duration(milliseconds: 30 * index),
+                    child: _CategoryTile(category: list[index]),
+                  ),
                 ),
                 loading: () => StatesView.loading(message: 'Loading categories…'),
                 error: (e, _) => StatesView.error(

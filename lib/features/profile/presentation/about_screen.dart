@@ -16,7 +16,7 @@ class AboutScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final city = ref.watch(selectedCityProvider);
+    final location = ref.watch(selectedLocationProvider);
 
     return SubPageScaffold(
       title: 'About ${AppConfig.appName}',
@@ -64,7 +64,7 @@ class AboutScreen extends ConsumerWidget {
                 Text(
                   'CityBee helps you discover the best of your city — verified local '
                   'businesses, exclusive coupons, trusted doctors, restaurants, hotels '
-                  'and hidden heritage gems. Born in ${city.nickname} (${city.name}), '
+                  'and hidden heritage gems. Born in ${location.state ?? location.displayName} (${location.displayName}), '
                   'we are building one city at a time with local teams who know every lane.',
                   style: AppTypography.body,
                 ),
@@ -133,7 +133,7 @@ class AboutScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           Center(
             child: Text(
-              'CityBee v1.0.0 · Made in ${city.nickname} 💚',
+              'CityBee v1.0.0 · Made in ${location.state ?? location.displayName} 💚',
               style: AppTypography.label.copyWith(fontSize: 9.5),
             ),
           ),

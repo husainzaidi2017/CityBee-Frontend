@@ -1,29 +1,53 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../core/network/api_client.dart';
 import '../core/services/location_service.dart';
 import '../data/repositories/auth_repository.dart';
+import '../data/repositories/auth_repository_supabase.dart';
 import '../data/repositories/business_repository.dart';
 import '../data/repositories/city_repository.dart';
 import '../data/repositories/offer_repository.dart';
 import '../data/repositories/place_repository.dart';
 import '../data/repositories/profile_repository.dart';
 import '../data/repositories/service_repository.dart';
+import '../data/repositories/api/api_business_repository.dart';
+import '../data/repositories/api/api_city_repository.dart';
+import '../data/repositories/api/api_offer_repository.dart';
+import '../data/repositories/api/api_place_repository.dart';
+import '../data/repositories/api/api_profile_repository.dart';
 import '../domain/models/app_category.dart';
+import '../domain/models/app_notification.dart';
 import '../domain/models/business.dart';
+import '../domain/models/citybee_location.dart';
 import '../domain/models/city.dart';
 import '../domain/models/offer.dart';
 import '../domain/models/place.dart';
 import '../domain/models/service_item.dart';
 import '../domain/models/user_profile.dart';
 
-// ── Repositories (swap mock → supabase implementations here) ─────────────
-final cityRepositoryProvider = Provider<CityRepository>((ref) => MockCityRepository());
-final businessRepositoryProvider = Provider<BusinessRepository>((ref) => MockBusinessRepository());
-final offerRepositoryProvider = Provider<OfferRepository>((ref) => MockOfferRepository());
-final placeRepositoryProvider = Provider<PlaceRepository>((ref) => MockPlaceRepository());
+// ── Repositories (API-backed; swap back to mocks for offline dev) ─────────
+final authRepositoryProvider = Provider<AuthRepository>(
+    (ref) => SupabaseAuthRepository());
+final apiClientProvider = Provider<ApiClient>((ref) => ApiClient(
+      tokenProvider: () => ref.read(authRepositoryProvider).accessToken,
+    ));
+final cityRepositoryProvider = Provider<CityRepository>(
+    (ref) => ApiCityRepository(ref.watch(apiClientProvider)));
+final businessRepositoryProvider = Provider<BusinessRepository>(
+    (ref) => ApiBusinessRepository(ref.watch(apiClientProvider)));
+final offerRepositoryProvider = Provider<OfferRepository>(
+    (ref) => ApiOfferRepository(ref.watch(apiClientProvider)));
+final placeRepositoryProvider = Provider<PlaceRepository>(
+    (ref) => ApiPlaceRepository(ref.watch(apiClientProvider)));
 final serviceRepositoryProvider = Provider<ServiceRepository>((ref) => MockServiceRepository());
 final locationServiceProvider = Provider((ref) => const LocationService());
-final authRepositoryProvider = Provider<AuthRepository>((ref) => MockAuthRepository());
+final profileRepositoryProvider = Provider<ProfileRepository>(
+    (ref) => ApiProfileRepository(
+        ref.watch(apiClientProvider), ref.watch(authRepositoryProvider)));
 
 // ── Authentication (guest browsing is always allowed) ────────────────────
 /// Whether the user has an active session. Login is never mandatory —
@@ -53,41 +77,90 @@ class AuthController extends Notifier<bool> {
 
 final authStateProvider = NotifierProvider<AuthController, bool>(AuthController.new);
 
-// ── Cities & selected city ───────────────────────────────────────────────
+// ── Cities (CityBee reference data) & Google location search ─────────────
 final citiesProvider = FutureProvider<List<City>>((ref) async {
   return ref.watch(cityRepositoryProvider).getCities();
 });
 
-/// The currently selected city — every content provider reads this so all
-/// screens react to a city switch.
-class CityController extends Notifier<City> {
+/// Google Places location search (debounced by the caller).
+final citySearchProvider =
+    FutureProvider.autoDispose.family<List<CitySuggestion>, String>((ref, query) async {
+  return ref.watch(cityRepositoryProvider).searchCities(query);
+});
+
+// ── Selected location (single source of truth) ───────────────────────────
+/// The user's selected Google location. Coordinates drive every discovery
+/// provider; the display name drives every header. Selecting a location
+/// NEVER creates a CityBee city — it persists locally (guests) and on the
+/// user profile (signed in).
+class LocationController extends Notifier<CityBeeLocation> {
+  static const _prefsKey = 'citybee.selectedLocation';
+
+  /// First-run default: the city CityBee launched with. Overridden by the
+  /// persisted selection or GPS on first interaction.
+  static const _defaultLocation = CityBeeLocation(
+    displayName: 'Moradabad',
+    state: 'Uttar Pradesh',
+    country: 'India',
+    countryCode: 'IN',
+    latitude: 28.8386,
+    longitude: 78.7733,
+    locality: 'Moradabad',
+  );
+
   @override
-  City build() => ref.watch(citiesProvider).maybeWhen(
-        data: (cities) => cities.first,
-        orElse: () => const City(
-          id: 'moradabad',
-          name: 'Moradabad',
-          state: 'Uttar Pradesh',
-          nickname: 'Peetal Nagri',
-          defaultArea: 'Civil Lines, Moradabad',
-          latitude: 28.8386,
-          longitude: 78.7733,
-        ),
-      );
+  CityBeeLocation build() {
+    _restore();
+    return _defaultLocation;
+  }
 
-  void select(City city) => state = city;
+  Future<void> _restore() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_prefsKey);
+      if (raw == null) return;
+      final location = CityBeeLocation.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+      // Ignore corrupted entries.
+      if (location.displayName.isNotEmpty && location.latitude != 0) {
+        state = location;
+      }
+    } catch (_) {
+      // Corrupt storage → keep the default.
+    }
+  }
 
-  /// Best-effort "use my location": silently keeps the current city when
-  /// permission is denied or no known city is nearby.
+  Future<void> select(CityBeeLocation location) async {
+    if (location.displayName.isEmpty) return;
+    state = location;
+
+    // Local persistence (guests included).
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefsKey, jsonEncode(location.toJson()));
+    } catch (_) {}
+
+    // Backend sync for signed-in users (best effort).
+    final auth = ref.read(authRepositoryProvider);
+    if (!auth.isSignedIn) return;
+    try {
+      await ref
+          .read(apiClientProvider)
+          .patch('/users/me', body: {'selectedLocation': location.toProfilePatch()});
+    } catch (_) {}
+  }
+
+  /// "Use my current location": GPS → reverse geocode via the backend
+  /// (Google) → select. No CityBee city is created.
   Future<bool> useMyLocation() async {
     final service = ref.read(locationServiceProvider);
-    final cities = await ref.read(citiesProvider.future);
     try {
       final position = await service.getCurrentPosition();
       if (position == null) return false;
-      final nearest = service.nearestCity(position, cities);
-      if (nearest == null) return false;
-      state = nearest;
+      final location = await ref
+          .read(cityRepositoryProvider)
+          .reverseGeocode(position.latitude, position.longitude);
+      if (location == null || location.displayName.isEmpty) return false;
+      await select(location);
       return true;
     } catch (_) {
       return false;
@@ -95,27 +168,33 @@ class CityController extends Notifier<City> {
   }
 }
 
-final selectedCityProvider = NotifierProvider<CityController, City>(CityController.new);
+final selectedLocationProvider =
+    NotifierProvider<LocationController, CityBeeLocation>(LocationController.new);
 
-// ── Profile (mock repository until Supabase Auth) ────────────────────────
-final profileRepositoryProvider = Provider<ProfileRepository>((ref) => MockProfileRepository());
-
-/// Editable user profile. [save] persists through the repository so the
-/// Supabase implementation can drop in without UI changes.
+// ── Profile ──────────────────────────────────────────────────────────────
+/// Editable user profile. [save] persists through the repository (API when
+/// signed in; local guest profile otherwise).
 class UserProfileController extends Notifier<UserProfile> {
   @override
-  UserProfile build() => const UserProfile(
-        name: 'Amit Sharma',
-        handle: '@amit.moradabad',
-        email: 'amit.sharma@example.com',
-        phone: '+91 98765 43210',
-        levelTitle: 'Level 3 Pioneer',
-        topPercent: 'Top 5% Saver',
-        savedAmount: '₹2,450',
-        bookmarkCount: 12,
-        reviewsGiven: 5,
-        avatarImage: 'https://picsum.photos/seed/localgo-avatar/200/200',
-      );
+  UserProfile build() {
+    // Hydrate asynchronously from the API when a session exists.
+    final repo = ref.read(profileRepositoryProvider);
+    if (ref.read(authRepositoryProvider).isSignedIn) {
+      repo.getProfile().then((profile) => state = profile);
+    }
+    return const UserProfile(
+      name: 'Amit Sharma',
+      handle: '@amit.moradabad',
+      email: 'amit.sharma@example.com',
+      phone: '+91 98765 43210',
+      levelTitle: 'Level 3 Pioneer',
+      topPercent: 'Top 5% Saver',
+      savedAmount: '₹2,450',
+      bookmarkCount: 12,
+      reviewsGiven: 5,
+      avatarImage: 'https://picsum.photos/seed/localgo-avatar/200/200',
+    );
+  }
 
   Future<void> save(UserProfile profile) async {
     final saved = await ref.read(profileRepositoryProvider).saveProfile(profile);
@@ -129,14 +208,61 @@ final userProfileProvider =
 // ── Favorites ────────────────────────────────────────────────────────────
 /// Bookmarked business ids + saved offer ids in one notifier so the More
 /// screen and favorite hearts stay in sync.
+///
+/// Local-first: the set always updates instantly (guests keep favorites
+/// locally); when signed in, toggles also sync to the backend best-effort
+/// and the set hydrates from GET /favorites on login.
 class FavoritesController extends Notifier<Set<String>> {
   @override
-  Set<String> build() => {};
+  Set<String> build() {
+    final auth = ref.read(authRepositoryProvider);
+    if (auth.isSignedIn) {
+      _hydrate();
+    }
+    return {};
+  }
 
-  void toggle(String id) {
+  Future<void> _hydrate() async {
+    try {
+      final data = await ref.read(apiClientProvider).get('/favorites');
+      if (data is List) {
+        final slugs = data
+            .map((e) {
+              if (e is! Map<String, dynamic>) return null;
+              final business = e['business'] as Map<String, dynamic>?;
+              final place = e['place'] as Map<String, dynamic>?;
+              return business?['id']?.toString() ?? place?['id']?.toString();
+            })
+            .whereType<String>()
+            .toSet();
+        state = slugs;
+      }
+    } catch (_) {
+      // Keep local favorites when the sync fails.
+    }
+  }
+
+  void toggle(String id, {String? uuid, String type = 'business'}) {
     final next = {...state};
-    next.contains(id) ? next.remove(id) : next.add(id);
+    final wasFavorite = next.contains(id);
+    wasFavorite ? next.remove(id) : next.add(id);
     state = next;
+
+    final auth = ref.read(authRepositoryProvider);
+    if (!auth.isSignedIn || uuid == null) return;
+    // Best-effort backend sync; local state stays authoritative on failure.
+    final body = {'${type}Id': uuid};
+    if (wasFavorite) {
+      ref
+          .read(apiClientProvider)
+          .delete('/favorites/by-entity', body: body)
+          .catchError((_) => null);
+    } else {
+      ref
+          .read(apiClientProvider)
+          .post('/favorites', body: body)
+          .catchError((_) => null);
+    }
   }
 
   bool includes(String id) => state.contains(id);
@@ -145,22 +271,30 @@ class FavoritesController extends Notifier<Set<String>> {
 final favoritesProvider =
     NotifierProvider<FavoritesController, Set<String>>(FavoritesController.new);
 
-// ── Catalog content ──────────────────────────────────────────────────────
+// ── Catalog content (coordinate-based; backend expands radius per category) ──
 final categoriesProvider = FutureProvider<List<AppCategory>>((ref) async {
-  ref.watch(selectedCityProvider);
+  ref.watch(selectedLocationProvider);
   return ref.watch(cityRepositoryProvider).getCategories();
 });
 
 final businessesByCategoryProvider =
     FutureProvider.autoDispose.family<List<Business>, String>((ref, categoryId) async {
-  final city = ref.watch(selectedCityProvider);
-  return ref.watch(businessRepositoryProvider).getByCategory(categoryId, cityId: city.id);
+  final location = ref.watch(selectedLocationProvider);
+  return ref.watch(businessRepositoryProvider).getByCategory(
+        categoryId,
+        lat: location.latitude,
+        lng: location.longitude,
+      );
 });
 
 final popularBusinessesProvider = FutureProvider.autoDispose
     .family<List<Business>, PopularFilter>((ref, filter) async {
-  final city = ref.watch(selectedCityProvider);
-  return ref.watch(businessRepositoryProvider).getPopular(cityId: city.id, filter: filter);
+  final location = ref.watch(selectedLocationProvider);
+  return ref.watch(businessRepositoryProvider).getPopular(
+        filter: filter,
+        lat: location.latitude,
+        lng: location.longitude,
+      );
 });
 
 final businessByIdProvider =
@@ -170,13 +304,20 @@ final businessByIdProvider =
 
 final offersByTagProvider =
     FutureProvider.autoDispose.family<List<Offer>, String>((ref, tag) async {
-  final city = ref.watch(selectedCityProvider);
-  return ref.watch(offerRepositoryProvider).getOffers(cityId: city.id, tag: tag);
+  final location = ref.watch(selectedLocationProvider);
+  return ref.watch(offerRepositoryProvider).getOffers(
+        tag: tag,
+        lat: location.latitude,
+        lng: location.longitude,
+      );
 });
 
 final offersCountProvider = FutureProvider<int>((ref) async {
-  final city = ref.watch(selectedCityProvider);
-  return ref.watch(offerRepositoryProvider).countAll(cityId: city.id);
+  final location = ref.watch(selectedLocationProvider);
+  return ref.watch(offerRepositoryProvider).countAll(
+        lat: location.latitude,
+        lng: location.longitude,
+      );
 });
 
 final offerByIdProvider =
@@ -185,8 +326,11 @@ final offerByIdProvider =
 });
 
 final placesProvider = FutureProvider.autoDispose<List<Place>>((ref) async {
-  final city = ref.watch(selectedCityProvider);
-  return ref.watch(placeRepositoryProvider).getPlaces(cityId: city.id);
+  final location = ref.watch(selectedLocationProvider);
+  return ref.watch(placeRepositoryProvider).getPlaces(
+        lat: location.latitude,
+        lng: location.longitude,
+      );
 });
 
 final placeByIdProvider =
@@ -195,39 +339,37 @@ final placeByIdProvider =
 });
 
 final foodsProvider = FutureProvider.autoDispose<List<FoodHighlight>>((ref) async {
-  final city = ref.watch(selectedCityProvider);
-  return ref.watch(placeRepositoryProvider).getFoods(cityId: city.id);
+  return ref.watch(placeRepositoryProvider).getFoods();
 });
 
 final cityGuideProvider = FutureProvider.autoDispose<CityGuide>((ref) async {
-  final city = ref.watch(selectedCityProvider);
-  return ref.watch(placeRepositoryProvider).getGuide(cityId: city.id);
+  return ref.watch(placeRepositoryProvider).getGuide();
 });
 
 final servicesProvider = FutureProvider.autoDispose<List<ServiceItem>>((ref) async {
-  final city = ref.watch(selectedCityProvider);
-  return ref.watch(serviceRepositoryProvider).getServices(cityId: city.id);
+  final location = ref.watch(selectedLocationProvider);
+  return ref.watch(serviceRepositoryProvider).getServices(cityId: location.displayName);
 });
 
 final eventServicesProvider =
     FutureProvider.autoDispose<List<ServiceItem>>((ref) async {
-  final city = ref.watch(selectedCityProvider);
-  return ref.watch(serviceRepositoryProvider).getEventServices(cityId: city.id);
+  final location = ref.watch(selectedLocationProvider);
+  return ref.watch(serviceRepositoryProvider).getEventServices(cityId: location.displayName);
 });
 
 final legalServiceProvider = FutureProvider.autoDispose<ServiceItem>((ref) async {
-  final city = ref.watch(selectedCityProvider);
-  return ref.watch(serviceRepositoryProvider).getLegalService(cityId: city.id);
+  final location = ref.watch(selectedLocationProvider);
+  return ref.watch(serviceRepositoryProvider).getLegalService(cityId: location.displayName);
 });
 
 final helplinesProvider = FutureProvider.autoDispose<List<Helpline>>((ref) async {
-  final city = ref.watch(selectedCityProvider);
-  return ref.watch(serviceRepositoryProvider).getHelplines(cityId: city.id);
+  final location = ref.watch(selectedLocationProvider);
+  return ref.watch(serviceRepositoryProvider).getHelplines(cityId: location.displayName);
 });
 
 final specialistCountProvider = FutureProvider.autoDispose<int>((ref) async {
-  final city = ref.watch(selectedCityProvider);
-  return ref.watch(serviceRepositoryProvider).specialistCount(cityId: city.id);
+  final location = ref.watch(selectedLocationProvider);
+  return ref.watch(serviceRepositoryProvider).specialistCount(cityId: location.displayName);
 });
 
 // ── Search ───────────────────────────────────────────────────────────────
@@ -236,3 +378,46 @@ final searchResultsProvider =
   if (query.trim().isEmpty) return const [];
   return ref.watch(businessRepositoryProvider).search(query);
 });
+
+// ── Notifications (API inbox when signed in) ─────────────────────────────
+final notificationsProvider =
+    FutureProvider.autoDispose<List<AppNotification>>((ref) async {
+  if (!ref.watch(authStateProvider)) return const <AppNotification>[];
+  final data = await ref.watch(apiClientProvider).get('/notifications');
+  if (data is! List) return const <AppNotification>[];
+  return data
+      .map((e) => e is Map<String, dynamic> ? _notification(e) : null)
+      .whereType<AppNotification>()
+      .toList();
+});
+
+AppNotification _notification(Map<String, dynamic> json) {
+  final payloadJson =
+      json['payload'] is Map<String, dynamic> ? json['payload'] as Map<String, dynamic> : const <String, dynamic>{};
+  final payload = NotificationPayload.fromData(payloadJson);
+  final (icon, color) = switch (payload.target) {
+    NotificationTarget.offer => (Icons.local_offer_rounded, 0xFFF4691F),
+    NotificationTarget.business => (Icons.verified, 0xFF0E6B4F),
+    NotificationTarget.place => (Icons.location_on_outlined, 0xFFE23A2E),
+    _ => (Icons.notifications_active_outlined, 0xFF1A73E8),
+  };
+  return AppNotification(
+    id: json['id']?.toString() ?? '',
+    icon: icon,
+    colorValue: color,
+    title: json['title']?.toString() ?? '',
+    body: json['body']?.toString() ?? '',
+    time: _relativeTime(json['createdAt']?.toString()),
+    payload: payload,
+  );
+}
+
+String _relativeTime(String? isoDate) {
+  if (isoDate == null) return '';
+  final date = DateTime.tryParse(isoDate);
+  if (date == null) return '';
+  final diff = DateTime.now().difference(date);
+  if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+  if (diff.inHours < 24) return '${diff.inHours}h ago';
+  return '${diff.inDays}d ago';
+}

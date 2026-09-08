@@ -82,7 +82,9 @@ class _PlaceDetailBody extends ConsumerWidget {
                 fallbackIcon: Icons.photo_camera_outlined,
                 isFavorite: isSaved,
                 onFavoriteTap: () {
-                  ref.read(favoritesProvider.notifier).toggle(place.id);
+                  ref
+                      .read(favoritesProvider.notifier)
+                      .toggle(place.id, uuid: place.uuid, type: 'place');
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(

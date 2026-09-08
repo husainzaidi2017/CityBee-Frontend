@@ -35,7 +35,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final city = ref.watch(selectedCityProvider);
+    final location = ref.watch(selectedLocationProvider);
     final categories = ref.watch(categoriesProvider);
     final offers = ref.watch(offersByTagProvider('All'));
     final popular = ref.watch(popularBusinessesProvider(_popularFilter));
@@ -57,7 +57,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                     child: AppSearchBar(
-                      hint: 'Search anything in ${city.name}…',
+                      hint: 'Search anything in ${location.displayName}…',
                       readOnly: true,
                       onTap: () => context.push('/search'),
                     ),
@@ -184,7 +184,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                         child: SectionHeader(
-                          title: 'Explore ${city.name}',
+                          title: 'Explore ${location.displayName}',
                           trailingLabel: 'See All >',
                           onTrailingTap: () => context.go('/explore'),
                         ),
@@ -212,7 +212,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 4),
                   Center(
                     child: Text(
-                      'CityBee · Made in ${city.name} 💚',
+                      'CityBee · Made in ${location.displayName} 💚',
                       style: AppTypography.label.copyWith(fontSize: 9.5),
                     ),
                   ),

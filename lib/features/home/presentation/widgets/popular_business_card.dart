@@ -39,7 +39,7 @@ class PopularBusinessCard extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: AppImage(url: business.images.first, width: 92, height: 92),
+                    child: AppImage(url: business.images.firstOrNull ?? '', width: 92, height: 92),
                   ),
                   Positioned(
                     bottom: 4,
@@ -77,7 +77,7 @@ class PopularBusinessCard extends StatelessWidget {
                       const SizedBox(width: 2),
                       Expanded(
                         child: Text(
-                          '${business.area} · ${business.distanceLabel} km',
+                          '${business.area.isEmpty ? business.cityName : business.area} · ${business.distanceLabel} km',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.label.copyWith(fontSize: 10.5),

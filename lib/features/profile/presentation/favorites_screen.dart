@@ -117,7 +117,7 @@ class _FavoriteBusinessTile extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: AppImage(url: business.images.first, width: 56, height: 56),
+              child: AppImage(url: business.images.firstOrNull ?? '', width: 56, height: 56),
             ),
             const SizedBox(width: 11),
             Expanded(

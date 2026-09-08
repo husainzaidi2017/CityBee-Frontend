@@ -4,7 +4,7 @@ enum OtpChannel { sms, whatsapp }
 /// Contract for authentication.
 ///
 /// The mock implementation simulates flows in memory; the Supabase
-/// implementation will map 1:1 onto `signInWithOtp` / `verifyOtp` /
+/// implementation maps 1:1 onto `signInWithOtp` / `verifyOtp` /
 /// `signOut` without any UI changes.
 abstract class AuthRepository {
   /// Sends a one-time password to [phone] (E.164 digits only, e.g.
@@ -23,6 +23,9 @@ abstract class AuthRepository {
 
   /// Whether a session is currently active.
   bool get isSignedIn;
+
+  /// Current access token for API calls (null when browsing as guest).
+  String? get accessToken => null;
 }
 
 /// Authentication failures with user-friendly messages.
@@ -36,6 +39,9 @@ class MockAuthRepository implements AuthRepository {
   static const _demoOtp = '123456';
 
   bool _signedIn = false;
+
+  @override
+  String? get accessToken => null;
 
   @override
   Future<void> sendOtp(String phone, {OtpChannel channel = OtpChannel.sms}) async {

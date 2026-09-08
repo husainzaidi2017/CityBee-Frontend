@@ -19,7 +19,7 @@ class LocationAppBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final city = ref.watch(selectedCityProvider);
+    final location = ref.watch(selectedLocationProvider);
 
     return Material(
       color: AppColors.surface,
@@ -52,7 +52,7 @@ class LocationAppBar extends ConsumerWidget {
                             child: ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 130),
                               child: Text(
-                                city.name,
+                                location.displayName,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: AppTypography.bodyStrong.copyWith(fontSize: 13),
@@ -66,7 +66,7 @@ class LocationAppBar extends ConsumerWidget {
                       ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 150),
                         child: Text(
-                          city.defaultArea,
+                          location.locality ?? location.subtitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.label.copyWith(fontSize: 10),

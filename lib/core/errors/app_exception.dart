@@ -30,3 +30,9 @@ final class NotFoundException extends AppException {
   const NotFoundException([Object? cause])
       : super('This listing is no longer available.', cause);
 }
+
+/// API request rejected (validation, auth, duplicate, …) with a
+/// server-provided, user-safe message.
+final class AppExceptionWithMessage extends AppException {
+  const AppExceptionWithMessage(super.userMessage);
+}

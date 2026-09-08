@@ -24,6 +24,7 @@ class Business {
     required this.ratingCount,
     required this.address,
     required this.area,
+    this.cityName = '',
     required this.distanceKm,
     required this.phone,
     required this.whatsapp,
@@ -37,6 +38,7 @@ class Business {
     required this.actionButtons,
     required this.latitude,
     required this.longitude,
+    this.distanceMeters,
     this.menu = const [],
     this.reviews = const [],
     this.couponCode,
@@ -52,9 +54,13 @@ class Business {
     this.amenities = const [],
     // Display-only price summary, e.g. "₹1,400–₹2,800 / night".
     this.priceText,
+    // Backend database id (null for purely local/mock entries). Public id
+    // [id] is the stable slug used by routes and favorites.
+    this.uuid,
   });
 
   final String id;
+  final String? uuid;
   final String name;
   final BusinessKind kind;
   final String categoryId;
@@ -67,6 +73,13 @@ class Business {
   final int ratingCount;
   final String address;
   final String area;
+
+  /// Actual CityBee city of the business (e.g. "Hubli") — distinct from the
+  /// user's selected location; displayed with distance for honesty.
+  final String cityName;
+
+  /// Distance in meters from the selected location (backend-computed).
+  final int? distanceMeters;
 
   /// Distance from the user's selected location, in kilometres.
   final double distanceKm;

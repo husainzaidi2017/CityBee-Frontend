@@ -19,7 +19,7 @@ class ServicesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final city = ref.watch(selectedCityProvider);
+    final location = ref.watch(selectedLocationProvider);
     final helplines = ref.watch(helplinesProvider);
     final services = ref.watch(servicesProvider);
     final events = ref.watch(eventServicesProvider);
@@ -39,7 +39,7 @@ class ServicesScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${city.name} Services Hub',
+                  Text('${location.displayName} Services Hub',
                       style: AppTypography.headline),
                   const SizedBox(height: 3),
                   Text(

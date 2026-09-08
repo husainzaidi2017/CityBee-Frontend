@@ -37,6 +37,15 @@ dependencies:
   # Formatting
   intl: ^0.20.2
 
+  # Backend API access
+  http: ^1.2.2
+
+  # Local persistence (selected location, guest state)
+  shared_preferences: ^2.3.2
+
+  # Authentication (Supabase Auth: OTP, Google OAuth)
+  supabase_flutter: ^2.8.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

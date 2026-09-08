@@ -25,7 +25,7 @@ class MoreScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(userProfileProvider);
-    final city = ref.watch(selectedCityProvider);
+    final location = ref.watch(selectedLocationProvider);
     final isLoggedIn = ref.watch(authStateProvider);
     final favorites = ref.watch(favoritesProvider);
     final bookmarkCount =
@@ -69,7 +69,7 @@ class MoreScreen extends ConsumerWidget {
                   iconColor: AppColors.primary,
                   iconBg: AppColors.primarySoft,
                   label: 'Change City',
-                  value: '${city.name}, ${city.state}',
+                  value: '${location.displayName}, ${location.state ?? ""}',
                   onTap: () => showCityPickerSheet(context),
                 ),
                 _MenuTile(
@@ -85,8 +85,8 @@ class MoreScreen extends ConsumerWidget {
                   iconColor: AppColors.catHotel,
                   iconBg: AppColors.catHotelSoft,
                   label: 'Download City Map',
-                  value: 'Offline map of ${city.name}',
-                  onTap: () => _showMapDownloadSheet(context, city.name),
+                  value: 'Offline map of ${location.displayName}',
+                  onTap: () => _showMapDownloadSheet(context, location.displayName),
                 ),
                 _MenuTile(
                   icon: Icons.settings_outlined,
@@ -178,7 +178,7 @@ class MoreScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             Center(
               child: Text(
-                'CityBee v1.0.0 · Made in ${city.nickname} 💚',
+                'CityBee v1.0.0 · Made in ${location.state ?? location.displayName} 💚',
                 style: AppTypography.label.copyWith(fontSize: 9.5),
               ),
             ),

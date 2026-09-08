@@ -55,7 +55,7 @@ class _OffersScreenState extends ConsumerState<OffersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final city = ref.watch(selectedCityProvider);
+    final location = ref.watch(selectedLocationProvider);
 
     return ColoredBox(
       color: AppColors.background,
@@ -106,7 +106,7 @@ class _OffersScreenState extends ConsumerState<OffersScreen> {
                 itemBuilder: (context, index) => _OffersPage(
                   key: ValueKey(_tags[index]),
                   tag: _tags[index],
-                  cityName: city.name,
+                  cityName: location.displayName,
                   query: _query,
                   onErrorRetry: () => ref.invalidate(offersByTagProvider(_tags[index])),
                 ),
@@ -301,7 +301,7 @@ class FeaturedOfferCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${offer.area} · ${offer.distanceText} · ${offer.validityText}',
+                          '${offer.area.isEmpty ? offer.cityName : offer.area} · ${offer.distanceText} · ${offer.validityText}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.label,
@@ -415,7 +415,7 @@ class DealCard extends StatelessWidget {
                       const SizedBox(width: 2),
                       Expanded(
                         child: Text(
-                          '${offer.area} · ${offer.distanceText}',
+                          '${offer.area.isEmpty ? offer.cityName : offer.area} · ${offer.distanceText}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.label.copyWith(fontSize: 10),
@@ -478,7 +478,7 @@ class SavingsBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final city = ref.watch(selectedCityProvider);
+    final location = ref.watch(selectedLocationProvider);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -504,7 +504,7 @@ class SavingsBanner extends ConsumerWidget {
               ),
               const SizedBox(width: 5),
               Text(
-                '${city.name} Saved',
+                '${location.displayName} Saved',
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,

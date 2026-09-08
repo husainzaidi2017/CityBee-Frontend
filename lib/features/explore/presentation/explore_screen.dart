@@ -20,7 +20,7 @@ class ExploreScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final city = ref.watch(selectedCityProvider);
+    final location = ref.watch(selectedLocationProvider);
     final places = ref.watch(placesProvider);
     final foods = ref.watch(foodsProvider);
     final guide = ref.watch(cityGuideProvider);
@@ -37,10 +37,10 @@ class ExploreScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Explore ${city.name}', style: AppTypography.headline),
+                  Text('Explore ${location.displayName}', style: AppTypography.headline),
                   const SizedBox(height: 3),
                   Text(
-                    'Your guide to ${city.nickname} — brass, food & heritage',
+                    'Your guide to ${location.state ?? location.displayName} — brass, food & heritage',
                     style: AppTypography.caption,
                   ),
                 ],

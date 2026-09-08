@@ -81,7 +81,9 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
   Business get business => widget.business;
 
   void _toggleFavorite() {
-    ref.read(favoritesProvider.notifier).toggle(business.id);
+    ref
+        .read(favoritesProvider.notifier)
+        .toggle(business.id, uuid: business.uuid);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(ref.read(favoritesProvider).contains(business.id)
@@ -105,7 +107,7 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
               // ── Immersive collapsing hero (photos · back · heart · share)
               CollapsingDetailHeader(
                 title: business.name,
-                image: business.images.first,
+                image: business.images.firstOrNull ?? '',
                 imageList: business.images,
                 fallbackIcon: Icons.storefront_outlined,
                 isFavorite: isFavorite,

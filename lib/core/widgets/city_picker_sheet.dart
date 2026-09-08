@@ -1,13 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/models/city.dart';
+import '../../domain/models/citybee_location.dart';
+import '../../data/repositories/city_repository.dart';
 import '../../providers/app_providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
-/// Bottom sheet for switching the active city. All content providers
-/// re-scope automatically when the selection changes.
+/// Bottom sheet for choosing the discovery location.
+///
+/// Primary flow: Google Places search (anywhere worldwide) → tap a
+/// suggestion → resolve → selected. Selecting a location NEVER creates a
+/// CityBee city; the `cities` list below is CityBee reference data
+/// ("Popular on CityBee") loaded from the backend.
 Future<void> showCityPickerSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
@@ -16,13 +24,75 @@ Future<void> showCityPickerSheet(BuildContext context) {
   );
 }
 
-class _CityPickerSheet extends ConsumerWidget {
+class _CityPickerSheet extends ConsumerStatefulWidget {
   const _CityPickerSheet();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final cities = ref.watch(citiesProvider);
-    final selected = ref.watch(selectedCityProvider);
+  ConsumerState<_CityPickerSheet> createState() => _CityPickerSheetState();
+}
+
+class _CityPickerSheetState extends ConsumerState<_CityPickerSheet> {
+  final _searchController = TextEditingController();
+  Timer? _debounce;
+  String _query = '';
+  String? _resolving;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      if (mounted) setState(() => _query = value.trim());
+    });
+  }
+
+  Future<void> _selectSuggestion(CitySuggestion suggestion) async {
+    setState(() => _resolving = suggestion.placeId);
+    try {
+      final location =
+          await ref.read(cityRepositoryProvider).resolveLocation(suggestion.placeId);
+      if (!mounted) return;
+      if (location != null && location.displayName.isNotEmpty) {
+        await ref.read(selectedLocationProvider.notifier).select(location);
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Now exploring ${location.displayName}')),
+          );
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _resolving = null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not select that location. Try again.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _selectCityBeeCity(City city) async {
+    // A CityBee city row already exists — build a location from it.
+    await ref.read(selectedLocationProvider.notifier).select(CityBeeLocation(
+          displayName: city.name,
+          state: city.state,
+          latitude: city.latitude,
+          longitude: city.longitude,
+          locality: city.name,
+        ));
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = ref.watch(selectedLocationProvider);
+    final searching = _query.length >= 2;
+    final suggestions = searching ? ref.watch(citySearchProvider(_query)) : null;
 
     return SafeArea(
       child: Padding(
@@ -31,65 +101,110 @@ class _CityPickerSheet extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Choose your city', style: AppTypography.title),
+            Text('Choose your location', style: AppTypography.title),
             const SizedBox(height: 4),
-            Text('Offers, businesses and places update instantly.',
+            Text('Results around your location, anywhere in the world.',
                 style: AppTypography.caption),
-            const SizedBox(height: 16),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.primarySoft,
+            const SizedBox(height: 14),
+            TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'Search city, area or locality…',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.border),
                 ),
-                child: const Icon(Icons.my_location, color: AppColors.primary, size: 20),
-              ),
-              title: Text('Use my current location', style: AppTypography.bodyStrong),
-              subtitle: Text('Detects the nearest CityBee city', style: AppTypography.label),
-              onTap: () async {
-                final ok = await ref.read(selectedCityProvider.notifier).useMyLocation();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(ok
-                        ? 'Location updated'
-                        : 'Location unavailable — pick a city manually'),
-                  ));
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-            const Divider(),
-            cities.when(
-              data: (list) => Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: list.length,
-                  itemBuilder: (_, index) {
-                    final city = list[index];
-                    return _CityTile(
-                      city: city,
-                      selected: city.id == selected.id,
-                      onTap: () {
-                        ref.read(selectedCityProvider.notifier).select(city);
-                        Navigator.of(context).pop();
-                      },
-                    );
-                  },
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.border),
                 ),
               ),
-              loading: () => const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-              ),
-              error: (_, __) => const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('Could not load cities. Check your connection.',
-                    style: AppTypography.caption),
-              ),
             ),
+            const SizedBox(height: 10),
+            if (searching)
+              Flexible(
+                child: suggestions == null
+                    ? const SizedBox.shrink()
+                    : suggestions.when(
+                        data: (list) => list.isEmpty
+                            ? const Padding(
+                                padding: EdgeInsets.all(12),
+                                child: Text('No locations found. Try another spelling.',
+                                    style: AppTypography.caption),
+                              )
+                            : ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: list.length,
+                                itemBuilder: (_, index) {
+                                  final s = list[index];
+                                  final busy = _resolving == s.placeId;
+                                  return ListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    dense: true,
+                                    leading: const Icon(Icons.location_on_outlined,
+                                        size: 20, color: AppColors.primary),
+                                    title: Text(s.mainText, style: AppTypography.bodyStrong),
+                                    subtitle:
+                                        Text(s.secondaryText, style: AppTypography.label),
+                                    trailing: busy
+                                        ? const SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(strokeWidth: 2),
+                                          )
+                                        : const Icon(Icons.chevron_right,
+                                            size: 20, color: AppColors.textMuted),
+                                    onTap: busy ? null : () => _selectSuggestion(s),
+                                  );
+                                },
+                              ),
+                        loading: () => const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        ),
+                        error: (_, __) => const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Text('Search unavailable right now. Try again in a moment.',
+                              style: AppTypography.caption),
+                        ),
+                      ),
+              )
+            else ...[
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primarySoft,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.my_location, color: AppColors.primary, size: 20),
+                ),
+                title: Text('Use my current location', style: AppTypography.bodyStrong),
+                subtitle:
+                    Text('Detects your area via GPS', style: AppTypography.label),
+                onTap: () async {
+                  final ok = await ref.read(selectedLocationProvider.notifier).useMyLocation();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(ok
+                          ? 'Using your current location'
+                          : 'Location unavailable — search for a place instead'),
+                    ));
+                    if (ok) Navigator.of(context).pop();
+                  }
+                },
+              ),
+              const Divider(),
+              _PopularCityTiles(
+                selectedName: selected.displayName,
+                onSelect: _selectCityBeeCity,
+              ),
+            ],
           ],
         ),
       ),
@@ -97,33 +212,70 @@ class _CityPickerSheet extends ConsumerWidget {
   }
 }
 
-class _CityTile extends StatelessWidget {
-  const _CityTile({required this.city, required this.selected, required this.onTap});
+/// CityBee cities with real content — dynamic from the backend, never a
+/// hardcoded Flutter list.
+class _PopularCityTiles extends ConsumerWidget {
+  const _PopularCityTiles({required this.selectedName, required this.onSelect});
 
-  final City city;
-  final bool selected;
-  final VoidCallback onTap;
+  final String selectedName;
+  final Future<void> Function(City city) onSelect;
 
   @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.background,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(Icons.location_city_outlined,
-            color: selected ? Colors.white : AppColors.textSecondary, size: 20),
-      ),
-      title: Text('${city.name}, ${city.state}', style: AppTypography.bodyStrong),
-      subtitle: Text(city.nickname, style: AppTypography.label),
-      trailing: selected
-          ? const Icon(Icons.check_circle, color: AppColors.primary, size: 20)
-          : const Icon(Icons.chevron_right, color: AppColors.textMuted),
-      onTap: onTap,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cities = ref.watch(citiesProvider);
+
+    return cities.when(
+      data: (list) {
+        // Only cities that actually have CityBee content are "popular".
+        final popular = list.where((c) => c.hasContent).toList();
+        if (popular.isEmpty) return const SizedBox.shrink();
+        return Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text('Popular on CityBee', style: AppTypography.label),
+              ),
+              ListView.builder(
+                shrinkWrap: true,
+                itemCount: popular.length,
+                itemBuilder: (_, index) {
+                  final city = popular[index];
+                  final selected = city.name == selectedName;
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: selected ? AppColors.primary : AppColors.background,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.location_city_outlined,
+                          color: selected ? Colors.white : AppColors.textSecondary,
+                          size: 20),
+                    ),
+                    title: Text('${city.name}, ${city.state}',
+                        style: AppTypography.bodyStrong),
+                    subtitle: Text(city.nickname, style: AppTypography.label),
+                    trailing: selected
+                        ? const Icon(Icons.check_circle,
+                            color: AppColors.primary, size: 20)
+                        : const Icon(Icons.chevron_right,
+                            color: AppColors.textMuted, size: 20),
+                    onTap: () => onSelect(city),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

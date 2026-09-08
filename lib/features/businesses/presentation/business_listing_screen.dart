@@ -50,7 +50,7 @@ class _BusinessListingScreenState extends ConsumerState<BusinessListingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final city = ref.watch(selectedCityProvider);
+    final location = ref.watch(selectedLocationProvider);
     final categories = ref.watch(categoriesProvider);
     final category = categories.valueOrNull
         ?.where((c) => c.id == widget.categoryId)
@@ -207,7 +207,7 @@ class _BusinessListingScreenState extends ConsumerState<BusinessListingScreen> {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                         child: Text(
-                          '${city.name} · ${sorted.length} places',
+                          '${location.displayName} · ${sorted.length} places',
                           style: AppTypography.caption,
                         ),
                       ),

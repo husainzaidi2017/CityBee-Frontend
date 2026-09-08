@@ -14,12 +14,17 @@ class Offer {
     required this.rating,
     required this.area,
     required this.distanceText,
+    this.cityName = '',
     this.remainingText,
     this.leftCount,
     this.featured = false,
+    this.uuid,
   });
 
   final String id;
+
+  /// Backend database id (null for mock entries).
+  final String? uuid;
 
   /// The business this offer belongs to (may be absent for mock entries).
   final String businessId;
@@ -39,6 +44,10 @@ class Offer {
   final String categoryTag;
   final double rating;
   final String area;
+
+  /// Actual CityBee city of the offering business (display honesty:
+  /// "Hubli • 42 km" when the user selected a smaller town).
+  final String cityName;
   final String distanceText;
   final String? remainingText;
   final int? leftCount;

@@ -9,11 +9,16 @@ class Place {
     required this.ratingText,
     required this.tags,
     this.address = '',
+    this.cityName = '',
     this.timings = '',
     this.entryFee = '',
+    this.uuid,
   });
 
   final String id;
+
+  /// Backend database id (null for mock entries).
+  final String? uuid;
   final String name;
   final String image;
 
@@ -25,6 +30,9 @@ class Place {
   final String ratingText;
   final List<String> tags;
   final String address;
+
+  /// Actual CityBee city of the place (display honesty: "Hubli • 42 km").
+  final String cityName;
   final String timings;
   final String entryFee;
 }

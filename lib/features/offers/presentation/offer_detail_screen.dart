@@ -276,7 +276,7 @@ class _BusinessBlock extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: AppImage(url: business.images.first, width: 54, height: 54),
+                child: AppImage(url: business.images.firstOrNull ?? '', width: 54, height: 54),
               ),
               const SizedBox(width: 11),
               Expanded(

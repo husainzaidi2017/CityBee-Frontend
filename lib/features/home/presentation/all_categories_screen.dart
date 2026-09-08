@@ -22,7 +22,7 @@ class AllCategoriesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categories = ref.watch(categoriesProvider);
-    final city = ref.watch(selectedCityProvider);
+    final location = ref.watch(selectedLocationProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -46,7 +46,7 @@ class AllCategoriesScreen extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
               child: Text(
-                'Everything to explore in ${city.name}',
+                'Everything to explore in ${location.displayName}',
                 style: AppTypography.caption,
               ),
             ),

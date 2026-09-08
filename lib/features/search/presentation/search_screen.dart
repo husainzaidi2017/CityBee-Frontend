@@ -187,7 +187,7 @@ class _SearchResultTile extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: AppImage(url: business.images.first, width: 58, height: 58),
+              child: AppImage(url: business.images.firstOrNull ?? '', width: 58, height: 58),
             ),
             const SizedBox(width: 11),
             Expanded(
@@ -217,7 +217,7 @@ class _SearchResultTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    '${business.area} · ${business.distanceLabel} km',
+                    '${business.area.isEmpty ? business.cityName : business.area} · ${business.distanceLabel} km',
                     style: AppTypography.label.copyWith(fontSize: 10),
                   ),
                 ],

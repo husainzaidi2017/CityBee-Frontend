@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/models/app_notification.dart';
+import '../../providers/app_providers.dart';
 import '../services/notification_navigator.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
-const _mockNotifications = <AppNotification>[
+/// Demo rows shown to guests (login is optional) — mirrors the broadcast
+/// notifications seeded in the backend.
+const _guestNotifications = <AppNotification>[
   AppNotification(
     id: 'n1',
     icon: Icons.local_offer_rounded,
@@ -37,10 +41,26 @@ const _mockNotifications = <AppNotification>[
 
 /// Notification inbox sheet behind the bell icon. Every row carries a
 /// deep-link payload and navigates to its own destination on tap.
+///
+/// Signed-in users see their API inbox; guests see the demo rows.
 Future<void> showNotificationsSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
-    builder: (_) => SafeArea(
+    builder: (_) => const _NotificationsSheet(),
+  );
+}
+
+class _NotificationsSheet extends ConsumerWidget {
+  const _NotificationsSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final signedIn = ref.watch(authStateProvider);
+    final notifications =
+        signedIn ? ref.watch(notificationsProvider) : const AsyncValue<List<AppNotification>>.data(_guestNotifications);
+    final rows = notifications.valueOrNull ?? _guestNotifications;
+
+    return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         child: Column(
@@ -49,18 +69,24 @@ Future<void> showNotificationsSheet(BuildContext context) {
           children: [
             Text('Notifications', style: AppTypography.title),
             const SizedBox(height: 12),
-            ..._mockNotifications.map(
-              (n) => _NotificationRow(
-                notification: n,
-                onTap: () =>
-                    NotificationNavigator.handleNotificationTap(context, n.payload),
+            if (rows.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text('You are all caught up.', style: AppTypography.caption),
+              )
+            else
+              ...rows.map(
+                (n) => _NotificationRow(
+                  notification: n,
+                  onTap: () =>
+                      NotificationNavigator.handleNotificationTap(context, n.payload),
+                ),
               ),
-            ),
           ],
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _NotificationRow extends StatelessWidget {

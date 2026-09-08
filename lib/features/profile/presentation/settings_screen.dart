@@ -25,7 +25,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final city = ref.watch(selectedCityProvider);
+    final location = ref.watch(selectedLocationProvider);
 
     return SubPageScaffold(
       title: 'Settings',
@@ -73,7 +73,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   bg: AppColors.primarySoft,
                 ),
                 title: Text('Current City', style: AppTypography.bodyStrong),
-                subtitle: Text('${city.name}, ${city.state}',
+                subtitle: Text('${location.displayName}, ${location.state ?? ""}',
                     style: AppTypography.label.copyWith(fontSize: 10)),
                 trailing: const Icon(Icons.chevron_right_rounded,
                     size: 19, color: AppColors.textMuted),

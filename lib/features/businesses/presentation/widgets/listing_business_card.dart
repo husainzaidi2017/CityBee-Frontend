@@ -40,7 +40,7 @@ class ListingBusinessCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  AppImage(url: business.images.first),
+                  AppImage(url: business.images.firstOrNull ?? ''),
                   Positioned(
                     top: 9,
                     left: 10,

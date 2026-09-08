@@ -1,5 +1,3 @@
-import 'mock_data.dart';
-
 import '../../domain/models/menu_item.dart';
 import '../../domain/models/business.dart';
 import '../../domain/models/review.dart';

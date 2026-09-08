@@ -1,5 +1,5 @@
-import '../domain/models/place.dart';
-import 'mock/mock_places.dart';
+import '../../domain/models/place.dart';
+import '../mock/mock_places.dart';
 
 /// Contract for Explore content (places, food, guides, tips).
 abstract class PlaceRepository {

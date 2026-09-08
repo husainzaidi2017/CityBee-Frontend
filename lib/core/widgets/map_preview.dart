@@ -22,7 +22,10 @@ class MapPreview extends StatelessWidget {
 
   final double latitude;
   final double longitude;
-  final double height;
+
+  /// Fixed height. Pass null to expand within the parent (e.g. inside a
+  /// `Positioned.fill` on the listing map page).
+  final double? height;
   final String? pinLabel;
 
   /// Renders the "Open Map ↗" pill overlay.
@@ -30,82 +33,85 @@ class MapPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: SizedBox(
-        height: height,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            CustomPaint(
-              painter: _StylizedMapPainter(seed: latitude + longitude),
-            ),
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.location_on, color: AppColors.brandRed, size: 34),
-                  if (pinLabel != null)
-                    Container(
-                      margin: const EdgeInsets.only(top: 2),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: const [
-                          BoxShadow(color: Color(0x22000000), blurRadius: 8),
-                        ],
-                      ),
-                      child: Text(
-                        pinLabel!,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            if (showOpenMap)
-              Positioned(
-                right: 10,
-                bottom: 10,
-                child: GestureDetector(
-                  onTap: () => AppLauncher.directions(latitude, longitude, label: pinLabel),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(999),
-                      boxShadow: const [
-                        BoxShadow(color: Color(0x2E000000), blurRadius: 10, offset: Offset(0, 3)),
-                      ],
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.map_outlined, size: 14, color: AppColors.primary),
-                        SizedBox(width: 5),
-                        Text(
-                          'Open Map',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        SizedBox(width: 3),
-                        Icon(Icons.open_in_new, size: 11, color: AppColors.primary),
-                      ],
+    Widget content = Stack(
+      fit: StackFit.expand,
+      children: [
+        CustomPaint(
+          painter: _StylizedMapPainter(seed: latitude + longitude),
+        ),
+        Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.location_on, color: AppColors.brandRed, size: 34),
+              if (pinLabel != null)
+                Container(
+                  margin: const EdgeInsets.only(top: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(999),
+                    boxShadow: const [
+                      BoxShadow(color: Color(0x22000000), blurRadius: 8),
+                    ],
+                  ),
+                  child: Text(
+                    pinLabel!,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
-      ),
+        if (showOpenMap)
+          Positioned(
+            right: 10,
+            bottom: 10,
+            child: GestureDetector(
+              onTap: () => AppLauncher.directions(latitude, longitude, label: pinLabel),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x2E000000), blurRadius: 10, offset: Offset(0, 3)),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.map_outlined, size: 14, color: AppColors.primary),
+                    SizedBox(width: 5),
+                    Text(
+                      'Open Map',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    SizedBox(width: 3),
+                    Icon(Icons.open_in_new, size: 11, color: AppColors.primary),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+
+    Widget sized = height == null
+        ? SizedBox.expand(child: content)
+        : SizedBox(height: height, child: content);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: sized,
     );
   }
 }

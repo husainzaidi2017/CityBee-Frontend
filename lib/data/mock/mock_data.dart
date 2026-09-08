@@ -1,6 +1,5 @@
 import '../../domain/models/app_category.dart';
 import '../../domain/models/city.dart';
-import '../../domain/models/service_item.dart';
 import '../../domain/models/user_profile.dart';
 
 /// Deterministic placeholder image URLs for the mock-data phase.

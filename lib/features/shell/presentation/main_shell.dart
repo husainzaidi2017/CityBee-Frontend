@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
 
 /// Root scaffold with the persistent 5-tab bottom navigation:
 /// Home · Offers · Services · Explore · More.

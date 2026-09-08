@@ -1,5 +1,5 @@
-import '../domain/models/service_item.dart';
-import 'mock/mock_services.dart';
+import '../../domain/models/service_item.dart';
+import '../mock/mock_services.dart';
 
 /// Contract for the Services hub.
 abstract class ServiceRepository {

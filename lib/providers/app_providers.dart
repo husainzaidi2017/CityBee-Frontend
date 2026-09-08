@@ -88,7 +88,9 @@ class FavoritesController extends Notifier<Set<String>> {
   Set<String> build() => {};
 
   void toggle(String id) {
-    state = state.contains(id) ? {...state}..remove(id) : {...state, id};
+    final next = {...state};
+    next.contains(id) ? next.remove(id) : next.add(id);
+    state = next;
   }
 
   bool includes(String id) => state.contains(id);
@@ -180,4 +182,11 @@ final helplinesProvider = FutureProvider.autoDispose<List<Helpline>>((ref) async
 final specialistCountProvider = FutureProvider.autoDispose<int>((ref) async {
   final city = ref.watch(selectedCityProvider);
   return ref.watch(serviceRepositoryProvider).specialistCount(cityId: city.id);
+});
+
+// ── Search ───────────────────────────────────────────────────────────────
+final searchResultsProvider =
+    FutureProvider.autoDispose.family<List<Business>, String>((ref, query) async {
+  if (query.trim().isEmpty) return const [];
+  return ref.watch(businessRepositoryProvider).search(query);
 });

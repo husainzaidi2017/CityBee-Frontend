@@ -1,6 +1,6 @@
-import '../domain/models/business.dart';
-import '../domain/models/menu_item.dart';
-import 'mock/mock_businesses.dart';
+import '../../domain/models/business.dart';
+import '../../domain/models/menu_item.dart';
+import '../mock/mock_businesses.dart';
 
 /// How "Popular Near You" cards are grouped on the Home screen.
 enum PopularFilter { all, dining, shopping, health }

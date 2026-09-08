@@ -21,9 +21,10 @@ abstract final class AppTheme {
       onError: Colors.white,
     );
 
-    final base = ThemeData.useMaterial3(
+    final base = ThemeData(
       colorScheme: scheme,
       scaffoldBackgroundColor: AppColors.background,
+      useMaterial3: true,
       splashFactory: InkSparkle.splashFactory,
     );
 

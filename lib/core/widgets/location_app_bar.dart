@@ -17,6 +17,8 @@ class BrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconSize = tileSize == 34 ? 20.0 : 16.0;
+    final fontSize = tileSize == 34 ? 18.0 : 16.0;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -27,14 +29,14 @@ class BrandMark extends StatelessWidget {
             color: AppColors.accent,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Icon(Icons.location_on, color: Colors.white, size: tileSize == 34 ? 20 : 16),
+          child: Icon(Icons.location_on, color: Colors.white, size: iconSize),
         ),
         const SizedBox(width: 7),
         Text.rich(
           TextSpan(
             text: 'Local',
             style: TextStyle(
-              fontSize: tileSize == 34 ? 18 : 16,
+              fontSize: fontSize,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
               letterSpacing: -0.3,

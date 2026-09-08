@@ -1,5 +1,5 @@
-import '../domain/models/offer.dart';
-import 'mock/mock_offers.dart';
+import '../../domain/models/offer.dart';
+import '../mock/mock_offers.dart';
 
 /// Contract for offers/coupons.
 abstract class OfferRepository {
@@ -10,11 +10,6 @@ abstract class OfferRepository {
 }
 
 class MockOfferRepository implements OfferRepository {
-  static const _tagGroups = <String, Set<String>>{
-    'Dining': {'Dining', 'Wellness & Health'},
-    'Beauty & Salon': {'Beauty & Salon'},
-  };
-
   @override
   Future<List<Offer>> getOffers({String cityId = '', String? tag}) async {
     await Future<void>.delayed(const Duration(milliseconds: 250));

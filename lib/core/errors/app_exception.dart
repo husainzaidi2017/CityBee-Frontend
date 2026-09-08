@@ -10,19 +10,23 @@ sealed class AppException implements Exception {
 }
 
 final class NetworkException extends AppException {
-  const NetworkException([super.cause])
-      : super('No internet connection. Please check your network and retry.');
+  const NetworkException([Object? cause])
+      : super('No internet connection. Please check your network and retry.', cause);
 }
 
 final class ServerException extends AppException {
-  const ServerException([super.cause]) : super('Something went wrong. Please try again.');
+  const ServerException([Object? cause])
+      : super('Something went wrong. Please try again.', cause);
 }
 
 final class LocationPermissionException extends AppException {
-  const LocationPermissionException([super.cause])
-      : super('Location permission is off. Enable it to see nearby places, or pick a city manually.');
+  const LocationPermissionException([Object? cause])
+      : super(
+            'Location permission is off. Enable it to see nearby places, or pick a city manually.',
+            cause);
 }
 
 final class NotFoundException extends AppException {
-  const NotFoundException([super.cause]) : super('This listing is no longer available.');
+  const NotFoundException([Object? cause])
+      : super('This listing is no longer available.', cause);
 }

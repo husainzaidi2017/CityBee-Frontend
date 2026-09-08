@@ -1,8 +1,6 @@
-import '../domain/models/app_category.dart';
-import '../domain/models/business.dart';
-import '../domain/models/city.dart';
-import 'mock/mock_businesses.dart';
-import 'mock/mock_data.dart';
+import '../../domain/models/app_category.dart';
+import '../../domain/models/city.dart';
+import '../mock/mock_data.dart';
 
 /// Contract for city & category lookups.
 ///

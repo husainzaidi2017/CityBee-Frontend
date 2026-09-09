@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Network access for the CityBee API (Cloud Run). Required in release
+         builds; debug builds inject INTERNET automatically, so its absence
+         only surfaced on physical-device release installs. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="CityBee"
         android:name="${applicationName}"

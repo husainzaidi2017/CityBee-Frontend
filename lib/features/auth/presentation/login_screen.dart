@@ -22,6 +22,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   String? _emailError;
@@ -34,6 +35,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -41,8 +43,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   bool get _isEmailValid => _emailRegex.hasMatch(_emailController.text.trim());
 
-  /// Reliable password path — no email sending, no rate limit. Creates the
-  /// Supabase user (sign-up) or signs in; profile syncs via /users/me after.
+  /// Email card action. SIGN IN: password login. CREATE ACCOUNT:
+  /// validates name/email/password, registers the account (no session),
+  /// then opens the OTP sheet — the account only activates on correct OTP.
   Future<void> _handleEmailPassword() async {
     final email = _emailController.text.trim();
     if (!_isEmailValid) {
@@ -54,20 +57,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       setState(() => _emailError = 'Password must be at least 6 characters');
       return;
     }
+    if (_isSignUp && _nameController.text.trim().length < 2) {
+      setState(() => _emailError = 'Please enter your full name');
+      return;
+    }
     setState(() {
       _emailError = null;
       _emailBusy = true;
     });
     try {
       if (_isSignUp) {
-        await ref.read(authStateProvider.notifier).signUp(email, password);
+        await ref
+            .read(authStateProvider.notifier)
+            .createAccount(_nameController.text.trim(), email, password);
+        if (!mounted) return;
+        await _showOtpSheet(email);
       } else {
         await ref
             .read(authStateProvider.notifier)
             .signInWithPassword(email, password);
+        if (!mounted) return;
+        _greetAndGoHome();
       }
-      if (!mounted) return;
-      _greetAndGoHome();
     } on AuthException catch (e) {
       final m = e.userMessage.toLowerCase();
       if (!_isSignUp && m.contains('wrong email or password')) {
@@ -94,27 +105,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) _showError('Unable to sign in with Google. Please try again.');
     } finally {
       if (mounted) setState(() => _googleBusy = false);
-    }
-  }
-
-  Future<void> _handleEmailOtp() async {
-    final email = _emailController.text.trim();
-    if (!_isEmailValid) {
-      setState(() => _emailError = 'Enter a valid email address');
-      return;
-    }
-    setState(() {
-      _emailError = null;
-      _emailBusy = true;
-    });
-    try {
-      await ref.read(authStateProvider.notifier).sendOtp(email);
-      if (!mounted) return;
-      await _showOtpSheet(email);
-    } on AuthException catch (e) {
-      if (mounted) _showError(e.userMessage);
-    } finally {
-      if (mounted) setState(() => _emailBusy = false);
     }
   }
 
@@ -217,6 +207,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     Text('Continue with Email', style: AppTypography.label),
                     const SizedBox(height: 8),
+                    if (_isSignUp) ...[
+                      TextField(
+                        controller: _nameController,
+                        textCapitalization: TextCapitalization.words,
+                        autocorrect: false,
+                        style: AppTypography.body.copyWith(fontSize: 14.5),
+                        decoration: const InputDecoration(
+                          hintText: 'Your full name',
+                          isDense: true,
+                          prefixIcon: Icon(Icons.person_outline_rounded,
+                              size: 18, color: AppColors.textSecondary),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
                     TextField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -300,18 +305,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               : 'New here? Create an account',
                           style: AppTypography.label
                               .copyWith(color: AppColors.primary, fontSize: 11.5),
-                        ),
-                      ),
-                    ),
-                    // OTP path kept for email-code sign-in when the rate
-                    // limit allows; password is the reliable default.
-                    Center(
-                      child: TextButton(
-                        onPressed: busy ? null : _handleEmailOtp,
-                        child: Text(
-                          'Sign in with a 6-digit code instead',
-                          style: AppTypography.label.copyWith(
-                              color: AppColors.textSecondary, fontSize: 11),
                         ),
                       ),
                     ),
@@ -488,7 +481,7 @@ class _OtpSheetState extends ConsumerState<_OtpSheet> {
       _error = null;
     });
     try {
-      await ref.read(authStateProvider.notifier).sendOtp(widget.email);
+      await ref.read(authStateProvider.notifier).resendOtp(widget.email);
       if (mounted) {
         _otpController.clear();
         _startCooldown();

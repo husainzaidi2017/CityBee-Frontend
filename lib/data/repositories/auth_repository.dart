@@ -1,30 +1,28 @@
-/// How an OTP was delivered (email).
-enum OtpChannel { email }
-
 /// Contract for authentication.
 ///
 /// The mock implementation simulates flows in memory; the Supabase
-/// implementation maps OTP flows onto `signInWithOtp` / `verifyOtp` and
-/// Google sign-in onto the native picker + `signInWithIdToken` without any
-/// UI changes.
+/// implementation maps Google sign-in onto the native picker +
+/// `signInWithIdToken`, and account creation onto signUp + email OTP
+/// verification, without any UI changes.
 abstract class AuthRepository {
-  /// Sends a one-time password to [email].
-  Future<void> sendOtp(String email, {OtpChannel channel});
-
-  /// Verifies the OTP and completes sign-in. Throws [AuthException] on a
-  /// wrong code.
-  Future<void> verifyOtp(String email, String otp);
-
   /// Native Google sign-in: account picker → Google ID token → Supabase
   /// session (see SupabaseAuthRepository for the full flow).
   Future<void> signInWithGoogle();
 
-  /// Email+password sign-in (for accounts created with a password; works
-  /// without the email rate limit). Throws [AuthException] on bad creds.
+  /// Email+password sign-in for existing accounts.
   Future<void> signInWithPassword(String email, String password);
 
-  /// Creates a new account with email+password and signs in immediately.
-  Future<void> signUp(String email, String password);
+  /// CREATE ACCOUNT (step 1): registers name/email/password and sends a
+  /// 6-digit OTP to the email. No session is established yet — the account
+  /// only becomes usable after [verifyOtp].
+  Future<void> createAccount(String name, String email, String password);
+
+  /// Re-sends the account-creation OTP (subject to Supabase rate limits).
+  Future<void> resendOtp(String email);
+
+  /// CREATE ACCOUNT (step 2): verifies the 6-digit code and establishes the
+  /// session. The account is only active after this succeeds.
+  Future<void> verifyOtp(String email, String otp);
 
   /// Clears the session (Supabase + Google). Browsing continues as guest.
   Future<void> signOut();
@@ -52,9 +50,12 @@ class MockAuthRepository implements AuthRepository {
   String? get accessToken => null;
 
   @override
-  Future<void> sendOtp(String email, {OtpChannel channel = OtpChannel.email}) async {
-    // Simulates the network round-trip; the channel is surfaced by the UI
-    // that triggered it, so nothing needs to be stored here.
+  Future<void> createAccount(String name, String email, String password) async {
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+  }
+
+  @override
+  Future<void> resendOtp(String email) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
   }
 
@@ -75,12 +76,6 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   Future<void> signInWithPassword(String email, String password) async {
-    await Future<void>.delayed(const Duration(milliseconds: 600));
-    _signedIn = true;
-  }
-
-  @override
-  Future<void> signUp(String email, String password) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
     _signedIn = true;
   }

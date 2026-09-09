@@ -28,31 +28,64 @@ class SupabaseAuthRepository implements contract.AuthRepository {
   String? get accessToken => _client.auth.currentSession?.accessToken;
 
   @override
-  Future<void> sendOtp(String email, {contract.OtpChannel channel = contract.OtpChannel.email}) async {
+  /// CREATE ACCOUNT: register name/email/password, then send the 6-digit
+  /// OTP. Any session from signUp is discarded immediately — the account is
+  /// only usable after verifyOtp succeeds (the app-side activation gate).
+  @override
+  Future<void> createAccount(String name, String email, String password) async {
+    try {
+      final response = await _client.auth.signUp(
+        email: email.trim(),
+        password: password,
+        emailRedirectTo: AppConfig.authCallbackUrl,
+        data: {'name': name.trim(), 'full_name': name.trim()},
+      );
+      // Discard the auto-session so the account is NOT active before OTP.
+      if (response.session != null) {
+        await _client.auth.signOut();
+      }
+    } on AuthException catch (e) {
+      developer.log('createAccount(signUp) failed: code=${e.statusCode} message=${e.message}', name: 'CityBeeAuth');
+      final m = e.message.toLowerCase();
+      if (m.contains('already registered') || m.contains('already been registered')) {
+        throw const contract.AuthException('An account with this email already exists — use Sign In.');
+      }
+      if (m.contains('rate') || m.contains('over')) {
+        throw const contract.AuthException('Too many requests from this network. Please wait an hour.');
+      }
+      if (m.contains('password')) {
+        throw const contract.AuthException('Password must be at least 6 characters.');
+      }
+      if (m.contains('network') || m.contains('fetch')) {
+        throw const contract.AuthException('Please check your internet connection.');
+      }
+      throw contract.AuthException(e.message);
+    } catch (e) {
+      _logTransport('createAccount', e);
+      throw const contract.AuthException('Please check your internet connection.');
+    }
+    // Step 2: send the 6-digit verification code.
+    await _sendOtp(email);
+  }
+
+  @override
+  Future<void> resendOtp(String email) => _sendOtp(email);
+
+  Future<void> _sendOtp(String email) async {
     try {
       await _client.auth.signInWithOtp(
         email: email.trim(),
         shouldCreateUser: true,
-        // Deep link (allow-listed in Supabase URL Configuration) so any
-        // link-based email opens the app, never localhost.
         emailRedirectTo: AppConfig.authCallbackUrl,
       );
     } on AuthException catch (e) {
-      developer.log(
-        'sendOtp failed: code=${e.statusCode} message="${e.message}"',
-        name: 'CityBeeAuth',
-      );
+      developer.log('sendOtp failed: code=${e.statusCode} message=${e.message}', name: 'CityBeeAuth');
       final m = e.message.toLowerCase();
       if (m.contains('rate') || m.contains('over')) {
         throw const contract.AuthException('Too many requests. Please wait a moment and try again.');
       }
       if (m.contains('network') || m.contains('fetch')) {
         throw const contract.AuthException('Please check your internet connection.');
-      }
-      if (m.contains('smtp') || m.contains('email provider') || m.contains('not configured')) {
-        throw const contract.AuthException(
-          'Email delivery is not configured on the server yet.',
-        );
       }
       throw const contract.AuthException('Could not send the code. Please try again.');
     } catch (e) {
@@ -118,53 +151,6 @@ class SupabaseAuthRepository implements contract.AuthRepository {
         throw const contract.AuthException('Please check your internet connection.');
       }
       throw contract.AuthException(e.message);
-    }
-  }
-
-  @override
-  Future<void> signUp(String email, String password) async {
-    AuthResponse response;
-    try {
-      response = await _client.auth.signUp(
-        email: email.trim(),
-        password: password,
-        emailRedirectTo: AppConfig.authCallbackUrl,
-      );
-    } on AuthException catch (e) {
-      developer.log(
-        'signUp failed: code=${e.statusCode} message="${e.message}"',
-        name: 'CityBeeAuth',
-      );
-      final m = e.message.toLowerCase();
-      if (m.contains('rate') || m.contains('over')) {
-        throw const contract.AuthException(
-          'Too many sign-ups from this network. Please wait an hour.',
-        );
-      }
-      if (m.contains('already registered')) {
-        throw const contract.AuthException(
-          'An account with this email already exists — use Sign In.',
-        );
-      }
-      if (m.contains('password')) {
-        throw const contract.AuthException(
-          'Password must be at least 6 characters.',
-        );
-      }
-      throw contract.AuthException(e.message);
-    }
-    // With email confirmation enabled the account is created but NO session
-    // exists yet — the user must confirm via email first. Never report
-    // success without a live session (that produced phantom "logged in"
-    // states with no profile record).
-    if (response.session == null) {
-      developer.log(
-        'signUp: user created but session is null (email confirmation pending)',
-        name: 'CityBeeAuth',
-      );
-      throw const contract.AuthException(
-        'Account created — please confirm via the email we sent you, then sign in.',
-      );
     }
   }
 

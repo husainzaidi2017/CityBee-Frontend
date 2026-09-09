@@ -63,40 +63,30 @@ class AuthController extends Notifier<bool> {
     return ref.read(authRepositoryProvider).isSignedIn;
   }
 
-  Future<void> sendOtp(String email, {OtpChannel channel = OtpChannel.email}) =>
-      ref.read(authRepositoryProvider).sendOtp(email, channel: channel);
+  /// CREATE ACCOUNT step 1: registers name/email/password and sends the
+  /// 6-digit OTP. No session exists yet — the caller shows the OTP screen.
+  Future<void> createAccount(String name, String email, String password) =>
+      ref.read(authRepositoryProvider).createAccount(name, email, password);
 
+  /// Re-sends the account-creation OTP (rate limited by Supabase).
+  Future<void> resendOtp(String email) =>
+      ref.read(authRepositoryProvider).resendOtp(email);
+
+  /// CREATE ACCOUNT step 2: verifies the OTP; only on success does the
+  /// session exist and the profile load — the caller then navigates Home.
   Future<void> verifyOtp(String email, String otp) async {
     await ref.read(authRepositoryProvider).verifyOtp(email, otp);
-    _setStateIfSession();
+    await _syncSessionAndProfile();
   }
 
   Future<void> signInWithGoogle() async {
     await ref.read(authRepositoryProvider).signInWithGoogle();
-    _setStateIfSession();
+    await _syncSessionAndProfile();
   }
 
   Future<void> signInWithPassword(String email, String password) async {
     await ref.read(authRepositoryProvider).signInWithPassword(email, password);
-    _setStateIfSession();
-  }
-
-  Future<void> signUp(String email, String password) async {
-    await ref.read(authRepositoryProvider).signUp(email, password);
-    _setStateIfSession();
-  }
-
-  /// Only flip to logged-in when a REAL Supabase session exists — never on
-  /// a phantom success (that left users "logged in" with no DB record).
-  void _setStateIfSession() {
-    final repo = ref.read(authRepositoryProvider);
-    final hasSession = repo.accessToken != null && repo.accessToken!.isNotEmpty;
-    if (hasSession) {
-      state = true;
-      _syncProfile();
-    } else {
-      state = false;
-    }
+    await _syncSessionAndProfile();
   }
 
   Future<void> logout() async {
@@ -108,18 +98,34 @@ class AuthController extends Notifier<bool> {
   /// listener uses this since `state` is protected.
   void update(bool signedIn) => state = signedIn;
 
-  /// Best-effort profile sync after sign-in: GET /users/me upserts the
-  /// public.users row (auth uid, name, email, avatar) server-side,
-  /// idempotently, and refreshes the in-app profile.
+  /// Confirms the Supabase session exists, flips auth state, then AWAITS the
+  /// profile load before returning — navigation to Home happens only after
+  /// the profile state is populated (Edit Profile shows name/email
+  /// immediately, no restart needed).
+  Future<void> _syncSessionAndProfile() async {
+    final repo = ref.read(authRepositoryProvider);
+    final hasSession = repo.accessToken != null && repo.accessToken!.isNotEmpty;
+    if (!hasSession) {
+      state = false;
+      return;
+    }
+    state = true;
+    await _syncProfile();
+  }
+
+  /// Loads the CityBee profile (the server upserts public.users from auth
+  /// metadata on first call) and WRITES it into the profile state — the old
+  /// implementation fetched and discarded the result, which is why
+  /// name/email only appeared after an app restart.
   Future<void> _syncProfile() async {
     try {
-      await ref.read(profileRepositoryProvider).getProfile();
+      final profile = await ref.read(profileRepositoryProvider).getProfile();
+      ref.read(userProfileProvider.notifier).state = profile;
     } catch (_) {
       // Profile sync is best-effort; discovery works regardless.
     }
   }
 }
-
 final authStateProvider = NotifierProvider<AuthController, bool>(AuthController.new);
 
 /// Keeps auth state in sync with Supabase session events (token refresh,

@@ -9,8 +9,9 @@ import '../../../data/mock/mock_data.dart';
 import '../../../domain/models/user_profile.dart';
 import '../../../providers/app_providers.dart';
 
-/// Edit Profile: avatar picker, name, phone and email — persisted through
-/// the profile repository (mock now, Supabase later).
+/// Edit Profile: avatar picker, name, phone. EMAIL IS READ-ONLY — it is the
+/// account identity from Supabase Auth and cannot be changed here (changing
+/// it would break sign-in identity).
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -22,7 +23,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final UserProfile _initial;
   late final TextEditingController _name;
   late final TextEditingController _phone;
-  late final TextEditingController _email;
   late String _avatar;
   bool _saving = false;
 
@@ -32,7 +32,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _initial = ref.read(userProfileProvider);
     _name = TextEditingController(text: _initial.name);
     _phone = TextEditingController(text: _initial.phone);
-    _email = TextEditingController(text: _initial.email);
     _avatar = _initial.avatarImage;
   }
 
@@ -40,14 +39,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   void dispose() {
     _name.dispose();
     _phone.dispose();
-    _email.dispose();
     super.dispose();
   }
 
   bool get _hasChanges =>
       _name.text != _initial.name ||
       _phone.text != _initial.phone ||
-      _email.text != _initial.email ||
       _avatar != _initial.avatarImage;
 
   Future<void> _save() async {
@@ -59,11 +56,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       return;
     }
     setState(() => _saving = true);
+    // Email is intentionally NOT sent — it comes from the auth identity
+    // and must never be overwritten from the profile editor.
     await ref.read(userProfileProvider.notifier).save(
           _initial.copyWith(
             name: _name.text.trim(),
             phone: _phone.text.trim(),
-            email: _email.text.trim(),
             avatarImage: _avatar,
           ),
         );
@@ -186,16 +184,44 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     const SizedBox(height: 14),
                     _ProfileField(
                       controller: _phone,
-                      label: 'Phone Number',
+                      label: 'Phone Number (optional)',
                       icon: Icons.phone_iphone_rounded,
                       keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: 14),
-                    _ProfileField(
-                      controller: _email,
-                      label: 'Email Address',
-                      icon: Icons.mail_outline_rounded,
-                      keyboardType: TextInputType.emailAddress,
+                    // Read-only email: account identity from Supabase Auth.
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Email Address',
+                            style: AppTypography.label),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: TextEditingController(text: _initial.email),
+                          readOnly: true,
+                          enabled: false,
+                          style: AppTypography.body
+                              .copyWith(color: AppColors.textSecondary),
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.lock_outline_rounded,
+                                size: 18, color: AppColors.textMuted),
+                            suffixIcon: const Tooltip(
+                              message: 'Email is your account identity and cannot be changed',
+                              child: Icon(Icons.info_outline_rounded,
+                                  size: 18, color: AppColors.textMuted),
+                            ),
+                            filled: true,
+                            fillColor: AppColors.background,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 13),
+                            disabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  const BorderSide(color: AppColors.border, width: 1.1),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

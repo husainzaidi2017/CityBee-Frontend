@@ -28,7 +28,9 @@ class ApiProfileRepository implements ProfileRepository {
     if (!_auth.isSignedIn) return profile;
     final data = await _api.patch('/users/me', body: {
       'name': profile.name,
-      'phone': profile.phone,
+      // Only send phone when the user actually typed one — never re-send
+      // empty strings or stale placeholders.
+      if (profile.phone.trim().isNotEmpty) 'phone': profile.phone.trim(),
       if (profile.avatarImage.startsWith('http'))
         'profileImageUrl': profile.avatarImage,
     });

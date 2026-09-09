@@ -236,27 +236,27 @@ final selectedLocationProvider =
     NotifierProvider<LocationController, CityBeeLocation>(LocationController.new);
 
 // ── Profile ──────────────────────────────────────────────────────────────
-/// Editable user profile. [save] persists through the repository (API when
-/// signed in; local guest profile otherwise).
+/// Editable user profile. Hydrates from the API (when signed in) — blank
+/// defaults mean the UI shows honest empty states instead of fake persona
+/// data while loading or for guests.
 class UserProfileController extends Notifier<UserProfile> {
   @override
   UserProfile build() {
-    // Hydrate asynchronously from the API when a session exists.
     final repo = ref.read(profileRepositoryProvider);
     if (ref.read(authRepositoryProvider).isSignedIn) {
       repo.getProfile().then((profile) => state = profile);
     }
     return const UserProfile(
-      name: 'Amit Sharma',
-      handle: '@amit.moradabad',
-      email: 'amit.sharma@example.com',
-      phone: '+91 98765 43210',
-      levelTitle: 'Level 3 Pioneer',
-      topPercent: 'Top 5% Saver',
-      savedAmount: '₹2,450',
-      bookmarkCount: 12,
-      reviewsGiven: 5,
-      avatarImage: 'https://picsum.photos/seed/localgo-avatar/200/200',
+      name: '',
+      handle: '@user',
+      email: '',
+      phone: '',
+      levelTitle: 'CityBee Explorer',
+      topPercent: '',
+      savedAmount: '₹0',
+      bookmarkCount: 0,
+      reviewsGiven: 0,
+      avatarImage: 'https://picsum.photos/seed/citybee-avatar/200/200',
     );
   }
 

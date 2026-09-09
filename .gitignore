@@ -43,3 +43,12 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+android-cmdline-tools.zip
+
+# Local archives never belong in the repo
+*.zip
+*.tar.gz
+*.apk
+*.jks
+*.keystore
+.env

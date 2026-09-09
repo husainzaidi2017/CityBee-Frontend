@@ -352,10 +352,57 @@ class _OtpSheetState extends ConsumerState<_OtpSheet> {
   bool _busy = false;
   String? _error;
 
+  /// Resend cooldown (seconds) — mirrors Supabase's rate limit so the UI
+  /// doesn't hit the endpoint before the server would allow it anyway.
+  static const _resendCooldownSeconds = 60;
+  int _cooldown = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCooldown();
+  }
+
+  void _startCooldown() {
+    _cooldown = _resendCooldownSeconds;
+    _tickCooldown();
+  }
+
+  void _tickCooldown() {
+    if (!mounted) return;
+    Future<void>.delayed(const Duration(seconds: 1), () {
+      if (!mounted) return;
+      setState(() => _cooldown--);
+      if (_cooldown > 0) _tickCooldown();
+    });
+  }
+
   @override
   void dispose() {
     _otpController.dispose();
     super.dispose();
+  }
+
+  Future<void> _resend() async {
+    if (_cooldown > 0 || _busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await ref.read(authStateProvider.notifier).sendOtp(widget.email);
+      if (mounted) {
+        _otpController.clear();
+        _startCooldown();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('New code sent to your email.')),
+        );
+      }
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _error = e.userMessage);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _verify() async {
@@ -438,6 +485,22 @@ class _OtpSheetState extends ConsumerState<_OtpSheet> {
                           style: AppTypography.bodyStrong
                               .copyWith(color: Colors.white, fontSize: 14),
                         ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Resend with cooldown — kept aligned with Supabase rate limits.
+              Center(
+                child: TextButton(
+                  onPressed: _cooldown > 0 || _busy ? null : _resend,
+                  child: Text(
+                    _cooldown > 0
+                        ? 'Resend code in ${_cooldown}s'
+                        : 'Resend code',
+                    style: AppTypography.label.copyWith(
+                      color: _cooldown > 0 ? AppColors.textMuted : AppColors.primary,
+                      fontSize: 11.5,
+                    ),
+                  ),
                 ),
               ),
             ],

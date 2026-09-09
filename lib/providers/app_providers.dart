@@ -102,7 +102,11 @@ class AuthController extends Notifier<bool> {
 final authStateProvider = NotifierProvider<AuthController, bool>(AuthController.new);
 
 /// Keeps auth state in sync with Supabase session events (token refresh,
-/// remote sign-out, expiry) — no second auth system.
+/// remote sign-out, deep-link callback completion) — no second auth system.
+///
+/// Deep links (citybee://auth-callback from email links / OAuth) are
+/// consumed by supabase_flutter itself; when the session lands, this
+/// listener flips the auth state and the profile syncs via /users/me.
 final authSessionListenerProvider = Provider<AuthSessionSync>((ref) {
   try {
     final subscription = Supabase.instance.client.auth.onAuthStateChange.listen((event) {

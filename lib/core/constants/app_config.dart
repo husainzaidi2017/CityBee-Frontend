@@ -43,6 +43,11 @@ abstract final class AppConfig {
     defaultValue: '', // fill via --dart-define or here after Google Cloud setup
   );
 
+  /// Deep link the Supabase auth flow returns to (email links / OAuth).
+  /// Registered in the Android manifest and allow-listed in Supabase URL
+  /// Configuration — production never redirects to localhost.
+  static const String authCallbackUrl = 'citybee://auth-callback';
+
   /// Temporary destination for the "List Your Business" CTA.
   /// Replace with the real CityBee business-registration portal when live.
   static const String businessListingUrl = 'https://www.google.com';

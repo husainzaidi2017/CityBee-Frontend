@@ -123,8 +123,9 @@ class SupabaseAuthRepository implements contract.AuthRepository {
 
   @override
   Future<void> signUp(String email, String password) async {
+    AuthResponse response;
     try {
-      await _client.auth.signUp(
+      response = await _client.auth.signUp(
         email: email.trim(),
         password: password,
         emailRedirectTo: AppConfig.authCallbackUrl,
@@ -151,6 +152,19 @@ class SupabaseAuthRepository implements contract.AuthRepository {
         );
       }
       throw contract.AuthException(e.message);
+    }
+    // With email confirmation enabled the account is created but NO session
+    // exists yet — the user must confirm via email first. Never report
+    // success without a live session (that produced phantom "logged in"
+    // states with no profile record).
+    if (response.session == null) {
+      developer.log(
+        'signUp: user created but session is null (email confirmation pending)',
+        name: 'CityBeeAuth',
+      );
+      throw const contract.AuthException(
+        'Account created — please confirm via the email we sent you, then sign in.',
+      );
     }
   }
 

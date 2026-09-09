@@ -68,26 +68,35 @@ class AuthController extends Notifier<bool> {
 
   Future<void> verifyOtp(String email, String otp) async {
     await ref.read(authRepositoryProvider).verifyOtp(email, otp);
-    state = true;
-    _syncProfile();
+    _setStateIfSession();
   }
 
   Future<void> signInWithGoogle() async {
     await ref.read(authRepositoryProvider).signInWithGoogle();
-    state = true;
-    _syncProfile();
+    _setStateIfSession();
   }
 
   Future<void> signInWithPassword(String email, String password) async {
     await ref.read(authRepositoryProvider).signInWithPassword(email, password);
-    state = true;
-    _syncProfile();
+    _setStateIfSession();
   }
 
   Future<void> signUp(String email, String password) async {
     await ref.read(authRepositoryProvider).signUp(email, password);
-    state = true;
-    _syncProfile();
+    _setStateIfSession();
+  }
+
+  /// Only flip to logged-in when a REAL Supabase session exists — never on
+  /// a phantom success (that left users "logged in" with no DB record).
+  void _setStateIfSession() {
+    final repo = ref.read(authRepositoryProvider);
+    final hasSession = repo.accessToken != null && repo.accessToken!.isNotEmpty;
+    if (hasSession) {
+      state = true;
+      _syncProfile();
+    } else {
+      state = false;
+    }
   }
 
   Future<void> logout() async {

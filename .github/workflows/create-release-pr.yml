@@ -1,0 +1,26 @@
+name: Create Release PR
+
+on:
+  push:
+    branches:
+      - release
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr create \
+            --base main \
+            --head release \
+            --title "Release: release → main" \
+            --body "Automatically created PR from release branch." \
+            || echo "PR already exists"

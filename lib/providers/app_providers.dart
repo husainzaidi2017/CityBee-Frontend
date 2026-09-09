@@ -99,6 +99,15 @@ class AuthController extends Notifier<bool> {
   /// listener uses this since `state` is protected.
   void update(bool signedIn) => state = signedIn;
 
+  /// Called when a session appears via the Supabase event stream (email
+  /// link / deep-link activation) rather than a direct sign-in call —
+  /// loads the profile right away so the UI populates without a restart.
+  Future<void> syncFromSessionEvent() async {
+    if (state) {
+      await _syncProfile();
+    }
+  }
+
   /// Confirms the Supabase session exists, flips auth state, then AWAITS the
   /// profile load before returning — navigation to Home happens only after
   /// the profile state is populated (Edit Profile shows name/email
@@ -142,7 +151,14 @@ final authSessionListenerProvider = Provider<AuthSessionSync>((ref) {
   try {
     final subscription = Supabase.instance.client.auth.onAuthStateChange.listen((event) {
       final controller = ref.read(authStateProvider.notifier);
+      final wasSignedIn = ref.read(authStateProvider);
       controller.update(event.session != null);
+      // Deep-link activation (email link / OAuth callback): the session
+      // appears HERE instead of via a direct sign-in call — load the
+      // profile immediately so name/email populate without an app restart.
+      if (event.session != null && !wasSignedIn) {
+        controller.syncFromSessionEvent();
+      }
     });
     ref.onDispose(subscription.cancel);
     return AuthSessionSync(subscription);

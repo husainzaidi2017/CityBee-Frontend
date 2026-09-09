@@ -1,4 +1,4 @@
-# CityBee — Flutter Frontend
+# CityBee — Flutter Frontend Android App
 
 <div align="center">
 

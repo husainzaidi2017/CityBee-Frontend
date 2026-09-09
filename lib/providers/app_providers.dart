@@ -92,6 +92,7 @@ class AuthController extends Notifier<bool> {
   Future<void> logout() async {
     await ref.read(authRepositoryProvider).signOut();
     state = false;
+    await ref.read(userProfileProvider.notifier).clear();
   }
 
   /// Session-event sync (token refresh, remote sign-out) — external
@@ -120,7 +121,10 @@ class AuthController extends Notifier<bool> {
   Future<void> _syncProfile() async {
     try {
       final profile = await ref.read(profileRepositoryProvider).getProfile();
+      // Publishes to state AND persists the warm-start cache.
       ref.read(userProfileProvider.notifier).state = profile;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('citybee.profile', jsonEncode(profile.toJson()));
     } catch (_) {
       // Profile sync is best-effort; discovery works regardless.
     }
@@ -251,6 +255,10 @@ final selectedLocationProvider =
     NotifierProvider<LocationController, CityBeeLocation>(LocationController.new);
 
 // ── Profile ──────────────────────────────────────────────────────────────
+/// Warm-start profile from SharedPreferences (overridden in main()).
+/// Null when there is no cache or no restored session.
+final cachedUserProfileProvider = Provider<UserProfile?>((ref) => null);
+
 /// Editable user profile. Hydrates from the API (when signed in) — blank
 /// defaults mean the UI shows honest empty states instead of fake persona
 /// data while loading or for guests.
@@ -258,8 +266,13 @@ class UserProfileController extends Notifier<UserProfile> {
   @override
   UserProfile build() {
     final repo = ref.read(profileRepositoryProvider);
-    if (ref.read(authRepositoryProvider).isSignedIn) {
-      repo.getProfile().then((profile) => state = profile);
+    final signedIn = ref.read(authRepositoryProvider).isSignedIn;
+    if (signedIn) {
+      // Refresh from the API in the background…
+      repo.getProfile().then(_persist).catchError((_) {});
+      // …but render the warm-start cache immediately (no blank flash).
+      final cached = ref.read(cachedUserProfileProvider);
+      if (cached != null) return cached;
     }
     return const UserProfile(
       name: '',
@@ -277,7 +290,41 @@ class UserProfileController extends Notifier<UserProfile> {
 
   Future<void> save(UserProfile profile) async {
     final saved = await ref.read(profileRepositoryProvider).saveProfile(profile);
-    state = saved;
+    _persist(saved);
+  }
+
+  /// Publishes a profile to the state AND caches it locally so the next
+  /// app open renders instantly.
+  void _persist(UserProfile profile) {
+    state = profile;
+    _writeCache(profile);
+  }
+
+  Future<void> _writeCache(UserProfile profile) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('citybee.profile', jsonEncode(profile.toJson()));
+    } catch (_) {}
+  }
+
+  /// Clears state + cache (used on logout so the next user starts clean).
+  Future<void> clear() async {
+    state = const UserProfile(
+      name: '',
+      handle: '@user',
+      email: '',
+      phone: '',
+      levelTitle: 'CityBee Explorer',
+      topPercent: '',
+      savedAmount: '₹0',
+      bookmarkCount: 0,
+      reviewsGiven: 0,
+      avatarImage: 'https://picsum.photos/seed/citybee-avatar/200/200',
+    );
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('citybee.profile');
+    } catch (_) {}
   }
 }
 

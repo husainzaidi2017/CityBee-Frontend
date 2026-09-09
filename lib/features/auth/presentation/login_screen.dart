@@ -454,6 +454,7 @@ class _OtpSheetState extends ConsumerState<_OtpSheet> {
     _startCooldown();
   }
 
+
   void _startCooldown() {
     _cooldown = _resendCooldownSeconds;
     _tickCooldown();
@@ -519,6 +520,17 @@ class _OtpSheetState extends ConsumerState<_OtpSheet> {
 
   @override
   Widget build(BuildContext context) {
+    // If the user activates via the email LINK (deep link) instead of
+    // typing the code, the session appears here — finish immediately.
+    ref.listen<bool>(authStateProvider, (previous, next) {
+      if (next && previous != true) {
+        Navigator.of(context).maybePop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Welcome to CityBee!')),
+        );
+        context.go('/');
+      }
+    });
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SafeArea(
@@ -531,7 +543,9 @@ class _OtpSheetState extends ConsumerState<_OtpSheet> {
               Text('Verify your email', style: AppTypography.title),
               const SizedBox(height: 5),
               Text(
-                'We sent a 6-digit code to ${widget.email}.',
+                'We sent a verification email to ${widget.email}.\n'
+                'Tap the link in the email to continue — or enter the '
+                '6-digit code if your email shows one.',
                 style: AppTypography.caption,
               ),
               const SizedBox(height: 16),

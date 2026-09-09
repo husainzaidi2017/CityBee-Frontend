@@ -50,4 +50,31 @@ class UserProfile {
         reviewsGiven: reviewsGiven ?? this.reviewsGiven,
         avatarImage: avatarImage ?? this.avatarImage,
       );
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'handle': handle,
+        'email': email,
+        'phone': phone,
+        'levelTitle': levelTitle,
+        'topPercent': topPercent,
+        'savedAmount': savedAmount,
+        'bookmarkCount': bookmarkCount,
+        'reviewsGiven': reviewsGiven,
+        'avatarImage': avatarImage,
+      };
+
+  factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
+        name: (json['name'] ?? '') as String,
+        handle: (json['handle'] ?? '@user') as String,
+        email: (json['email'] ?? '') as String,
+        phone: (json['phone'] ?? '') as String,
+        levelTitle: (json['levelTitle'] ?? 'CityBee Explorer') as String,
+        topPercent: (json['topPercent'] ?? '') as String,
+        savedAmount: (json['savedAmount'] ?? '₹0') as String,
+        bookmarkCount: (json['bookmarkCount'] ?? 0) as int,
+        reviewsGiven: (json['reviewsGiven'] ?? 0) as int,
+        avatarImage: (json['avatarImage'] ??
+            'https://picsum.photos/seed/citybee-avatar/200/200') as String,
+      );
 }

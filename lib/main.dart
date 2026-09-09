@@ -1,9 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
 import 'core/constants/app_config.dart';
+import 'domain/models/user_profile.dart';
+import 'providers/app_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,5 +24,24 @@ Future<void> main() async {
     ),
   );
 
-  runApp(const ProviderScope(child: CityBeeApp()));
+  // Warm-start the profile cache so the More/Profile screens render the
+  // user's name instantly on app open (no 0.5s blank flash) — the API
+  // refresh runs right after and updates the state.
+  UserProfile? cachedProfile;
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('citybee.profile');
+    if (raw != null && Supabase.instance.client.auth.currentSession != null) {
+      cachedProfile = UserProfile.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    }
+  } catch (_) {
+    // Corrupt cache → fall back to the blank default.
+  }
+
+  runApp(
+    ProviderScope(
+      overrides: [cachedUserProfileProvider.overrideWithValue(cachedProfile)],
+      child: const CityBeeApp(),
+    ),
+  );
 }

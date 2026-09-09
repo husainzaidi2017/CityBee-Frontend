@@ -33,6 +33,16 @@ abstract final class AppConfig {
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxamh1aXlsdmZhZnVxZWh1endtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4NzI2MTQsImV4cCI6MjEwNDQ0ODYxNH0.8--m2hX4EZNc144QI0bD0tHKwm6g0XgSctqILAAxMGA',
   );
 
+  /// Google OAuth *web* client ID — the same one configured on the
+  /// Supabase Google provider. This is a public identifier (NOT a secret);
+  /// Google's official "Sign in with Google" flows require it in the client
+  /// to request ID tokens. Set it once the OAuth client is created in
+  /// Google Cloud Console + Supabase (see README auth setup).
+  static const String googleServerClientId = String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
+    defaultValue: '', // fill via --dart-define or here after Google Cloud setup
+  );
+
   /// Temporary destination for the "List Your Business" CTA.
   /// Replace with the real CityBee business-registration portal when live.
   static const String businessListingUrl = 'https://www.google.com';

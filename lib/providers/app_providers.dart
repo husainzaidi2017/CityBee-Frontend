@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide OtpChannel;
 
 import '../core/network/api_client.dart';
 import '../core/services/location_service.dart';
@@ -52,30 +53,77 @@ final profileRepositoryProvider = Provider<ProfileRepository>(
 // ── Authentication (guest browsing is always allowed) ────────────────────
 /// Whether the user has an active session. Login is never mandatory —
 /// the whole app works as a guest with `false`.
+///
+/// State follows the Supabase Auth session (login, logout, token refresh,
+/// restore on app start); the session listener below keeps it in sync.
 class AuthController extends Notifier<bool> {
   @override
-  bool build() => ref.read(authRepositoryProvider).isSignedIn;
+  bool build() {
+    // Supabase persists sessions locally — reopening the app stays logged in.
+    return ref.read(authRepositoryProvider).isSignedIn;
+  }
 
-  Future<void> sendOtp(String phone, {OtpChannel channel = OtpChannel.sms}) =>
-      ref.read(authRepositoryProvider).sendOtp(phone, channel: channel);
+  Future<void> sendOtp(String email, {OtpChannel channel = OtpChannel.email}) =>
+      ref.read(authRepositoryProvider).sendOtp(email, channel: channel);
 
-  Future<void> verifyOtp(String phone, String otp) async {
-    await ref.read(authRepositoryProvider).verifyOtp(phone, otp);
+  Future<void> verifyOtp(String email, String otp) async {
+    await ref.read(authRepositoryProvider).verifyOtp(email, otp);
     state = true;
+    _syncProfile();
   }
 
   Future<void> signInWithGoogle() async {
     await ref.read(authRepositoryProvider).signInWithGoogle();
     state = true;
+    _syncProfile();
   }
 
   Future<void> logout() async {
     await ref.read(authRepositoryProvider).signOut();
     state = false;
   }
+
+  /// Session-event sync (token refresh, remote sign-out) — external
+  /// listener uses this since `state` is protected.
+  void update(bool signedIn) => state = signedIn;
+
+  /// Best-effort profile sync after sign-in: GET /users/me upserts the
+  /// public.users row (auth uid, name, email, avatar) server-side,
+  /// idempotently, and refreshes the in-app profile.
+  Future<void> _syncProfile() async {
+    try {
+      await ref.read(profileRepositoryProvider).getProfile();
+    } catch (_) {
+      // Profile sync is best-effort; discovery works regardless.
+    }
+  }
 }
 
 final authStateProvider = NotifierProvider<AuthController, bool>(AuthController.new);
+
+/// Keeps auth state in sync with Supabase session events (token refresh,
+/// remote sign-out, expiry) — no second auth system.
+final authSessionListenerProvider = Provider<AuthSessionSync>((ref) {
+  try {
+    final subscription = Supabase.instance.client.auth.onAuthStateChange.listen((event) {
+      final controller = ref.read(authStateProvider.notifier);
+      controller.update(event.session != null);
+    });
+    ref.onDispose(subscription.cancel);
+    return AuthSessionSync(subscription);
+  } catch (_) {
+    // Listener is a safety net; the controller reads session state directly.
+    return const AuthSessionSync(null);
+  }
+});
+
+/// Handle to the Supabase session subscription (cancels with the provider).
+class AuthSessionSync {
+  const AuthSessionSync(this.subscription);
+
+  // ignore: unused_field
+  final Object? subscription;
+}
 
 // ── Cities (CityBee reference data) & Google location search ─────────────
 final citiesProvider = FutureProvider<List<City>>((ref) async {

@@ -12,9 +12,8 @@ import '../../../core/widgets/pressable.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../providers/app_providers.dart';
 
-/// CityBee login — phone (+91, 10-digit) with OTP, WhatsApp OTP, Google,
-/// guest browsing and a business-owner section. Login is never mandatory:
-/// guests can browse everything.
+/// CityBee login — Google first, email OTP second, guest browsing always
+/// available. Login is never mandatory: guests can browse everything.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -23,49 +22,62 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _phoneController = TextEditingController();
-  String? _phoneError;
-  bool _busy = false;
+  final _emailController = TextEditingController();
+  String? _emailError;
+  bool _googleBusy = false;
+  bool _emailBusy = false;
 
-  static final _digitsOnly = FilteringTextInputFormatter.digitsOnly;
-  static final _phoneRegex = RegExp(r'^[6-9]\d{9}$');
+  static final _emailRegex = RegExp(r'^[\w.\-+]+@([\w\-]+\.)+[a-zA-Z]{2,}$');
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
-  bool get _isPhoneValid => _phoneRegex.hasMatch(_phoneController.text.trim());
-
-  Future<void> _handleGetOtp({OtpChannel channel = OtpChannel.sms}) async {
-    final phone = _phoneController.text.trim();
-    if (!_isPhoneValid) {
-      setState(() => _phoneError = 'Enter a valid 10-digit mobile number');
-      return;
-    }
-    setState(() {
-      _phoneError = null;
-      _busy = true;
-    });
-    try {
-      await ref.read(authStateProvider.notifier).sendOtp('91$phone', channel: channel);
-      if (!mounted) return;
-      await _showOtpSheet(phone, channel);
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
+  bool get _isEmailValid => _emailRegex.hasMatch(_emailController.text.trim());
 
   Future<void> _handleGoogle() async {
-    setState(() => _busy = true);
+    if (_googleBusy) return;
+    setState(() => _googleBusy = true);
     try {
       await ref.read(authStateProvider.notifier).signInWithGoogle();
       if (!mounted) return;
       _greetAndGoHome();
+    } on AuthException catch (e) {
+      if (mounted) _showError(e.userMessage);
+    } catch (_) {
+      if (mounted) _showError('Unable to sign in with Google. Please try again.');
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) setState(() => _googleBusy = false);
     }
+  }
+
+  Future<void> _handleEmailOtp() async {
+    final email = _emailController.text.trim();
+    if (!_isEmailValid) {
+      setState(() => _emailError = 'Enter a valid email address');
+      return;
+    }
+    setState(() {
+      _emailError = null;
+      _emailBusy = true;
+    });
+    try {
+      await ref.read(authStateProvider.notifier).sendOtp(email);
+      if (!mounted) return;
+      await _showOtpSheet(email);
+    } on AuthException catch (e) {
+      if (mounted) _showError(e.userMessage);
+    } finally {
+      if (mounted) setState(() => _emailBusy = false);
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
   }
 
   void _greetAndGoHome() {
@@ -75,13 +87,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     context.go('/');
   }
 
-  Future<void> _showOtpSheet(String phone, OtpChannel channel) {
+  Future<void> _showOtpSheet(String email) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (_) => _OtpSheet(
-        phone: phone,
-        channel: channel,
+        email: email,
         onVerified: () {
           Navigator.of(context).pop();
           _greetAndGoHome();
@@ -101,6 +112,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final busy = _googleBusy || _emailBusy;
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
@@ -121,13 +134,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Sign in to save favorites, claim coupons and get\npersonalized deals near you.',
+                'Sign in to save favorites and get\npersonalized deals near you.',
                 textAlign: TextAlign.center,
                 style: AppTypography.caption.copyWith(fontSize: 12.5, height: 1.5),
               ),
               const SizedBox(height: 30),
 
-              // ── Phone card ──────────────────────────────────────
+              // ── Google (primary) ────────────────────────────────
+              _GoogleButton(
+                busy: _googleBusy,
+                onPressed: busy ? null : _handleGoogle,
+              ),
+              const SizedBox(height: 18),
+
+              // ── Divider ─────────────────────────────────────────
+              Row(
+                children: [
+                  const Expanded(child: Divider()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('OR', style: AppTypography.label),
+                  ),
+                  const Expanded(child: Divider()),
+                ],
+              ),
+              const SizedBox(height: 18),
+
+              // ── Email card (secondary) ──────────────────────────
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -138,52 +171,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Phone Number', style: AppTypography.label),
+                    Text('Continue with Email', style: AppTypography.label),
                     const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Container(
-                          height: 46,
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.border, width: 1.1),
-                          ),
-                          child: Row(
-                            children: [
-                              Text('🇮🇳', style: const TextStyle(fontSize: 15)),
-                              const SizedBox(width: 6),
-                              Text('+91',
-                                  style: AppTypography.bodyStrong.copyWith(fontSize: 14)),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextField(
-                            controller: _phoneController,
-                            keyboardType: TextInputType.phone,
-                            inputFormatters: [_digitsOnly, LengthLimitingTextInputFormatter(10)],
-                            style: AppTypography.body.copyWith(fontSize: 14.5),
-                            decoration: InputDecoration(
-                              hintText: '98765 43210',
-                              errorText: _phoneError,
-                              isDense: true,
-                            ),
-                            onChanged: (_) {
-                              if (_phoneError != null) {
-                                setState(() => _phoneError = null);
-                              }
-                            },
-                          ),
-                        ),
-                      ],
+                    TextField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      autocorrect: false,
+                      style: AppTypography.body.copyWith(fontSize: 14.5),
+                      decoration: InputDecoration(
+                        hintText: 'you@example.com',
+                        errorText: _emailError,
+                        isDense: true,
+                        prefixIcon: const Icon(Icons.alternate_email_rounded,
+                            size: 18, color: AppColors.textSecondary),
+                      ),
+                      onChanged: (_) {
+                        if (_emailError != null) {
+                          setState(() => _emailError = null);
+                        }
+                      },
                     ),
                     const SizedBox(height: 14),
                     Pressable(
-                      onTap: _busy ? null : () => _handleGetOtp(),
+                      onTap: busy ? null : _handleEmailOtp,
                       child: Container(
                         height: 48,
                         alignment: Alignment.center,
@@ -191,7 +201,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           color: AppColors.primary,
                           borderRadius: BorderRadius.circular(999),
                         ),
-                        child: _busy
+                        child: _emailBusy
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
@@ -199,7 +209,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     strokeWidth: 2, color: Colors.white),
                               )
                             : Text(
-                                'Get OTP / Continue',
+                                'Get Code / Continue',
                                 style: AppTypography.bodyStrong.copyWith(
                                   color: Colors.white,
                                   fontSize: 14,
@@ -207,41 +217,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    // WhatsApp OTP — same flow, delivered on WhatsApp.
-                    _SocialButton(
-                      icon: Icons.chat_bubble_outline_rounded,
-                      iconColor: const Color(0xFF16A34A),
-                      label: 'Get OTP on WhatsApp',
-                      onPressed: _busy ? null : () => _handleGetOtp(channel: OtpChannel.whatsapp),
-                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 18),
-
-              // ── Divider ─────────────────────────────────────────
-              Row(
-                children: [
-                  const Expanded(child: Divider()),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('or continue with', style: AppTypography.label),
-                  ),
-                  const Expanded(child: Divider()),
-                ],
-              ),
-              const SizedBox(height: 18),
-
-              // ── Google ──────────────────────────────────────────
-              _SocialButton(
-                icon: Icons.g_mobiledata_rounded,
-                iconColor: AppColors.textPrimary,
-                iconSize: 26,
-                label: 'Continue with Google',
-                onPressed: _busy ? null : _handleGoogle,
-              ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 20),
 
               // ── Guest ───────────────────────────────────────────
               TextButton(
@@ -287,7 +266,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'List it free on CityBee & reach 50,000+ locals',
+                            'List it free on CityBee & reach locals nearby',
                             style: AppTypography.label.copyWith(
                               color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 10,
@@ -354,16 +333,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-/// OTP verification sheet (SMS or WhatsApp).
+/// Email OTP verification sheet.
 class _OtpSheet extends ConsumerStatefulWidget {
   const _OtpSheet({
-    required this.phone,
-    required this.channel,
+    required this.email,
     required this.onVerified,
   });
 
-  final String phone;
-  final OtpChannel channel;
+  final String email;
   final VoidCallback onVerified;
 
   @override
@@ -383,7 +360,7 @@ class _OtpSheetState extends ConsumerState<_OtpSheet> {
 
   Future<void> _verify() async {
     if (_otpController.text.trim().length != 6) {
-      setState(() => _error = 'Enter the 6-digit OTP');
+      setState(() => _error = 'Enter the 6-digit code');
       return;
     }
     setState(() {
@@ -393,7 +370,7 @@ class _OtpSheetState extends ConsumerState<_OtpSheet> {
     try {
       await ref
           .read(authStateProvider.notifier)
-          .verifyOtp('91${widget.phone}', _otpController.text.trim());
+          .verifyOtp(widget.email, _otpController.text.trim());
       widget.onVerified();
     } on AuthException catch (e) {
       setState(() => _error = e.userMessage);
@@ -404,7 +381,6 @@ class _OtpSheetState extends ConsumerState<_OtpSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final viaWhatsApp = widget.channel == OtpChannel.whatsapp;
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SafeArea(
@@ -414,12 +390,10 @@ class _OtpSheetState extends ConsumerState<_OtpSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Verify your number', style: AppTypography.title),
+              Text('Verify your email', style: AppTypography.title),
               const SizedBox(height: 5),
               Text(
-                viaWhatsApp
-                    ? 'We sent a 6-digit code to +91 ${widget.phone} on WhatsApp.'
-                    : 'We sent a 6-digit code to +91 ${widget.phone}.',
+                'We sent a 6-digit code to ${widget.email}.',
                 style: AppTypography.caption,
               ),
               const SizedBox(height: 16),
@@ -440,13 +414,6 @@ class _OtpSheetState extends ConsumerState<_OtpSheet> {
                 decoration: InputDecoration(
                   hintText: '••••••',
                   errorText: _error,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  'Demo build: use OTP 123456',
-                  style: AppTypography.label.copyWith(fontSize: 10),
                 ),
               ),
               const SizedBox(height: 14),
@@ -481,42 +448,151 @@ class _OtpSheetState extends ConsumerState<_OtpSheet> {
   }
 }
 
-class _SocialButton extends StatelessWidget {
-  const _SocialButton({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    required this.onPressed,
-    this.iconSize = 20,
-  });
+/// Official Google sign-in button treatment: white card, the multi-colour
+/// Google "G" (per Google branding), Hanken Grotesk label. Shows a spinner
+/// and blocks repeat taps while authentication is in flight.
+class _GoogleButton extends StatelessWidget {
+  const _GoogleButton({required this.busy, required this.onPressed});
 
-  final IconData icon;
-  final Color iconColor;
-  final String label;
+  final bool busy;
   final VoidCallback? onPressed;
-  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
     return Pressable(
-      onTap: onPressed,
+      onTap: busy ? null : onPressed,
       child: Container(
-        height: 46,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        height: 52,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(color: AppColors.border, width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: iconSize, color: iconColor),
-            const SizedBox(width: 9),
-            Text(label, style: AppTypography.bodyStrong.copyWith(fontSize: 13.5)),
+            if (busy)
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              const _GoogleLogo(size: 22),
+            const SizedBox(width: 12),
+            Text(
+              busy ? 'Signing in…' : 'Continue with Google',
+              style: AppTypography.bodyStrong.copyWith(fontSize: 14.5),
+            ),
           ],
         ),
       ),
     );
   }
+}
+
+/// Official multi-colour Google "G" logo drawn as a custom painter
+/// (Google brand guidelines; no fake substitute glyph).
+class _GoogleLogo extends StatelessWidget {
+  const _GoogleLogo({this.size = 22});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size.square(size),
+      painter: _GoogleLogoPainter(),
+    );
+  }
+}
+
+class _GoogleLogoPainter extends CustomPainter {
+  // Google brand colours.
+  static const _blue = Color(0xFF4285F4);
+  static const _green = Color(0xFF34A853);
+  static const _yellow = Color(0xFFFBBC05);
+  static const _red = Color(0xFFEA4335);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width;
+    final stroke = s * 0.095;
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke;
+
+    // Centre of the G.
+    final c = Offset(s / 2, s / 2);
+    final radius = (s - stroke) / 2 - s * 0.02;
+
+    // Blue arc: top-right → bottom (crossbar originates here).
+    canvas.drawArc(
+      Rect.fromCircle(center: c, radius: radius),
+      -1.05, // ~-60°
+      2.1,
+      false,
+      paint..color = _blue,
+    );
+    // Red arc: bottom → left.
+    canvas.drawArc(
+      Rect.fromCircle(center: c, radius: radius),
+      1.05,
+      2.1,
+      false,
+      paint..color = _red,
+    );
+    // Yellow arc: left → top-left.
+    canvas.drawArc(
+      Rect.fromCircle(center: c, radius: radius),
+      3.15,
+      2.1,
+      false,
+      paint..color = _yellow,
+    );
+    // Green arc: top-left → top.
+    canvas.drawArc(
+      Rect.fromCircle(center: c, radius: radius),
+      5.25,
+      1.8,
+      false,
+      paint..color = _green,
+    );
+
+    // Horizontal crossbar of the G (blue).
+    final barPaint = Paint()..color = _blue;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(c.dx, c.dy),
+          width: radius * 1.15,
+          height: stroke,
+        ),
+        Radius.circular(stroke / 2),
+      ),
+      barPaint,
+    );
+    // Vertical connector from crossbar to the blue arc end.
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(c.dx + radius * 0.575, c.dy - stroke * 0.9),
+          width: stroke,
+          height: stroke * 2.2,
+        ),
+        Radius.circular(stroke / 2),
+      ),
+      barPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _GoogleLogoPainter oldDelegate) => false;
 }

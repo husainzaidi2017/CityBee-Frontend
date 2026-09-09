@@ -129,8 +129,20 @@ class SupabaseAuthRepository implements contract.AuthRepository {
           throw const contract.AuthException('Unable to sign in with Google. Please try again.');
       }
     } catch (e) {
+      // Non-GoogleSignInException errors from the platform channel: log the
+      // real error and surface a distinctive message — never silently call
+      // it "cancelled" (that hid real configuration failures before).
       _logTransport('GoogleSignIn.authenticate', e);
-      throw const contract.AuthException('Google sign-in was cancelled.');
+      final raw = e.toString().toLowerCase();
+      if (raw.contains('cancel')) {
+        throw const contract.AuthException('Google sign-in was cancelled.');
+      }
+      if (raw.contains('network') || raw.contains('timeout')) {
+        throw const contract.AuthException('Please check your internet connection.');
+      }
+      throw contract.AuthException(
+        'Google sign-in could not be completed (${e.runtimeType}). Please try again.',
+      );
     }
 
     // 2. Google ID token → Supabase session. Supabase creates/reuses the
@@ -173,8 +185,16 @@ class SupabaseAuthRepository implements contract.AuthRepository {
       }
       throw contract.AuthException(e.message);
     } catch (e) {
+      // Surface the real exchange error (with runtimeType) instead of a
+      // generic message that hides the actual failure cause.
       _logTransport('signInWithIdToken', e);
-      throw const contract.AuthException('Unable to sign in with Google. Please try again.');
+      final raw = e.toString().toLowerCase();
+      if (raw.contains('network') || raw.contains('fetch') || raw.contains('timeout')) {
+        throw const contract.AuthException('Please check your internet connection.');
+      }
+      throw contract.AuthException(
+        'Google sign-in could not be completed (${e.runtimeType}). Please try again.',
+      );
     }
   }
 

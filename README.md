@@ -1,89 +1,152 @@
-# CityBee — City & Local Discovery App
+# CityBee — Flutter Frontend
 
-A Flutter application for discovering local offers, businesses (restaurants, doctors, hotels, salons, shops, malls), city services and places — built city-first around Moradabad (Peetal Nagri) but architected for any city.
+<div align="center">
 
-## Tech stack
+**CityBee** — a hyperlocal city & business discovery app.
+Find doctors, restaurants, hotels, salons, shops, offers, heritage places and more — anywhere in the world.
 
-| Concern | Choice |
+**Flutter · Material 3 · Riverpod · GoRouter · Supabase Auth · NestJS API**
+
+</div>
+
+---
+
+## Overview
+
+CityBee lets users discover local businesses around **any selected location** (powered by Google Places). Users browse as guests or sign in with **Google** or **email + password**. All data comes from the CityBee backend:
+
+- **Backend repo:** [husainzaidi2017/CityBee-Backend](https://github.com/husainzaidi2017/CityBee-Backend) (NestJS + TypeScript, deployed on Google Cloud Run)
+- **Database:** Supabase PostgreSQL + PostGIS
+- **Image storage:** Cloudinary
+
+## Features
+
+| Area | What it does |
 |---|---|
-| UI | Flutter · Material 3 |
-| State management | Riverpod (`flutter_riverpod`) |
-| Navigation | GoRouter (stateful 5-tab shell) |
-| Backend (planned) | Supabase PostgreSQL + PostGIS |
-| Auth (planned) | Supabase Auth |
-| Storage (planned) | Supabase Storage |
-| Location | Geolocator |
-| Images | `cached_network_image` |
-| External actions | `url_launcher` (call / WhatsApp / Google Maps) |
+| 🗺️ **Location** | Search any city/area worldwide (Google Places). Selected location persists across restarts. No hardcoded city list. |
+| 📍 **Nearby discovery** | Businesses, offers and places searched by coordinates with **category-wise progressive radius expansion** (5→10→25→50→100 km) — decided by the backend, not the app. |
+| 🏥 **Categories** | Food & Dining, Doctors, Hotels, Salons, Fashion, Grocery, Heritage, Malls, Cinemas… loaded from the API. |
+| 🔐 **Authentication** | Google Sign-In (native account picker) · Email + Password (sign-in / sign-up with email verification) · Guest browsing always available. |
+| 👤 **Profile** | Name/avatar/phone editing, email read-only (account identity), instant load via warm-start cache. |
+| ❤️ **Favorites** | Local for guests, synced to the backend when signed in. |
+| 🔔 **Notifications** | Deep linking to offer/business/place detail screens. |
+| 📞 **Quick actions** | One-tap Call / WhatsApp / Google Maps directions / Share on every listing. |
+| 🖼️ **Images** | Optimized Cloudinary delivery (≤1200px, WebP) with cached loading and graceful fallbacks. |
+
+## Screens
+
+```
+Splash → Login
+  └─ 5-tab shell: Home · Offers · Services · Explore · More
+       ├─ Home: categories grid, popular nearby, offers rail
+       ├─ Offers: tag-filtered deals list
+       ├─ Explore: places, food highlights, city guide
+       └─ More: profile, favorites, settings, about, legal
+  └─ Detail screens: Business / Doctor / Restaurant / Hotel / Offer / Place
+  └─ Search, All Categories, Edit Profile, notifications sheet
+```
+
+Navigation: **GoRouter** with a stateful 5-tab shell; detail routes push above it.
 
 ## Architecture
 
 ```
 lib/
-  app.dart                     # MaterialApp.router
-  main.dart                    # ProviderScope entry point
-  core/
-    constants/                 # (reserved)
-    theme/                     # AppColors · AppTypography · AppSpacing · AppRadius · AppShadows · AppTheme
-    utils/                     # AppLauncher (call/WhatsApp/maps) · Formatters
-    services/                  # LocationService (Geolocator wrapper)
-    widgets/                   # AppImage · chips · buttons · badges · search bar ·
-                               # SectionHeader · StatesView · MapPreview · LocationAppBar
-    errors/                    # AppException hierarchy (user-friendly messages)
-  routing/app_router.dart      # GoRouter graph
-  providers/app_providers.dart # Repositories + city/favorites/content providers
-  domain/models/               # City · AppCategory · Business · Offer · Place · Review ·
-                               # MenuItem · ServiceItem · Helpline · UserProfile
-  data/
-    mock/                      # Realistic mock content (screenshot-accurate)
-    repositories/              # Abstract contracts + Mock implementations
-  features/
-    shell/                     # Bottom-nav shell (Home · Offers · Services · Explore · More)
-    shell/ home/ offers/ services/ explore/ businesses/ search/
-    auth/ (splash, login) · profile/ (account-more, edit, settings, legal)
-      presentation/            # Screens + feature-local widgets
+├── main.dart                    # Supabase.init + profile warm-start cache
+├── app.dart                     # MaterialApp.router + auth session listener
+├── core/
+│   ├── constants/app_config.dart    # API base URL, Supabase keys, client IDs
+│   ├── network/api_client.dart      # HTTP envelope client (Bearer auth)
+│   ├── errors/app_exception.dart    # user-friendly error hierarchy
+│   ├── services/                    # location, share, notification navigator
+│   ├── theme/                       # CityBee orange design system
+│   └── widgets/                     # AppImage, cards, sheets, states
+├── data/
+│   ├── mock/                        # offline/mock data (fallback & tests)
+│   └── repositories/                # contracts + API implementations
+│       └── api/                     # ApiCity/Business/Offer/Place/Profile…
+├── domain/models/                   # Business, Offer, Place, CityBeeLocation…
+├── features/                        # auth, home, offers, services, explore,
+│                                    # businesses, search, profile, shell
+├── providers/app_providers.dart     # Riverpod providers & controllers
+└── routing/app_router.dart          # GoRouter graph
 ```
 
-**Data flow:** `UI → Riverpod provider → Repository (abstract) → Mock/Supabase implementation`.
-No widget queries mock data or Supabase directly.
+**State management:** Riverpod (`Notifier` controllers + `FutureProvider.autoDispose` for content). All content providers re-scope automatically when the selected location changes.
 
-## Key design decisions
+**Repository pattern:** every data source is behind an abstract contract (`BusinessRepository`, `AuthRepository`, …) with an API implementation and a mock implementation — swap or test either without UI changes.
 
-- **One Business model** for every category. Doctor/hotel specifics ride in optional fields (`consultationFee`, `amenities`, `timings`…); the detail screen renders category-specific sections from the same model — no duplicated architectures.
-- **City-aware everything.** `selectedCityProvider` is watched by every content provider, so switching cities (city picker sheet) re-scopes all screens. Adding a city = adding one `City` record.
-- **MapPreview is the single map surface** (CustomPaint placeholder today). Replace its internals with `GoogleMap` when the API key is configured — screens don't change.
-- **Mock-first strategy.** Mock repositories simulate network latency so loading/empty/error states are exercised. Swap to Supabase by changing the five provider assignments in `app_providers.dart`.
-- **Errors never surface raw.** Repositories/services throw `AppException` subtypes; the UI shows `userMessage` text.
+### Location architecture (important)
 
-## Screens
+- The user's selected location is a **`CityBeeLocation`** (Google Places data: display name, coordinates, place id) — **never** a `cities` table row.
+- `cities` in Supabase is CityBee reference data only (businesses/places anchor to `city_id`).
+- Selecting a location stores it in `SharedPreferences` (guests) and on the user profile (signed-in) — and does **not** create any database city record.
+- Discovery sends **coordinates** to the backend, which runs PostGIS nearby queries with per-category radius expansion.
 
-| Route | Screen |
+### Authentication
+
+| Flow | Path |
 |---|---|
-| `/` | Home — search, quick chips, hero banner, category grid, offers rail, popular businesses, city places, owner CTA |
-| `/offers` | Offers — filter chips, featured coupon hero, verified deals list, savings banner |
-| `/offer/:id` | Offer detail — coupon copy, validity, business block, call/WhatsApp |
-| `/services` | Services Hub — helplines, Brass Shield banner, specialist sections, events, legal aid |
-| `/explore` | Explore — city guide hero, spotlights, food rail, explorer tips |
-| `/place/:id` | Place detail |
-| `/category/:id` | Business listing — filters, sort, list ↔ map toggle |
-| `/business/:id` | Business detail — carousel, actions, deal banner, highlights, menu, map, reviews, sticky booking bar |
-| `/search` | Live search with trending terms |
-| `/splash`, `/login` | Branded splash · phone OTP / WhatsApp / Google login with guest browsing |
-| `/more`, `/favorites`, `/profile/edit` | Account+More (merged) · bookmarks · edit profile |
+| Google | Native picker → Google ID token → Supabase `signInWithIdToken` → session |
+| Email sign-in | Email + password → Supabase `signInWithPassword` → session |
+| Email sign-up | Name/email/password → account created (no session) → email verification (link or 6-digit code) → session |
+| Session restore | Supabase persists sessions; profile warm-starts from cache |
 
-## Next steps (backend wiring)
+After any successful sign-in the app **awaits** the profile load (`/users/me` upserts `public.users` from auth metadata) before navigating — so Edit Profile shows name/email immediately.
 
-1. Create the Supabase schema (`cities`, `categories`, `businesses`, `offers`, `places`, `reviews`, `favorites`, …) with PostGIS and RLS per the implementation plan.
-2. Implement `Supabase*Repository` classes next to the mocks; flip the five providers.
-3. Supabase Auth for the profile; Firebase (FCM/Analytics/Crashlytics) via `flutterfire configure`.
-4. Google Maps key in `android/app/src/main/AndroidManifest.xml`, then swap the `MapPreview` painter for a real `GoogleMap`.
+Deep link: `citybee://auth-callback` (registered in the Android manifest and allow-listed in Supabase URL Configuration) completes email-link activations in-app.
 
-## Running
+## Getting started
+
+### Prerequisites
+
+- Flutter 3.47+ (stable)
+- A running [CityBee backend](https://github.com/husainzaidi2017/CityBee-Backend) (or the deployed Cloud Run URL)
+
+### Run
 
 ```bash
 flutter pub get
-flutter run             # on a connected Android device/emulator
-flutter analyze         # clean
-flutter test            # widget smoke test
-flutter build apk --debug
+flutter run \
+  --dart-define=API_BASE_URL=https://citybee-918786981660.asia-south2.run.app/api \
+  --dart-define=GOOGLE_SERVER_CLIENT_ID=<your-web-oauth-client-id>
 ```
+
+Defaults (see `lib/core/constants/app_config.dart`) point at the production Cloud Run API; override per environment with `--dart-define`:
+
+| Define | Purpose |
+|---|---|
+| `API_BASE_URL` | NestJS API base (dev: `http://localhost:3000/api` or `http://10.0.2.2:3000/api` on the Android emulator) |
+| `GOOGLE_SERVER_CLIENT_ID` | Google OAuth **web** client ID (same one configured on the Supabase Google provider) — public identifier, not a secret |
+| `SUPABASE_URL` / `SUPABASE_ANON_KEY` | Defaults baked in; override for another project |
+
+### Build
+
+```bash
+# Release APK (production API)
+flutter build apk --release \
+  --dart-define=API_BASE_URL=https://citybee-918786981660.asia-south2.run.app/api \
+  --dart-define=GOOGLE_SERVER_CLIENT_ID=<web-client-id>
+
+# Web
+flutter build web --release --dart-define=API_BASE_URL=<url>
+```
+
+## Configuration notes
+
+- **No secrets in this app.** Only publishable values live here (Supabase URL + anon key, Google web client ID). The service-role key, Cloudinary API secret and Google Maps server key exist **only** in the backend.
+- **Google Sign-In** requires: the Google provider enabled in Supabase (web client ID + secret), an Android OAuth client (package `com.localgo.localgo` + your keystore SHA-1) and consent-screen branding completed.
+- **Email verification emails** need custom SMTP in Supabase to be customizable (6-digit code via `{{ .Token }}` template); without SMTP the built-in sender (2/hour) sends a magic link — which the app handles via deep link.
+
+## Testing
+
+```bash
+flutter analyze   # 0 issues expected
+flutter test      # widget + API-mapper unit tests
+```
+
+## Related repositories
+
+| Repo | Contents |
+|---|---|
+| [CityBee-Backend](https://github.com/husainzaidi2017/CityBee-Backend) | NestJS API, Supabase migrations (schema + RLS + constraints), Cloudinary upload pipeline, discovery/radius-expansion engine |

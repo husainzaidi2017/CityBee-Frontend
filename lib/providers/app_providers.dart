@@ -78,6 +78,18 @@ class AuthController extends Notifier<bool> {
     _syncProfile();
   }
 
+  Future<void> signInWithPassword(String email, String password) async {
+    await ref.read(authRepositoryProvider).signInWithPassword(email, password);
+    state = true;
+    _syncProfile();
+  }
+
+  Future<void> signUp(String email, String password) async {
+    await ref.read(authRepositoryProvider).signUp(email, password);
+    state = true;
+    _syncProfile();
+  }
+
   Future<void> logout() async {
     await ref.read(authRepositoryProvider).signOut();
     state = false;

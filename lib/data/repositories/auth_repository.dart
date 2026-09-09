@@ -19,6 +19,13 @@ abstract class AuthRepository {
   /// session (see SupabaseAuthRepository for the full flow).
   Future<void> signInWithGoogle();
 
+  /// Email+password sign-in (for accounts created with a password; works
+  /// without the email rate limit). Throws [AuthException] on bad creds.
+  Future<void> signInWithPassword(String email, String password);
+
+  /// Creates a new account with email+password and signs in immediately.
+  Future<void> signUp(String email, String password);
+
   /// Clears the session (Supabase + Google). Browsing continues as guest.
   Future<void> signOut();
 
@@ -62,6 +69,18 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   Future<void> signInWithGoogle() async {
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    _signedIn = true;
+  }
+
+  @override
+  Future<void> signInWithPassword(String email, String password) async {
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    _signedIn = true;
+  }
+
+  @override
+  Future<void> signUp(String email, String password) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
     _signedIn = true;
   }

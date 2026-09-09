@@ -23,19 +23,63 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   String? _emailError;
   bool _googleBusy = false;
   bool _emailBusy = false;
+  bool _isSignUp = false;
+  bool _showPassword = false;
 
   static final _emailRegex = RegExp(r'^[\w.\-+]+@([\w\-]+\.)+[a-zA-Z]{2,}$');
 
   @override
   void dispose() {
     _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   bool get _isEmailValid => _emailRegex.hasMatch(_emailController.text.trim());
+
+  /// Reliable password path — no email sending, no rate limit. Creates the
+  /// Supabase user (sign-up) or signs in; profile syncs via /users/me after.
+  Future<void> _handleEmailPassword() async {
+    final email = _emailController.text.trim();
+    if (!_isEmailValid) {
+      setState(() => _emailError = 'Enter a valid email address');
+      return;
+    }
+    final password = _passwordController.text;
+    if (password.length < 6) {
+      setState(() => _emailError = 'Password must be at least 6 characters');
+      return;
+    }
+    setState(() {
+      _emailError = null;
+      _emailBusy = true;
+    });
+    try {
+      if (_isSignUp) {
+        await ref.read(authStateProvider.notifier).signUp(email, password);
+      } else {
+        await ref
+            .read(authStateProvider.notifier)
+            .signInWithPassword(email, password);
+      }
+      if (!mounted) return;
+      _greetAndGoHome();
+    } on AuthException catch (e) {
+      final m = e.userMessage.toLowerCase();
+      if (!_isSignUp && m.contains('wrong email or password')) {
+        setState(() => _isSignUp = true);
+        _showError('No password found for this email — create one below.');
+      } else {
+        _showError(e.userMessage);
+      }
+    } finally {
+      if (mounted) setState(() => _emailBusy = false);
+    }
+  }
 
   Future<void> _handleGoogle() async {
     if (_googleBusy) return;
@@ -160,7 +204,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 18),
 
-              // ── Email card (secondary) ──────────────────────────
+              // ── Email card (secondary: password sign-in) ─────────
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -191,9 +235,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         }
                       },
                     ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: !_showPassword,
+                      autocorrect: false,
+                      style: AppTypography.body.copyWith(fontSize: 14.5),
+                      decoration: InputDecoration(
+                        hintText: _isSignUp ? 'Choose a password (6+ chars)' : 'Password',
+                        isDense: true,
+                        prefixIcon: const Icon(Icons.lock_outline_rounded,
+                            size: 18, color: AppColors.textSecondary),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _showPassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            size: 18,
+                            color: AppColors.textSecondary,
+                          ),
+                          onPressed: () =>
+                              setState(() => _showPassword = !_showPassword),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 14),
                     Pressable(
-                      onTap: busy ? null : _handleEmailOtp,
+                      onTap: busy ? null : _handleEmailPassword,
                       child: Container(
                         height: 48,
                         alignment: Alignment.center,
@@ -209,12 +277,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     strokeWidth: 2, color: Colors.white),
                               )
                             : Text(
-                                'Get Code / Continue',
+                                _isSignUp ? 'Create Account' : 'Sign In',
                                 style: AppTypography.bodyStrong.copyWith(
                                   color: Colors.white,
                                   fontSize: 14,
                                 ),
                               ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: TextButton(
+                        onPressed: busy
+                            ? null
+                            : () => setState(() {
+                                  _isSignUp = !_isSignUp;
+                                  _emailError = null;
+                                }),
+                        child: Text(
+                          _isSignUp
+                              ? 'Have an account? Sign in'
+                              : 'New here? Create an account',
+                          style: AppTypography.label
+                              .copyWith(color: AppColors.primary, fontSize: 11.5),
+                        ),
+                      ),
+                    ),
+                    // OTP path kept for email-code sign-in when the rate
+                    // limit allows; password is the reliable default.
+                    Center(
+                      child: TextButton(
+                        onPressed: busy ? null : _handleEmailOtp,
+                        child: Text(
+                          'Sign in with a 6-digit code instead',
+                          style: AppTypography.label.copyWith(
+                              color: AppColors.textSecondary, fontSize: 11),
+                        ),
                       ),
                     ),
                   ],

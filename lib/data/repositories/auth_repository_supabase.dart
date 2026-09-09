@@ -92,6 +92,69 @@ class SupabaseAuthRepository implements contract.AuthRepository {
   }
 
   @override
+  Future<void> signInWithPassword(String email, String password) async {
+    try {
+      await _client.auth.signInWithPassword(
+        email: email.trim(),
+        password: password,
+      );
+    } on AuthException catch (e) {
+      developer.log(
+        'signInWithPassword failed: code=${e.statusCode} message="${e.message}"',
+        name: 'CityBeeAuth',
+      );
+      final m = e.message.toLowerCase();
+      if (m.contains('invalid login credentials')) {
+        throw const contract.AuthException(
+          'Wrong email or password. Or create an account below.',
+        );
+      }
+      if (m.contains('email not confirmed')) {
+        throw const contract.AuthException(
+          'Please confirm your email first (check your inbox).',
+        );
+      }
+      if (m.contains('network') || m.contains('fetch')) {
+        throw const contract.AuthException('Please check your internet connection.');
+      }
+      throw contract.AuthException(e.message);
+    }
+  }
+
+  @override
+  Future<void> signUp(String email, String password) async {
+    try {
+      await _client.auth.signUp(
+        email: email.trim(),
+        password: password,
+        emailRedirectTo: AppConfig.authCallbackUrl,
+      );
+    } on AuthException catch (e) {
+      developer.log(
+        'signUp failed: code=${e.statusCode} message="${e.message}"',
+        name: 'CityBeeAuth',
+      );
+      final m = e.message.toLowerCase();
+      if (m.contains('rate') || m.contains('over')) {
+        throw const contract.AuthException(
+          'Too many sign-ups from this network. Please wait an hour.',
+        );
+      }
+      if (m.contains('already registered')) {
+        throw const contract.AuthException(
+          'An account with this email already exists — use Sign In.',
+        );
+      }
+      if (m.contains('password')) {
+        throw const contract.AuthException(
+          'Password must be at least 6 characters.',
+        );
+      }
+      throw contract.AuthException(e.message);
+    }
+  }
+
+  @override
   Future<void> signInWithGoogle() async {
     final googleSignIn = GoogleSignIn.instance;
 

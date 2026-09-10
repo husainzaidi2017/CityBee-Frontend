@@ -28,7 +28,7 @@ class SubPageScaffold extends StatelessWidget {
         title: Text(title, style: AppTypography.title.copyWith(fontSize: 16)),
         titleSpacing: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
       ),

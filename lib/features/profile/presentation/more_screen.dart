@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_config.dart';
 import '../../../core/services/share_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_launcher.dart';
 import '../../../core/widgets/app_image.dart';
@@ -30,35 +31,55 @@ class MoreScreen extends ConsumerWidget {
     final favorites = ref.watch(favoritesProvider);
     final bookmarkCount =
         favorites.isEmpty ? profile.bookmarkCount : favorites.length;
+    final submissions = ref.watch(mySubmissionsProvider).valueOrNull ?? const [];
+    final isOwner = ref.watch(ownerSummaryProvider).valueOrNull?.hasApprovedBusiness ?? false;
 
     return ColoredBox(
       color: AppColors.background,
       child: SafeArea(
         bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('More', style: AppTypography.headline),
-            const SizedBox(height: 8),
-
-            // ── Account section ───────────────────────────────────
-            if (isLoggedIn) ...[
-              _SignedInCard(
-                profile: profile,
-                bookmarkCount: bookmarkCount,
-                onEdit: () => context.push('/profile/edit'),
-                onFavorites: () => context.push('/favorites'),
-                onCoupons: () => context.go('/offers'),
+            // ── Fixed header: title + account card (always visible) ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('More', style: AppTypography.headline),
+                  const SizedBox(height: 8),
+                  if (isLoggedIn)
+                    _SignedInCard(
+                      profile: profile,
+                      bookmarkCount: bookmarkCount,
+                      onEdit: () => context.push('/profile/edit'),
+                      onFavorites: () => context.push('/favorites'),
+                      onCoupons: () => context.go('/offers'),
+                    )
+                  else
+                    _GuestCard(
+                      onLogin: () => context.push('/login'),
+                    ),
+                ],
               ),
-            ] else
-              _GuestCard(
-                onLogin: () => context.push('/login'),
-              ),
-            const SizedBox(height: 10),
+            ),
 
-            // ── CityBee for Business ──────────────────────────────
-            _BusinessPromoCard(onListBusiness: () => _openBusinessListing(context)),
-            const SizedBox(height: 10),
+            // ── Scrollable everything else ──────────────────────────
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                children: [
+                  // ── Submission status (listing requests) ───────────
+                  // One simple tile: shows pending/needs-changes badge when
+                  // relevant, opens the full Submission Status screen.
+                  _SubmissionStatusTile(submissions: submissions),
+                  const SizedBox(height: 10),
+
+                  // ── CityBee for Business ──────────────────────────
+                  _BusinessPromoCard(
+                      onListBusiness: () => _openBusinessListing(context)),
+                  const SizedBox(height: 10),
 
             // ── Your city tools ───────────────────────────────────
             _MenuCard(
@@ -80,18 +101,29 @@ class MoreScreen extends ConsumerWidget {
                   value: '$bookmarkCount saved places',
                   onTap: () => context.push('/favorites'),
                 ),
+                // Explore lives here for owners (their bottom tab shows
+                // My Business instead of Explore).
+                if (isOwner)
+                  _MenuTile(
+                    icon: Icons.explore_outlined,
+                    iconColor: AppColors.primary,
+                    iconBg: AppColors.primarySoft,
+                    label: 'Explore City',
+                    value: 'Places, food & heritage',
+                    onTap: () => context.push('/explore-city'),
+                  ),
                 _MenuTile(
                   icon: Icons.map_outlined,
-                  iconColor: AppColors.catHotel,
-                  iconBg: AppColors.catHotelSoft,
+                  iconColor: AppColors.primary,
+                  iconBg: AppColors.primarySoft,
                   label: 'Download City Map',
                   value: 'Offline map of ${location.displayName}',
                   onTap: () => _showMapDownloadSheet(context, location.displayName),
                 ),
                 _MenuTile(
                   icon: Icons.settings_outlined,
-                  iconColor: AppColors.catDoctor,
-                  iconBg: AppColors.catDoctorSoft,
+                  iconColor: AppColors.primary,
+                  iconBg: AppColors.primarySoft,
                   label: 'Settings',
                   value: 'Notifications & location',
                   onTap: () => context.push('/settings'),
@@ -106,8 +138,8 @@ class MoreScreen extends ConsumerWidget {
               children: [
                 _MenuTile(
                   icon: Icons.card_giftcard_rounded,
-                  iconColor: AppColors.accent,
-                  iconBg: AppColors.accentSoft,
+                  iconColor: AppColors.primary,
+                  iconBg: AppColors.primarySoft,
                   label: 'Invite Friends',
                   value: 'Get ₹100 per verified friend',
                   onTap: () => ShareService.shareApp(
@@ -125,8 +157,8 @@ class MoreScreen extends ConsumerWidget {
               children: [
                 _MenuTile(
                   icon: Icons.help_outline_rounded,
-                  iconColor: AppColors.catDoctor,
-                  iconBg: AppColors.catDoctorSoft,
+                  iconColor: AppColors.primary,
+                  iconBg: AppColors.primarySoft,
                   label: 'Help & FAQ',
                   onTap: () => context.push('/faq'),
                 ),
@@ -140,8 +172,8 @@ class MoreScreen extends ConsumerWidget {
                 ),
                 _MenuTile(
                   icon: Icons.info_outline_rounded,
-                  iconColor: AppColors.catHotel,
-                  iconBg: AppColors.catHotelSoft,
+                  iconColor: AppColors.primary,
+                  iconBg: AppColors.primarySoft,
                   label: 'About CityBee',
                   onTap: () => context.push('/about'),
                 ),
@@ -154,15 +186,15 @@ class MoreScreen extends ConsumerWidget {
                 ),
                 _MenuTile(
                   icon: Icons.description_outlined,
-                  iconColor: AppColors.textSecondary,
-                  iconBg: AppColors.background,
+                  iconColor: AppColors.primary,
+                  iconBg: AppColors.primarySoft,
                   label: 'Terms & Conditions',
                   onTap: () => context.push('/terms'),
                 ),
                 _MenuTile(
                   icon: Icons.star_border_rounded,
-                  iconColor: AppColors.starAmber,
-                  iconBg: const Color(0xFFFEF5E3),
+                  iconColor: AppColors.primary,
+                  iconBg: AppColors.primarySoft,
                   label: 'Rate CityBee',
                   onTap: () => _openPlayStore(context),
                 ),
@@ -178,8 +210,11 @@ class MoreScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             Center(
               child: Text(
-                'CityBee v1.0.0 · Made in ${location.state ?? location.displayName} 💚',
-                style: AppTypography.label.copyWith(fontSize: 9.5),
+                'CityBee v1.0.0 · Made in ${location.state ?? location.displayName}',
+                style: AppTypography.label.copyWith(fontSize: 10.5),
+              ),
+            ),
+                ],
               ),
             ),
           ],
@@ -189,13 +224,9 @@ class MoreScreen extends ConsumerWidget {
   }
 
   // ── Actions ────────────────────────────────────────────────────────────
-  Future<void> _openBusinessListing(BuildContext context) async {
-    final ok = await AppLauncher.openWebsite(AppConfig.businessListingUrl);
-    if (!ok && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open the browser.')),
-      );
-    }
+  void _openBusinessListing(BuildContext context) {
+    // In-app List Your Business wizard (guests are gated inside the screen).
+    context.push('/list-business');
   }
 
   Future<void> _openPlayStore(BuildContext context) async {
@@ -328,7 +359,7 @@ class _SignedInCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.border),
+              boxShadow: AppShadows.card,
             ),
             child: Row(
               children: [
@@ -488,7 +519,7 @@ class _GuestCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: Row(
         children: [
@@ -553,7 +584,7 @@ class _StatTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: Column(
         children: [
@@ -564,7 +595,7 @@ class _StatTile extends StatelessWidget {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: AppTypography.label.copyWith(fontSize: 9),
+            style: AppTypography.label.copyWith(fontSize: 10.5),
           ),
         ],
       ),
@@ -594,7 +625,7 @@ class _QuickLinkButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(13),
-          border: Border.all(color: AppColors.border),
+          boxShadow: AppShadows.card,
         ),
         child: Column(
           children: [
@@ -611,6 +642,56 @@ class _QuickLinkButton extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// "Your Business" section — five states:
+/// no submission (List Your Business CTA) · pending · rejected (+resubmit)
+/// · approved (My Business) · suspended.
+/// Compact profile tile: Submission Status with a live count/badge.
+class _SubmissionStatusTile extends StatelessWidget {
+  const _SubmissionStatusTile({required this.submissions});
+
+  final List<dynamic> submissions;
+
+  @override
+  Widget build(BuildContext context) {
+    final pending = submissions.where((s) => s.status == 'pending').length;
+    final rejected = submissions.where((s) => s.status == 'rejected').length;
+    String? badge;
+    Color? badgeColor;
+    if (rejected > 0) {
+      badge = '$rejected need${rejected == 1 ? '' : 's'} changes';
+      badgeColor = AppColors.brandRed;
+    } else if (pending > 0) {
+      badge = '$pending pending';
+      badgeColor = AppColors.starAmber;
+    }
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.card,
+      ),
+      child: ListTile(
+        dense: true,
+        visualDensity: VisualDensity.compact,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+        leading: const Icon(Icons.assignment_outlined,
+            size: 20, color: AppColors.primary),
+        title: Text('Submission Status', style: AppTypography.bodyStrong),
+        subtitle: badge == null
+            ? Text('Track your listing requests', style: AppTypography.label)
+            : Text(badge,
+                style: AppTypography.label.copyWith(
+                  color: badgeColor,
+                  fontWeight: FontWeight.w600,
+                )),
+        trailing: const Icon(Icons.chevron_right_rounded,
+            size: 19, color: AppColors.textMuted),
+        onTap: () => context.push('/submission-status'),
       ),
     );
   }
@@ -664,7 +745,7 @@ class _BusinessPromoCard extends StatelessWidget {
                 child: const Text(
                   'FREE',
                   style: TextStyle(
-                    fontSize: 9,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
                     letterSpacing: 0.6,
@@ -731,7 +812,7 @@ class _MenuCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
+            boxShadow: AppShadows.card,
           ),
           child: Column(children: children),
         ),
@@ -802,7 +883,7 @@ class _LogoutTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
+          boxShadow: AppShadows.card,
         ),
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,

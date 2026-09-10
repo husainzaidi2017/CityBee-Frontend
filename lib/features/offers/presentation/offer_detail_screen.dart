@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/services/share_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_launcher.dart';
 import '../../../core/widgets/app_image.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/collapsing_detail_header.dart';
+import '../../../core/widgets/photo_viewer.dart';
 import '../../../core/widgets/map_preview.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/business.dart';
@@ -67,6 +68,14 @@ class _MissingOffer extends StatelessWidget {
   }
 }
 
+void _openViewer(BuildContext context, String imageUrl) {
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => PhotoViewerScreen(imageUrls: [imageUrl]),
+    ),
+  );
+}
+
 class _OfferDetailBody extends StatelessWidget {
   const _OfferDetailBody({required this.offer, required this.business});
 
@@ -86,6 +95,7 @@ class _OfferDetailBody extends StatelessWidget {
                 image: offer.image,
                 fallbackIcon: Icons.local_offer_rounded,
                 onShareTap: () => ShareService.shareOffer(offer),
+                onImageTap: (index) => _openViewer(context, offer.image),
                 badge: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -216,7 +226,7 @@ class _ValidityRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: Column(
         children: [
@@ -267,7 +277,7 @@ class _BusinessBlock extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,24 +327,119 @@ class _BusinessBlock extends StatelessWidget {
             pinLabel: business.name,
           ),
           const SizedBox(height: 11),
-          Row(
-            children: [
-              CardActionButton(
-                label: 'View Business',
-                filled: true,
-                onTap: () => context.push('/business/${business.id}'),
-              ),
-              const SizedBox(width: 8),
-              CardActionButton(
-                label: 'Get Directions',
+          // Contact Details — same labelled table as every record page.
+          _ContactTable(
+            rows: [
+              _Entry(
+                'ADDRESS',
+                business.address,
+                action: 'View Map',
                 onTap: () => AppLauncher.directions(
-                  business.latitude,
-                  business.longitude,
-                  label: business.name,
-                ),
+                    business.latitude, business.longitude),
               ),
+              if (business.phone.isNotEmpty)
+                _Entry(
+                  'PHONE',
+                  business.phone,
+                  action: 'Call',
+                  onTap: () => AppLauncher.call(business.phone),
+                ),
+              if (business.whatsapp.isNotEmpty)
+                _Entry(
+                  'WHATSAPP',
+                  business.whatsapp,
+                  action: 'Chat',
+                  onTap: () => AppLauncher.whatsapp(business.whatsapp),
+                ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Labelled entry of the Contact Details table.
+class _Entry {
+  const _Entry(this.label, this.value, {this.action, this.onTap});
+
+  final String label;
+  final String value;
+  final String? action;
+  final VoidCallback? onTap;
+}
+
+/// Contact Details table: grey uppercase label column + value — matching
+/// every other record page.
+class _ContactTable extends StatelessWidget {
+  const _ContactTable({required this.rows});
+
+  final List<_Entry> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0) const Divider(height: 1, color: AppColors.divider),
+            InkWell(
+              onTap: rows[i].onTap,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 96,
+                    color: AppColors.background,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 12),
+                    child: Text(
+                      rows[i].label,
+                      style: TextStyle(
+                        fontFamily: AppTypography.bodyFamily,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.6,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        rows[i].value,
+                        style: AppTypography.body.copyWith(
+                          fontSize: 13,
+                          color: AppColors.textPrimary,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (rows[i].action != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Text(
+                        rows[i].action!,
+                        style: TextStyle(
+                          fontFamily: AppTypography.bodyFamily,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

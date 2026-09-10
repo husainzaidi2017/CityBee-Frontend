@@ -47,9 +47,9 @@ class SelectChip extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
-        height: 34,
+        height: 38,
         alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: selected ? activeBg : AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -63,7 +63,7 @@ class SelectChip extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (showCheck && selected) ...[
-              Icon(Icons.check, size: 14, color: fg),
+              Icon(Icons.check, size: 15, color: fg),
               const SizedBox(width: 5),
             ],
             Text(
@@ -71,8 +71,8 @@ class SelectChip extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
                 color: fg,
               ),
             ),
@@ -127,7 +127,7 @@ class RemovableFilterChip extends StatelessWidget {
 }
 
 /// Horizontal scrolling chip rail. Height leaves breathing room above and
-/// below the 34px chip so borders/shadows are never clipped.
+/// below the 38px chip so borders/shadows are never clipped.
 class ChipRail extends StatelessWidget {
   const ChipRail({
     super.key,
@@ -141,7 +141,7 @@ class ChipRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 38,
+      height: 42,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: padding,

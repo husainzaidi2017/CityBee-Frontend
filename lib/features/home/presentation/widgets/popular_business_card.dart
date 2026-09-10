@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/app_launcher.dart';
 import '../../../../core/widgets/app_image.dart';
@@ -25,8 +27,8 @@ class PopularBusinessCard extends StatelessWidget {
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          boxShadow: AppShadows.card,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,16 +63,14 @@ class PopularBusinessCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.titleSm,
                   ),
-                  const SizedBox(height: 3),
-                  Wrap(
-                    spacing: 5,
-                    runSpacing: 4,
-                    children: business.featureChips
-                        .take(3)
-                        .map((chip) => _MiniChip(label: chip))
-                        .toList(),
+                  const SizedBox(height: 2),
+                  Text(
+                    business.tagline,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.caption,
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
                       const Icon(Icons.location_on_outlined, size: 12, color: AppColors.textSecondary),
@@ -80,7 +80,7 @@ class PopularBusinessCard extends StatelessWidget {
                           '${business.area.isEmpty ? business.cityName : business.area} · ${business.distanceLabel} km',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppTypography.label.copyWith(fontSize: 10.5),
+                          style: AppTypography.label,
                         ),
                       ),
                     ],
@@ -90,11 +90,13 @@ class PopularBusinessCard extends StatelessWidget {
                     children: [
                       CardActionButton(
                         label: 'Call',
+                        icon: Icons.call_outlined,
                         onTap: () => AppLauncher.call(business.phone),
                       ),
                       const SizedBox(width: 6),
                       CardActionButton(
                         label: 'Route',
+                        icon: Icons.near_me_outlined,
                         onTap: () => AppLauncher.directions(
                           business.latitude,
                           business.longitude,
@@ -104,6 +106,8 @@ class PopularBusinessCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       CardActionButton(
                         label: 'WhatsApp',
+                        icon: Icons.chat_bubble_outline_rounded,
+                        filled: true,
                         onTap: () => AppLauncher.whatsapp(business.whatsapp),
                       ),
                     ],
@@ -113,28 +117,6 @@ class PopularBusinessCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _MiniChip extends StatelessWidget {
-  const _MiniChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppColors.border, width: 1),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
       ),
     );
   }

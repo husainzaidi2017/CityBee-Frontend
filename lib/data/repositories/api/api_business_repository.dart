@@ -39,8 +39,8 @@ class ApiBusinessRepository implements BusinessRepository {
       if (lat != null && lng != null) 'lng': lng.toString(),
     });
     final all = _mapList(data?.data);
-    final dining = {'dining', 'grocery'};
-    final shopping = {'fashion', 'heritage', 'malls', 'salons'};
+    final dining = {'dining', 'restaurants'};
+    final shopping = {'fashion', 'heritage', 'heritages', 'malls', 'salons', 'shops', 'grocery'};
     final health = {'doctors', 'hotels'};
     return all.where((b) {
       switch (filter) {
@@ -57,8 +57,11 @@ class ApiBusinessRepository implements BusinessRepository {
   }
 
   @override
-  Future<Business?> getById(String id) async {
-    final data = await _api.get('/businesses/$id');
+  Future<Business?> getById(String id, {double? lat, double? lng}) async {
+    final data = await _api.get('/businesses/$id', query: {
+      if (lat != null && lng != null) 'lat': lat.toString(),
+      if (lat != null && lng != null) 'lng': lng.toString(),
+    });
     return ApiMappers.business(data);
   }
 

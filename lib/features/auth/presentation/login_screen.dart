@@ -3,10 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/constants/app_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/utils/app_launcher.dart';
 import '../../../core/widgets/brand_mark.dart';
 import '../../../core/widgets/pressable.dart';
 import '../../../data/repositories/auth_repository.dart';
@@ -135,13 +133,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Future<void> _openBusinessListing() async {
-    final ok = await AppLauncher.openWebsite(AppConfig.businessListingUrl);
-    if (!ok && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open the browser.')),
-      );
-    }
+  void _openBusinessListing() {
+    // In-app List Your Business wizard.
+    context.push('/list-business');
   }
 
   @override
@@ -162,7 +156,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const Center(child: BrandMark(markSize: 64, wordmarkSize: 38)),
               const SizedBox(height: 26),
               Text(
-                'Welcome to CityBee 👋',
+                'Welcome to CityBee',
                 textAlign: TextAlign.center,
                 style: AppTypography.headline,
               ),

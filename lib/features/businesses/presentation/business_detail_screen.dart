@@ -3,12 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/share_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_launcher.dart';
+import '../../../core/widgets/app_icons.dart';
 import '../../../core/widgets/app_image.dart';
 import '../../../core/widgets/badges.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/collapsing_detail_header.dart';
+import '../../../core/widgets/photo_viewer.dart';
 import '../../../core/widgets/map_preview.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/business.dart';
@@ -80,6 +83,17 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
 
   Business get business => widget.business;
 
+  void _openPhotoViewer(int index) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PhotoViewerScreen(
+          imageUrls: business.images,
+          initialIndex: index,
+        ),
+      ),
+    );
+  }
+
   void _toggleFavorite() {
     ref
         .read(favoritesProvider.notifier)
@@ -113,6 +127,7 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                 isFavorite: isFavorite,
                 onFavoriteTap: _toggleFavorite,
                 onShareTap: () => ShareService.shareBusiness(business),
+                onImageTap: (index) => _openPhotoViewer(index),
                 badge: business.imageBadges.firstOrNull != null
                     ? ImageBadgeRow(
                         badges: [
@@ -126,7 +141,8 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
               ),
 
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                // 18px breathing room under the hero — the title needs air.
+                padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
                 sliver: SliverList.list(
                   children: [
                     // ── Header block ─────────────────────────────────
@@ -202,16 +218,11 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                         child: _HighlightsRow(chips: business.featureChips),
                       ),
 
-                    // ── Doctor / hotel specifics ─────────────────────
+                    // ── Doctor specifics ─────────────────────────────
                     if (isDoctor)
                       Padding(
                         padding: const EdgeInsets.only(top: 15),
                         child: _DoctorInfoCard(business: business),
-                      ),
-                    if (isHotel)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 15),
-                        child: _AmenitiesCard(amenities: business.amenities),
                       ),
 
                     // ── About ────────────────────────────────────────
@@ -227,11 +238,18 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                       ),
                     ),
 
-                    // ── Info card ────────────────────────────────────
+                    // ── Contact details (same card on every record) ──
                     Padding(
                       padding: const EdgeInsets.only(top: 14),
                       child: _InfoCard(business: business),
                     ),
+
+                    // ── Hotel amenities ─────────────────────────────
+                    if (isHotel)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: _AmenitiesCard(amenities: business.amenities),
+                      ),
 
                     // ── Menu specialties ─────────────────────────────
                     if (business.menu.isNotEmpty) ...[
@@ -338,13 +356,6 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                   decoration: BoxDecoration(
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(999),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x330E6B4F),
-                        blurRadius: 12,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
                   ),
                   child: Text(
                     switch (business.kind) {
@@ -389,9 +400,9 @@ class _ActionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = <_ActionData>[
-      _ActionData(Icons.call_outlined, 'Call', () => AppLauncher.call(business.phone)),
-      _ActionData(Icons.chat_bubble_outline_rounded, 'WhatsApp', () => _whatsapp(context)),
-      _ActionData(Icons.directions_outlined, 'Directions',
+      _ActionData(AppIcons.callAsset, 'Call', () => AppLauncher.call(business.phone)),
+      _ActionData(AppIcons.whatsappAsset, 'WhatsApp', () => _whatsapp(context)),
+      _ActionData(AppIcons.directionsAsset, 'Directions',
           () => AppLauncher.directions(business.latitude, business.longitude, label: business.name)),
       if (business.website != null)
         _ActionData(Icons.language_rounded, 'Website',
@@ -402,7 +413,9 @@ class _ActionRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        // Flat border instead of a shadow: shadows bleed upward over the
+        // hero's bottom edge and read as an orange glow behind the carousel.
+        border: Border.all(color: AppColors.border, width: 1),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -418,7 +431,8 @@ class _ActionRow extends StatelessWidget {
 class _ActionData {
   const _ActionData(this.icon, this.label, this.onTap);
 
-  final IconData icon;
+  /// SVG asset path (Call/WhatsApp/Directions) or IconData (Website).
+  final Object icon;
   final String label;
   final VoidCallback onTap;
 }
@@ -445,7 +459,12 @@ class _ActionButton extends StatelessWidget {
                 color: AppColors.primarySoft,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(action.icon, size: 19, color: AppColors.primary),
+              child: Center(
+                child: action.icon is String
+                    ? AppIcons.action(action.icon as String, size: 20)
+                    : Icon(action.icon as IconData,
+                        size: 19, color: AppColors.primary),
+              ),
             ),
             const SizedBox(height: 6),
             Text(
@@ -486,7 +505,7 @@ class _HighlightsRow extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: AppColors.border),
+                      boxShadow: AppShadows.card,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -521,7 +540,7 @@ class _DoctorInfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: Column(
         children: [
@@ -572,7 +591,7 @@ class _AmenitiesCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: AppColors.border),
+            boxShadow: AppShadows.card,
           ),
           child: Wrap(
             spacing: 8,
@@ -602,32 +621,166 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(13),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppColors.border),
+    final rows = <_ContactEntry>[
+      _ContactEntry(
+        label: 'Address',
+        value: business.address,
+        actionText: 'View Map',
+        onTap: () => AppLauncher.directions(
+            business.latitude, business.longitude),
       ),
-      child: Column(
-        children: [
-          _InfoRow(
-            icon: Icons.location_on_outlined,
-            label: 'Address',
-            value: business.address,
+      if (business.phone.isNotEmpty)
+        _ContactEntry(
+          label: 'Phone',
+          value: business.phone,
+          actionText: 'Call',
+          onTap: () => AppLauncher.call(business.phone),
+        ),
+      if (business.whatsapp.isNotEmpty)
+        _ContactEntry(
+          label: 'WhatsApp',
+          value: business.whatsapp,
+          actionText: 'Chat',
+          onTap: () => AppLauncher.whatsapp(business.whatsapp),
+        ),
+      if (business.website != null && business.website!.isNotEmpty)
+        _ContactEntry(
+          label: 'Website',
+          value: business.website!,
+          actionText: 'Open',
+          onTap: () => AppLauncher.openWebsite(business.website!),
+        ),
+      if (business.openingHours.isNotEmpty)
+        _ContactEntry(label: 'Hours', value: business.openingHours),
+    ];
+    return _ContactDetailsTable(rows: rows);
+  }
+}
+
+/// One labelled entry of the Contact Details table.
+class _ContactEntry {
+  const _ContactEntry({
+    required this.label,
+    required this.value,
+    this.actionText,
+    this.onTap,
+  });
+
+  final String label;
+  final String value;
+
+  /// Small orange action link on the right (Call / Chat / View Map / Open).
+  final String? actionText;
+  final VoidCallback? onTap;
+}
+
+/// The Contact Details card used on EVERY record page: a bordered white
+/// table with a grey uppercase label column (ADDRESS, PHONE, …) and the
+/// value on the right — matching the admin panel's record table design.
+class _ContactDetailsTable extends StatelessWidget {
+  const _ContactDetailsTable({required this.rows});
+
+  final List<_ContactEntry> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 4),
+        Text('Contact Details', style: AppTypography.titleSm),
+        const SizedBox(height: 9),
+        Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: AppColors.border, width: 1),
           ),
-          const Divider(height: 18),
-          _InfoRow(
-            icon: Icons.schedule_outlined,
-            label: 'Hours',
-            value: business.openingHours,
+          child: Column(
+            children: [
+              for (var i = 0; i < rows.length; i++) ...[
+                if (i > 0)
+                  const Divider(height: 1, color: AppColors.divider),
+                _ContactTableRow(row: rows[i]),
+              ],
+            ],
           ),
-        ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ContactTableRow extends StatelessWidget {
+  const _ContactTableRow({required this.row});
+
+  final _ContactEntry row;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: row.onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Grey label column — uppercase, like the admin record table.
+            Container(
+              width: 96,
+              color: AppColors.background,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+              margin: const EdgeInsets.only(top: 0),
+              child: Text(
+                row.label.toUpperCase(),
+                style: TextStyle(
+                  fontFamily: AppTypography.bodyFamily,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            // Value column.
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  row.value,
+                  style: AppTypography.body.copyWith(
+                    fontSize: 13,
+                    color: AppColors.textPrimary,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ),
+            // Orange action link (Call / Chat / View Map).
+            if (row.actionText != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Text(
+                  row.actionText!,
+                  style: TextStyle(
+                    fontFamily: AppTypography.bodyFamily,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 }
 
+/// One row inside the Contact Details card: icon chip + text + optional
+/// trailing action. Tappable when [onTap] is set.
 class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.icon, required this.label, required this.value});
 
@@ -673,7 +826,7 @@ class _MenuHeader extends StatelessWidget {
           child: const Text(
             'Updated Daily',
             style: TextStyle(
-              fontSize: 9,
+              fontSize: 10.5,
               fontWeight: FontWeight.w800,
               color: AppColors.verifiedGreen,
             ),
@@ -703,7 +856,7 @@ class _MenuItemRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: Row(
         children: [
@@ -813,7 +966,7 @@ class _ReviewCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -838,7 +991,7 @@ class _ReviewCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(review.author, style: AppTypography.bodyStrong),
-                    Text(review.authorMeta, style: AppTypography.label.copyWith(fontSize: 9.5)),
+                    Text(review.authorMeta, style: AppTypography.label.copyWith(fontSize: 10.5)),
                   ],
                 ),
               ),
@@ -848,7 +1001,7 @@ class _ReviewCard extends StatelessWidget {
           const SizedBox(height: 9),
           Text(review.text, style: AppTypography.caption.copyWith(fontSize: 11.5)),
           const SizedBox(height: 7),
-          Text(review.timeAgo, style: AppTypography.label.copyWith(fontSize: 9.5)),
+          Text(review.timeAgo, style: AppTypography.label.copyWith(fontSize: 10.5)),
         ],
       ),
     );

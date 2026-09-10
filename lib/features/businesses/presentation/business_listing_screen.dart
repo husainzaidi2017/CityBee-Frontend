@@ -3,12 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_animation.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/chips.dart';
+import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../data/repositories/business_repository.dart';
 import '../../../domain/models/business.dart';
 import '../../../providers/app_providers.dart';
+import 'widgets/doctor_card.dart';
 import 'widgets/listing_business_card.dart';
 
 enum _SortOption { relevance, rating, distance }
@@ -45,8 +48,62 @@ class _BusinessListingScreenState extends ConsumerState<BusinessListingScreen> {
   /// unfiltered; options are scoped to the category.
   final Set<String> _filters = {};
 
+  /// Selected doctor speciality (doctors listing only); null = all types.
+  String? _speciality;
+
   List<String> get _availableFilters =>
       _categoryFilters[widget.categoryId] ?? _defaultFilters;
+
+  bool get _isDoctors => widget.categoryId == 'doctors';
+
+  /// Speciality chips shown at the top of the doctors listing — the common
+  /// Indian specialities first, then anything extra found in the data.
+  static const _doctorSpecialities = <String>[
+    'General Physician',
+    'Dentist',
+    'Orthopaedic',
+    'Cardiologist',
+    'Neurologist',
+    'Neurosurgeon',
+    'Pediatrician',
+    'Dermatologist',
+    'ENT Specialist',
+    'Gynecologist',
+    'Eye Specialist',
+    'Homeopathy',
+    'Ayurvedic',
+  ];
+
+  /// Loose root matching: "Orthopaedic" matches "Orthopaedist",
+  /// "Dentist" matches "Dentist (Orthodontics)".
+  static const _specialityRoots = <String, String>{
+    'General Physician': 'physician',
+    'Dentist': 'dentist',
+    'Orthopaedic': 'orthop',
+    'Cardiologist': 'cardio',
+    'Neurologist': 'neurolog',
+    'Neurosurgeon': 'neurosurg',
+    'Pediatrician': 'paediat',
+    'Dermatologist': 'dermat',
+    'ENT Specialist': 'ent',
+    'Gynecologist': 'gynaec',
+    'Eye Specialist': 'ophthal',
+    'Homeopathy': 'homeopath',
+    'Ayurvedic': 'ayurved',
+  };
+
+  bool _matchesSpeciality(Business b, String speciality) {
+    final root = _specialityRoots[speciality] ?? speciality.toLowerCase();
+    final label = speciality.toLowerCase();
+    final haystack = [
+      b.specialization ?? '',
+      b.tagline,
+      b.name,
+    ].join(' ').toLowerCase();
+    // Match either the speciality's root word ("ophthal" → ophthalmologist)
+    // or its plain label ("eye specialist") — records store either form.
+    return haystack.contains(root) || haystack.contains(label);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,16 +138,67 @@ class _BusinessListingScreenState extends ConsumerState<BusinessListingScreen> {
                       title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTypography.title.copyWith(fontSize: 16),
+                      style: AppTypography.title,
                     ),
                   ),
                   _ListMapToggle(
-                      isMap: _showMap,
-                      onToggle: () => setState(() => _showMap = !_showMap)),
+                    isMap: _showMap,
+                    onToggle: () => setState(() => _showMap = !_showMap)),
                 ],
               ),
             ),
             const SizedBox(height: 8),
+
+            // ── Doctor specialities (doctors listing only) ──────────
+            if (_isDoctors)
+              SizedBox(
+                height: 42,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: _doctorSpecialities.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 7),
+                  itemBuilder: (_, index) {
+                    final speciality = _doctorSpecialities[index];
+                    final selected = speciality == _speciality;
+                    return Center(
+                      child: GestureDetector(
+                        onTap: () => setState(() =>
+                            _speciality = selected ? null : speciality),
+                        child: AnimatedContainer(
+                          duration: AppAnimation.fast,
+                          curve: AppAnimation.curve,
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? AppColors.chipDark
+                                : AppColors.surface,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: selected
+                                  ? AppColors.chipDark
+                                  : AppColors.border,
+                              width: 1.1,
+                            ),
+                          ),
+                          child: Text(
+                            speciality,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: selected
+                                  ? AppColors.chipDarkText
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            if (_isDoctors) const SizedBox(height: 8),
 
             // ── Applied filters (collapses away when none) ──────────
             AnimatedSize(
@@ -102,7 +210,7 @@ class _BusinessListingScreenState extends ConsumerState<BusinessListingScreen> {
                   : Padding(
                       padding: const EdgeInsets.only(top: 2, bottom: 8),
                       child: SizedBox(
-                        height: 38,
+                        height: 42,
                         child: ListView(
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -123,82 +231,130 @@ class _BusinessListingScreenState extends ConsumerState<BusinessListingScreen> {
                       ),
                     ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  const Icon(Icons.sort_rounded,
-                      size: 15, color: AppColors.textSecondary),
-                  const SizedBox(width: 5),
-                  for (final option in _SortOption.values) ...[
-                    if (option != _SortOption.values.first) ...[
-                      Text('  ·  ', style: AppTypography.label),
-                    ],
-                    GestureDetector(
-                      onTap: () => setState(() => _sort = option),
-                      child: AnimatedDefaultTextStyle(
-                        duration: AppAnimation.fast,
-                        curve: AppAnimation.curve,
-                        style: AppTypography.label.copyWith(
-                          color: option == _sort
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
-                          fontWeight: option == _sort
-                              ? FontWeight.w800
-                              : FontWeight.w600,
-                        ),
-                        child: Text(
-                          switch (option) {
-                            _SortOption.relevance => 'Relevance',
-                            _SortOption.rating => 'Rating',
-                            _SortOption.distance => 'Nearest',
+            // ── Sort chips + filter entry (doctors: speciality chips are
+            //    the filter — no sort row) ────────────────────────────────
+            if (!_isDoctors)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 38,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _SortOption.values.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 7),
+                          itemBuilder: (_, index) {
+                            final option = _SortOption.values[index];
+                            final selected = option == _sort;
+                            return GestureDetector(
+                              onTap: () => setState(() => _sort = option),
+                              child: AnimatedContainer(
+                                duration: AppAnimation.fast,
+                                curve: AppAnimation.curve,
+                                alignment: Alignment.center,
+                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                                decoration: BoxDecoration(
+                                  color: selected
+                                      ? AppColors.chipDark
+                                      : AppColors.surface,
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(
+                                    color: selected
+                                        ? AppColors.chipDark
+                                        : AppColors.border,
+                                    width: 1.1,
+                                  ),
+                                ),
+                                child: Text(
+                                  switch (option) {
+                                    _SortOption.relevance => 'Relevance',
+                                    _SortOption.rating => 'Rating',
+                                    _SortOption.distance => 'Nearest',
+                                  },
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: selected
+                                        ? AppColors.chipDarkText
+                                        : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            );
                           },
                         ),
                       ),
                     ),
-                  ],
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () => _showFilterSheet(),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _filters.isEmpty
-                              ? 'Filters'
-                              : 'Filters (${_filters.length})',
-                          style: AppTypography.label.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w800,
-                          ),
+                    const SizedBox(width: 10),
+                    GestureDetector(
+                      onTap: () => _showFilterSheet(),
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        height: 38,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: AppColors.primarySoft,
+                          borderRadius: BorderRadius.circular(999),
                         ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.tune_rounded,
-                            size: 14, color: AppColors.primary),
-                      ],
+                        child: Row(
+                          children: [
+                            const Icon(Icons.tune_rounded,
+                                size: 15, color: AppColors.primary),
+                            const SizedBox(width: 5),
+                            Text(
+                              _filters.isEmpty ? 'Filters' : '${_filters.length}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
             // ── Results ─────────────────────────────────────────────
             Expanded(
               child: businessesAsync.when(
                 data: (businesses) {
-                  final filtered = _applyFilters(businesses, _filters);
+                  var filtered = _applyFilters(businesses, _filters);
+                  if (_isDoctors && _speciality != null) {
+                    filtered = filtered
+                        .where((b) => _matchesSpeciality(b, _speciality!))
+                        .toList();
+                  }
+                  final nothingMatches =
+                      filtered.isEmpty &&
+                          (businesses.isNotEmpty ||
+                              _speciality != null ||
+                              _filters.isNotEmpty);
+                  if (nothingMatches) {
+                    return StatesView.empty(
+                      icon: _speciality != null
+                          ? Icons.medical_services_outlined
+                          : Icons.filter_alt_off_outlined,
+                      message: _speciality != null
+                          ? 'No $_speciality doctors listed here yet.'
+                          : 'No places match your filters.',
+                      actionLabel:
+                          _speciality != null ? 'Show All Doctors' : 'Clear Filters',
+                      onAction: () => setState(() {
+                        _speciality = null;
+                        _filters.clear();
+                      }),
+                    );
+                  }
                   if (filtered.isEmpty) {
-                    return _filters.isEmpty
-                        ? StatesView.empty(
-                            icon: Icons.storefront_outlined,
-                            message: 'No businesses found here yet.',
-                          )
-                        : StatesView.empty(
-                            icon: Icons.filter_alt_off_outlined,
-                            message: 'No places match your filters.',
-                            actionLabel: 'Clear Filters',
-                            onAction: () => setState(() => _filters.clear()),
-                          );
+                    return StatesView.empty(
+                      icon: Icons.storefront_outlined,
+                      message: 'No businesses found here yet.',
+                    );
                   }
                   final sorted = _applySort(filtered, _sort);
                   return Column(
@@ -207,7 +363,7 @@ class _BusinessListingScreenState extends ConsumerState<BusinessListingScreen> {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                         child: Text(
-                          '${location.displayName} · ${sorted.length} places',
+                          '${location.displayName} · ${sorted.length} ${_isDoctors ? 'doctors' : 'places'}',
                           style: AppTypography.caption,
                         ),
                       ),
@@ -217,14 +373,23 @@ class _BusinessListingScreenState extends ConsumerState<BusinessListingScreen> {
                             : ListView.builder(
                                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
                                 itemCount: sorted.length,
-                                itemBuilder: (context, index) =>
-                                    ListingBusinessCard(business: sorted[index]),
+                                itemBuilder: (context, index) => _isDoctors
+                                    ? DoctorCard(business: sorted[index])
+                                    : ListingBusinessCard(business: sorted[index]),
                               ),
                       ),
                     ],
                   );
                 },
-                loading: () => StatesView.loading(message: 'Finding places…'),
+                loading: () => ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+                  children: const [
+                    _CardSkeleton(),
+                    _CardSkeleton(),
+                    _CardSkeleton(),
+                    _CardSkeleton(),
+                  ],
+                ),
                 error: (e, _) => StatesView.error(
                   message: 'Could not load businesses.',
                   onRetry: () => ref.invalidate(
@@ -383,6 +548,54 @@ class _ListMapToggle extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Shimmer skeleton matching the shape of [ListingBusinessCard].
+class _CardSkeleton extends StatelessWidget {
+  const _CardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    // Row-shaped skeleton matching the compact listing card.
+    return Container(
+      margin: const EdgeInsets.only(bottom: 11),
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.card,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          SkeletonBox(width: 96, height: 108, radius: 12),
+          SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonBox(width: 160, height: 14, radius: 7),
+                SizedBox(height: 9),
+                SkeletonBox(width: 200, height: 10, radius: 5),
+                SizedBox(height: 9),
+                SkeletonBox(width: 130, height: 10, radius: 5),
+                SizedBox(height: 12),
+                Row(
+                  children: [
+                    SkeletonBox(width: 70, height: 34, radius: 10),
+                    SizedBox(width: 6),
+                    SkeletonBox(width: 70, height: 34, radius: 10),
+                    SizedBox(width: 6),
+                    SkeletonBox(width: 70, height: 34, radius: 10),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

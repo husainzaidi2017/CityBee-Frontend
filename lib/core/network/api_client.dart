@@ -78,6 +78,15 @@ class ApiClient {
         ));
   }
 
+  Future<dynamic> put(String path, {Map<String, dynamic>? body}) async {
+    final uri = _uri(path);
+    return _send(() async => _client.put(
+          uri,
+          headers: await _headers(json: true),
+          body: body == null ? null : jsonEncode(body),
+        ));
+  }
+
   Future<dynamic> delete(String path, {Map<String, dynamic>? body}) async {
     final uri = _uri(path);
     return _send(() async => _client.delete(
@@ -106,6 +115,16 @@ class ApiClient {
   }
 
   // ── internals ───────────────────────────────────────────────────────────
+
+  /// The configured API base (for multipart requests that bypass [get]).
+  static String get baseUrl => AppConfig.apiBaseUrl;
+
+  /// Current bearer token (null for guests) — for multipart requests.
+  Future<String?> get token async => await _tokenProvider?.call();
+
+  /// JSON-decode a response body (for multipart flows outside [_send]).
+  dynamic decodeBody(String body) =>
+      body.isEmpty ? <String, dynamic>{} : jsonDecode(body);
 
   Uri _uri(String path, [Map<String, String>? query]) {
     final base = Uri.parse(AppConfig.apiBaseUrl);

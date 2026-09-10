@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/app_image.dart';
@@ -11,6 +12,7 @@ import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/pressable.dart';
 import '../../../core/widgets/search_bar.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/offer.dart';
 import '../../../providers/app_providers.dart';
@@ -192,7 +194,15 @@ class _OffersPageState extends ConsumerState<_OffersPage>
           ],
         );
       },
-      loading: () => StatesView.loading(message: 'Fetching live deals…'),
+      loading: () => ListView(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+        children: const [
+          SkeletonCard(
+              height: 232, width: double.infinity, imageHeight: 148, radius: 18),
+          SizedBox(height: 12),
+          SkeletonList(itemCount: 3, itemHeight: 128),
+        ],
+      ),
       error: (e, _) => StatesView.error(
         message: 'Could not load offers. Check your connection.',
         onRetry: widget.onErrorRetry,
@@ -216,7 +226,7 @@ class FeaturedOfferCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.border, width: 1),
+          boxShadow: AppShadows.card,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -345,7 +355,7 @@ class DealCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border, width: 1),
+          boxShadow: AppShadows.card,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,7 +381,7 @@ class DealCard extends StatelessWidget {
                       child: Text(
                         offer.badgeText,
                         style: const TextStyle(
-                          fontSize: 9.5,
+                          fontSize: 10.5,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
                         ),
@@ -472,7 +482,7 @@ class _ViewOfferButton extends StatelessWidget {
   }
 }
 
-/// Cream "₹6.8 Lakhs City Saved" community banner.
+/// Cream community-savings banner (drives sign-ups with the selected city).
 class SavingsBanner extends ConsumerWidget {
   const SavingsBanner({super.key});
 
@@ -494,20 +504,14 @@ class SavingsBanner extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              const Text(
-                '₹6.8 Lakhs',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.creamBannerText,
-                ),
-              ),
-              const SizedBox(width: 5),
+              const Icon(Icons.savings_outlined,
+                  size: 22, color: AppColors.creamBannerText),
+              const SizedBox(width: 7),
               Text(
-                '${location.displayName} Saved',
+                'Join ${location.displayName} Savers',
                 style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
                   color: AppColors.creamBannerText,
                 ),
               ),
@@ -515,7 +519,7 @@ class SavingsBanner extends ConsumerWidget {
           ),
           const SizedBox(height: 3),
           const Text(
-            'Join CityBee to unlock deals & city savings.',
+            'Claim local deals and watch your city savings add up.',
             style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w500,

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
-/// Bold section title with optional trailing link ("See All (86) >")
-/// matching the screenshot hierarchy.
+/// Section title with optional trailing link ("See All (86) →"),
+/// the app-wide reusable header for every Home/Explore/Offers section.
 class SectionHeader extends StatelessWidget {
   const SectionHeader({
     super.key,
@@ -17,14 +17,14 @@ class SectionHeader extends StatelessWidget {
 
   final String title;
 
-  /// e.g. "See All (86) >" — renders as a green link when set.
+  /// e.g. "See All (86)" — renders as a brand link with a trailing chevron.
   final String? trailingLabel;
   final VoidCallback? onTrailingTap;
 
   /// Optional grey secondary line under the title.
   final String? subtitle;
 
-  /// Red underline accent (used by "Verified Moradabad Deals").
+  /// Brand underline accent (used by "Verified Deals" headers).
   final bool underline;
 
   @override
@@ -38,9 +38,14 @@ class SectionHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppTypography.title),
+                  Text(
+                    title,
+                    style: AppTypography.title.copyWith(fontSize: 18),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   if (underline) ...[
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 4),
                     Container(width: 42, height: 3, color: AppColors.brandRed),
                   ],
                 ],
@@ -48,13 +53,28 @@ class SectionHeader extends StatelessWidget {
             ),
             if (trailingLabel != null)
               GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: onTrailingTap,
-                child: Text(
-                  trailingLabel!,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        trailingLabel!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 1),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 16,
+                        color: AppColors.primary,
+                      ),
+                    ],
                   ),
                 ),
               ),

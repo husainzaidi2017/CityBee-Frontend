@@ -13,6 +13,7 @@ class ServiceItem {
     required this.image,
     required this.actionLabel,
     required this.phone,
+    this.category,
     this.citySpecialty = false,
   });
 
@@ -30,6 +31,10 @@ class ServiceItem {
   /// Primary CTA, e.g. "Book Slot", "Get Quote", "Send Rescue".
   final String actionLabel;
   final String phone;
+
+  /// Trade category id this provider belongs to (electrician, plumber, …).
+  /// Null = general/other (shown only in the unfiltered list).
+  final String? category;
   final bool citySpecialty;
 }
 

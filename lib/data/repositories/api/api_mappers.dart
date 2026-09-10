@@ -63,6 +63,7 @@ abstract final class ApiMappers {
       qualification: doctor?['qualification'] as String?,
       experienceYears: (doctor?['experience_years'] as num?)?.toInt(),
       consultationFee: doctor?['consultation_fee'] as String?,
+      specialization: doctor?['specialization'] as String?,
       timings: doctor != null ? _s(doctor['specialization']) : null,
       amenities: _strings(hotel?['amenities']),
       priceText: hotel?['price_range'] as String?,

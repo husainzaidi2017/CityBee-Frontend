@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/app_image.dart';
 import '../../../core/widgets/search_bar.dart';
@@ -42,6 +43,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final results = ref.watch(searchResultsProvider(_query));
+    final location = ref.watch(selectedLocationProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -54,7 +56,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, size: 20),
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
                     onPressed: () => context.pop(),
                   ),
                   Expanded(
@@ -89,7 +91,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ? ListView(
                       padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
                       children: [
-                        Text('Trending in Moradabad', style: AppTypography.titleSm),
+                        Text('Trending in ${location.displayName}', style: AppTypography.titleSm),
                         const SizedBox(height: 10),
                         ..._trending.map((term) => ListTile(
                               contentPadding: EdgeInsets.zero,
@@ -181,7 +183,7 @@ class _SearchResultTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
+          boxShadow: AppShadows.card,
         ),
         child: Row(
           children: [
@@ -216,9 +218,45 @@ class _SearchResultTile extends StatelessWidget {
                     style: AppTypography.label,
                   ),
                   const SizedBox(height: 3),
-                  Text(
-                    '${business.area.isEmpty ? business.cityName : business.area} · ${business.distanceLabel} km',
-                    style: AppTypography.label.copyWith(fontSize: 10),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.star_rounded,
+                        size: 12,
+                        color: business.rating >= 4.0
+                            ? AppColors.starAmber
+                            : AppColors.textMuted,
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        business.ratingLabel,
+                        style: AppTypography.label.copyWith(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 5,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: business.isOpen
+                              ? AppColors.openGreen
+                              : AppColors.textMuted,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${business.area.isEmpty ? business.cityName : business.area} · ${business.distanceLabel} km',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.label.copyWith(fontSize: 10),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

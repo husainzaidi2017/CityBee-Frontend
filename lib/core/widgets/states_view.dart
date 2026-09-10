@@ -31,25 +31,31 @@ abstract final class StatesView {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 64,
-                height: 64,
+                width: 68,
+                height: 68,
                 decoration: const BoxDecoration(
-                  color: AppColors.surface,
+                  color: AppColors.primarySoft,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: AppColors.textMuted, size: 28),
+                child: const Icon(Icons.search_off, color: AppColors.primary, size: 28),
               ),
-              const SizedBox(height: 14),
-              Text(message, textAlign: TextAlign.center, style: AppTypography.body),
+              const SizedBox(height: 16),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+              ),
               if (actionLabel != null && onAction != null) ...[
-                const SizedBox(height: 14),
-                OutlinedButton(
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
                   onPressed: onAction,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
+                    side: const BorderSide(color: AppColors.primary, width: 1.2),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
                   ),
-                  child: Text(actionLabel),
+                  icon: Icon(icon, size: 16),
+                  label: Text(actionLabel),
                 ),
               ],
             ],

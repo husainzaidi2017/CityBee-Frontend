@@ -1,6 +1,6 @@
 import '../../domain/models/service_item.dart';
 
-/// Emergency & civic helplines shown in the "Urgent & City Helplines" card.
+/// Emergency & civic helplines shown in the "Emergency Help" row.
 const mockHelplines = <Helpline>[
   Helpline(label: '108 Ambulance', number: '108', colorValue: 0xFFE23A2E),
   Helpline(label: '112 Police', number: '112', colorValue: 0xFF2563EB),
@@ -9,46 +9,166 @@ const mockHelplines = <Helpline>[
   Helpline(label: '24x7 Pharmacy', number: '1800180152', colorValue: 0xFF0D9488),
 ];
 
-/// Section order for the Services hub.
-const serviceSectionTitles = <String>[
-  'Home & Appliance Experts',
-  'Moradabad Brass & Artisan Masters',
-  'Health & Home Wellness',
-  'Vehicle & Highway Roadside Care',
+/// Service categories on the Services hub — named exactly how Indian
+/// customers ask for them (mistri trades first). Order = grid order.
+class ServiceCategoryDef {
+  const ServiceCategoryDef(this.id, this.label);
+  final String id;
+  final String label;
+}
+
+const serviceCategories = <ServiceCategoryDef>[
+  ServiceCategoryDef('electrician', 'Electrician'),
+  ServiceCategoryDef('plumber', 'Plumber'),
+  ServiceCategoryDef('carpenter', 'Carpenter'),
+  ServiceCategoryDef('ac-fridge', 'AC & Fridge'),
+  ServiceCategoryDef('mechanic', 'Mechanic'),
+  ServiceCategoryDef('painter', 'Painter'),
+  ServiceCategoryDef('cleaning', 'Cleaning'),
+  ServiceCategoryDef('pest', 'Pest Control'),
 ];
 
+/// Verified specialists. `category` links each provider to a grid tile so
+/// tapping a trade filters this list.
 final mockServices = <ServiceItem>[
   const ServiceItem(
-    id: 'ac-care',
-    name: 'Mister Singh AC Care',
-    badge: '342 jobs',
-    rating: '4.9',
-    servicesSummary: 'AC service, gas refill, copper wiring',
-    priceText: 'From ₹299',
-    etaText: '⚡ 45 min arrival',
-    statsText: '24 hr warranty on all repairs',
-    trustNote: 'Certified electricians',
-    image: 'https://picsum.photos/seed/localgo-ac/600/400',
-    actionLabel: 'Book Slot',
-    phone: '+919876500111',
+    id: 'electrician-sharma',
+    category: 'electrician',
+    name: 'Sharma Electricals',
+    badge: '512 jobs',
+    rating: '4.8',
+    servicesSummary: 'Wiring, fan & inverter repair, meter problem',
+    priceText: 'From ₹149',
+    etaText: '⚡ 45 min visit',
+    statsText: '30-day warranty on repairs',
+    trustNote: 'Certified electrician',
+    image: 'https://picsum.photos/seed/localgo-electrician/600/400',
+    actionLabel: 'Call Now',
+    phone: '+919876500101',
   ),
   const ServiceItem(
     id: 'plumbing',
+    category: 'plumber',
     name: 'Kumar Plumbing & Pipes',
     badge: '150 jobs',
     rating: '4.7',
     servicesSummary: 'Tap leakage, tank cleaning, pipe fitting',
     priceText: 'From ₹149',
-    etaText: '⚡ 60 min arrival',
+    etaText: '⚡ 60 min visit',
     statsText: '30-day service warranty',
     trustNote: 'Background verified',
     image: 'https://picsum.photos/seed/localgo-plumb/600/400',
-    actionLabel: 'Book Slot',
+    actionLabel: 'Call Now',
     phone: '+919876500222',
   ),
   const ServiceItem(
+    id: 'carpenter-ansari',
+    category: 'carpenter',
+    name: 'Ansari Furniture Works',
+    badge: '226 jobs',
+    rating: '4.8',
+    servicesSummary: 'Bed & door repair, cupboard, modular fitting',
+    priceText: 'From ₹199',
+    etaText: '⚡ Same-day visit',
+    statsText: 'Material at market rate',
+    trustNote: '10-year karigar family',
+    image: 'https://picsum.photos/seed/localgo-carpenter/600/400',
+    actionLabel: 'Call Now',
+    phone: '+919876500102',
+  ),
+  const ServiceItem(
+    id: 'ac-care',
+    category: 'ac-fridge',
+    name: 'Mister Singh AC Care',
+    badge: '342 jobs',
+    rating: '4.9',
+    servicesSummary: 'AC service, gas refill, fridge repair',
+    priceText: 'From ₹299',
+    etaText: '⚡ 45 min visit',
+    statsText: '24 hr warranty on all repairs',
+    trustNote: 'Certified technician',
+    image: 'https://picsum.photos/seed/localgo-ac/600/400',
+    actionLabel: 'Call Now',
+    phone: '+919876500111',
+  ),
+  const ServiceItem(
+    id: 'mechanic-yadav',
+    category: 'mechanic',
+    name: 'Yadav Auto Garage',
+    badge: 'Doorstep',
+    rating: '4.7',
+    servicesSummary: 'Bike & car service, brake, battery at your gate',
+    priceText: 'From ₹399',
+    etaText: '⚡ 60 min pickup',
+    statsText: 'Free pickup & drop',
+    trustNote: '15 years experience',
+    image: 'https://picsum.photos/seed/localgo-mechanic/600/400',
+    actionLabel: 'Call Now',
+    phone: '+919876500103',
+  ),
+  const ServiceItem(
+    id: 'roadside',
+    category: 'mechanic',
+    name: 'Highway Rescue 24x7',
+    badge: '24x7',
+    rating: '4.8',
+    servicesSummary: 'Flat tyre, battery jump, fuel delivery on highway',
+    priceText: 'From ₹250',
+    etaText: '⚡ 30 min reach',
+    statsText: 'Serves Delhi–Bareilly highway',
+    trustNote: 'GPS-tracked vans',
+    image: 'https://picsum.photos/seed/localgo-rescue/600/400',
+    actionLabel: 'Send Rescue',
+    phone: '+919876500555',
+  ),
+  const ServiceItem(
+    id: 'painter-rangrej',
+    category: 'painter',
+    name: 'Rangrej Painting Co.',
+    badge: '180 jobs',
+    rating: '4.8',
+    servicesSummary: 'Room painting, putty, waterproofing',
+    priceText: '₹8 / sq ft',
+    etaText: 'Free site visit',
+    statsText: 'Asian Paints certified',
+    trustNote: 'No advance payment',
+    image: 'https://picsum.photos/seed/localgo-painter/600/400',
+    actionLabel: 'Get Quote',
+    phone: '+919876500104',
+  ),
+  const ServiceItem(
+    id: 'cleaning-safai',
+    category: 'cleaning',
+    name: 'Safai Squad Deep Cleaning',
+    badge: '320 jobs',
+    rating: '4.7',
+    servicesSummary: 'Full home deep clean, sofa & carpet shampoo',
+    priceText: 'From ₹499',
+    etaText: '⚡ 2 hr slot',
+    statsText: 'Own machines & material',
+    trustNote: 'Police-verified staff',
+    image: 'https://picsum.photos/seed/localgo-cleaning/600/400',
+    actionLabel: 'Book Slot',
+    phone: '+919876500105',
+  ),
+  const ServiceItem(
+    id: 'pest-shield',
+    category: 'pest',
+    name: 'Pest Shield India',
+    badge: 'Herbal safe',
+    rating: '4.8',
+    servicesSummary: 'Cockroach, termite, mosquito & bedbug control',
+    priceText: 'From ₹599',
+    etaText: '⚡ Same-day service',
+    statsText: '90-day protection',
+    trustNote: 'Kids & pet safe',
+    image: 'https://picsum.photos/seed/localgo-pest/600/400',
+    actionLabel: 'Book Slot',
+    phone: '+919876500106',
+  ),
+  const ServiceItem(
     id: 'brass-guild',
-    name: 'Peetal Nagri Artisan Guild',
+    name: 'Local Karigar Guild',
     badge: '47 workshops',
     rating: '5.0',
     servicesSummary: 'Brass polish, repair & custom casting by local karigars',
@@ -63,7 +183,7 @@ final mockServices = <ServiceItem>[
   ),
   const ServiceItem(
     id: 'homecare',
-    name: "Dr. Anjali's HomeCare",
+    name: 'Home Nursing Care',
     badge: 'Expert',
     rating: '4.9',
     servicesSummary: 'Elder care, nursing, injections at home',
@@ -75,30 +195,16 @@ final mockServices = <ServiceItem>[
     actionLabel: 'Book Visit',
     phone: '+919876500444',
   ),
-  const ServiceItem(
-    id: 'roadside',
-    name: 'Highway Rescue Moradabad',
-    badge: '24x7',
-    rating: '4.8',
-    servicesSummary: 'Flat tyre, battery jump, fuel delivery on NH-24',
-    priceText: 'From ₹250',
-    etaText: '⚡ 30 min reach',
-    statsText: 'Serves Delhi–Bareilly highway',
-    trustNote: 'GPS-tracked vans',
-    image: 'https://picsum.photos/seed/localgo-rescue/600/400',
-    actionLabel: 'Send Rescue',
-    phone: '+919876500555',
-  ),
 ];
 
-/// "Events, Weddings & Religious" two-column cards.
+/// "Pandit, Mehndi & Occasions" two-column cards.
 final mockEventServices = <ServiceItem>[
   const ServiceItem(
     id: 'pandit-ji',
-    name: 'Pandit Ji for Griha Pravesh',
+    name: 'Pandit Ji for Puja',
     badge: 'Puja at home',
     rating: '4.9',
-    servicesSummary: 'Vedic rituals & havan',
+    servicesSummary: 'Griha pravesh, havan & Vedic rituals',
     priceText: '₹310 for booking',
     etaText: 'Same-day slots',
     statsText: 'Sanskrit certified',
@@ -112,7 +218,7 @@ final mockEventServices = <ServiceItem>[
     name: 'Bridal Mehndi Artist',
     badge: 'Premium designs',
     rating: '4.8',
-    servicesSummary: 'Bridal & party mehndi',
+    servicesSummary: 'Bridal & party mehndi at home',
     priceText: '₹1,100 onwards',
     etaText: 'Home visit',
     statsText: '120+ brides styled',
@@ -123,10 +229,10 @@ final mockEventServices = <ServiceItem>[
   ),
 ];
 
-/// "Professional & Legal Aid" wide card.
+/// "Legal & Documentation" wide card.
 const mockLegalService = ServiceItem(
   id: 'notary',
-  name: 'Notary & Documentation Desk — Moradabad',
+  name: 'Notary & Documentation Desk',
   badge: 'Same-day',
   rating: '4.7',
   servicesSummary: 'Notary, affidavits, rent agreements & stamp paper',

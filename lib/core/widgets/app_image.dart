@@ -2,9 +2,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import 'skeleton.dart';
 
 /// Network image with graceful placeholder and offline fallback so lists
 /// never show broken image icons.
+///
+/// • Loading: subtle skeleton surface that fades into the image.
+/// • Error: polished brand fallback (soft tint + category icon) — never a
+///   harsh colored block.
 class AppImage extends StatelessWidget {
   const AppImage({
     super.key,
@@ -13,6 +18,7 @@ class AppImage extends StatelessWidget {
     this.height,
     this.fit = BoxFit.cover,
     this.fallbackIcon = Icons.storefront_outlined,
+    this.memCacheWidth = 1080,
   });
 
   final String url;
@@ -21,6 +27,10 @@ class AppImage extends StatelessWidget {
   final BoxFit fit;
   final IconData fallbackIcon;
 
+  /// Decodes the image at most this wide (px) — big uploads render as
+  /// small KB in memory and load fast on phones.
+  final int? memCacheWidth;
+
   @override
   Widget build(BuildContext context) {
     return CachedNetworkImage(
@@ -28,21 +38,21 @@ class AppImage extends StatelessWidget {
       width: width,
       height: height,
       fit: fit,
-      placeholder: (_, __) => const ColoredBox(
-        color: AppColors.surfaceAlt,
-        child: Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
+      memCacheWidth: memCacheWidth,
+      fadeInDuration: const Duration(milliseconds: 280),
+      fadeOutDuration: const Duration(milliseconds: 120),
+      placeholder: (_, __) => SkeletonBox(
+        width: width,
+        height: height ?? double.infinity,
+        radius: 0,
       ),
       errorWidget: (_, __, ___) => _Fallback(icon: fallbackIcon),
     );
   }
 }
 
+/// Soft brand-tinted fallback with a category icon — used when the image
+/// fails to load or the URL is empty.
 class _Fallback extends StatelessWidget {
   const _Fallback({required this.icon});
 
@@ -53,7 +63,15 @@ class _Fallback extends StatelessWidget {
     return Container(
       color: AppColors.primarySoft,
       child: Center(
-        child: Icon(icon, color: AppColors.primary, size: 28),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.surface.withValues(alpha: 0.85),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: AppColors.primary, size: 20),
+        ),
       ),
     );
   }

@@ -15,6 +15,11 @@ import '../data/repositories/offer_repository.dart';
 import '../data/repositories/place_repository.dart';
 import '../data/repositories/profile_repository.dart';
 import '../data/repositories/service_repository.dart';
+import '../data/repositories/api/api_service_repository.dart';
+import '../data/repositories/api/api_owner_repository.dart';
+import '../data/repositories/api/api_listing_repository.dart';
+import '../domain/models/owner_business.dart';
+import '../domain/models/listing_submission.dart';
 import '../data/repositories/api/api_business_repository.dart';
 import '../data/repositories/api/api_city_repository.dart';
 import '../data/repositories/api/api_offer_repository.dart';
@@ -44,7 +49,8 @@ final offerRepositoryProvider = Provider<OfferRepository>(
     (ref) => ApiOfferRepository(ref.watch(apiClientProvider)));
 final placeRepositoryProvider = Provider<PlaceRepository>(
     (ref) => ApiPlaceRepository(ref.watch(apiClientProvider)));
-final serviceRepositoryProvider = Provider<ServiceRepository>((ref) => MockServiceRepository());
+final serviceRepositoryProvider = Provider<ServiceRepository>(
+    (ref) => ApiServiceServiceRepository(ref.watch(apiClientProvider)));
 final locationServiceProvider = Provider((ref) => const LocationService());
 final profileRepositoryProvider = Provider<ProfileRepository>(
     (ref) => ApiProfileRepository(
@@ -441,7 +447,12 @@ final popularBusinessesProvider = FutureProvider.autoDispose
 
 final businessByIdProvider =
     FutureProvider.autoDispose.family<Business?, String>((ref, id) async {
-  return ref.watch(businessRepositoryProvider).getById(id);
+  final location = ref.watch(selectedLocationProvider);
+  return ref.watch(businessRepositoryProvider).getById(
+        id,
+        lat: location.latitude,
+        lng: location.longitude,
+      );
 });
 
 final offersByTagProvider =
@@ -490,18 +501,30 @@ final cityGuideProvider = FutureProvider.autoDispose<CityGuide>((ref) async {
 
 final servicesProvider = FutureProvider.autoDispose<List<ServiceItem>>((ref) async {
   final location = ref.watch(selectedLocationProvider);
-  return ref.watch(serviceRepositoryProvider).getServices(cityId: location.displayName);
+  return ref.watch(serviceRepositoryProvider).getServices(
+        cityId: location.displayName,
+        lat: location.latitude,
+        lng: location.longitude,
+      );
 });
 
 final eventServicesProvider =
     FutureProvider.autoDispose<List<ServiceItem>>((ref) async {
   final location = ref.watch(selectedLocationProvider);
-  return ref.watch(serviceRepositoryProvider).getEventServices(cityId: location.displayName);
+  return ref.watch(serviceRepositoryProvider).getEventServices(
+        cityId: location.displayName,
+        lat: location.latitude,
+        lng: location.longitude,
+      );
 });
 
 final legalServiceProvider = FutureProvider.autoDispose<ServiceItem>((ref) async {
   final location = ref.watch(selectedLocationProvider);
-  return ref.watch(serviceRepositoryProvider).getLegalService(cityId: location.displayName);
+  return ref.watch(serviceRepositoryProvider).getLegalService(
+        cityId: location.displayName,
+        lat: location.latitude,
+        lng: location.longitude,
+      );
 });
 
 final helplinesProvider = FutureProvider.autoDispose<List<Helpline>>((ref) async {
@@ -511,7 +534,11 @@ final helplinesProvider = FutureProvider.autoDispose<List<Helpline>>((ref) async
 
 final specialistCountProvider = FutureProvider.autoDispose<int>((ref) async {
   final location = ref.watch(selectedLocationProvider);
-  return ref.watch(serviceRepositoryProvider).specialistCount(cityId: location.displayName);
+  return ref.watch(serviceRepositoryProvider).specialistCount(
+        cityId: location.displayName,
+        lat: location.latitude,
+        lng: location.longitude,
+      );
 });
 
 // ── Search ───────────────────────────────────────────────────────────────
@@ -519,6 +546,45 @@ final searchResultsProvider =
     FutureProvider.autoDispose.family<List<Business>, String>((ref, query) async {
   if (query.trim().isEmpty) return const [];
   return ref.watch(businessRepositoryProvider).search(query);
+});
+
+// ── Business-owner management (My Business) ──────────────────────────────
+final ownerRepositoryProvider = Provider<ApiOwnerRepository>(
+    (ref) => ApiOwnerRepository(ref.watch(apiClientProvider)));
+
+final listingRepositoryProvider = Provider<ApiListingRepository>(
+    (ref) => ApiListingRepository(ref.watch(apiClientProvider)));
+
+/// My listing submissions (List-Your-Business status per submission).
+final mySubmissionsProvider =
+    FutureProvider.autoDispose<List<ListingSubmission>>((ref) async {
+  final signedIn = ref.watch(authStateProvider);
+  if (!signedIn) return const [];
+  return ref.watch(listingRepositoryProvider).mySubmissions();
+});
+
+/// Lightweight owner status — drives the bottom navigation (Explore ↔
+/// My Business). Refreshes on auth changes and after profile/business
+/// updates via [ref.invalidate].
+final ownerSummaryProvider = FutureProvider.autoDispose<OwnerBusinessSummary>(
+    (ref) async {
+  final signedIn = ref.watch(authStateProvider);
+  if (!signedIn) return OwnerBusinessSummary.empty;
+  return ref.watch(ownerRepositoryProvider).summary();
+});
+
+/// All businesses owned by the signed-in user (selector + dashboard).
+final myBusinessesProvider = FutureProvider.autoDispose<List<OwnerBusiness>>(
+    (ref) async {
+  final signedIn = ref.watch(authStateProvider);
+  if (!signedIn) return const [];
+  return ref.watch(ownerRepositoryProvider).myBusinesses();
+});
+
+/// Full management details for one owned business.
+final ownerBusinessDetailsProvider = FutureProvider.autoDispose
+    .family<OwnerBusinessDetails?, String>((ref, businessId) async {
+  return ref.watch(ownerRepositoryProvider).businessDetails(businessId);
 });
 
 // ── Notifications (API inbox when signed in) ─────────────────────────────

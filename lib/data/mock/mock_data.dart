@@ -51,7 +51,7 @@ const mockCities = <City>[
 /// ── Categories (Explore Near You grid) ───────────────────────────────────
 const mockCategories = <AppCategory>[
   AppCategory(id: 'fashion', name: 'Fashion', listingTitle: 'Fashion & Shopping'),
-  AppCategory(id: 'grocery', name: 'Grocery', listingTitle: 'Grocery Stores'),
+  AppCategory(id: 'shops', name: 'Shops', listingTitle: 'Shops & Stores'),
   AppCategory(id: 'dining', name: 'Food & Dining', listingTitle: 'Restaurants & Dining'),
   AppCategory(id: 'doctors', name: 'Doctors', listingTitle: 'Doctors & Clinics'),
   AppCategory(id: 'hotels', name: 'Hotels', listingTitle: 'Hotels & Stays'),

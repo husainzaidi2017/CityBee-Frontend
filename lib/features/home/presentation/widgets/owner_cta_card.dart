@@ -1,25 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/constants/app_config.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/app_launcher.dart';
 
-/// "For Owners" CTA card at the bottom of the Home screen. The CTA opens
-/// the business-registration portal (temporary Google link) externally.
-class OwnerCtaCard extends StatelessWidget {
+/// "For Owners" CTA card at the bottom of the Home screen. Opens the
+/// in-app List Your Business wizard.
+class OwnerCtaCard extends ConsumerWidget {
   const OwnerCtaCard({super.key});
 
-  Future<void> _openListing(BuildContext context) async {
-    final ok = await AppLauncher.openWebsite(AppConfig.businessListingUrl);
-    if (!ok && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open the browser.')),
-      );
-    }
+  void _openListing(BuildContext context) {
+    context.push('/list-business');
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -47,7 +42,7 @@ class OwnerCtaCard extends StatelessWidget {
               const SizedBox(width: 11),
               const Expanded(
                 child: Text(
-                  'Own a Business in Moradabad?',
+                  'Own a Business here?',
                   style: TextStyle(
                       fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
                 ),

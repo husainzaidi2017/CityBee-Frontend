@@ -7,42 +7,11 @@ import '../services/notification_navigator.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
-/// Demo rows shown to guests (login is optional) — mirrors the broadcast
-/// notifications seeded in the backend.
-const _guestNotifications = <AppNotification>[
-  AppNotification(
-    id: 'n1',
-    icon: Icons.local_offer_rounded,
-    colorValue: 0xFFF4691F,
-    title: 'New deal near you',
-    body: 'Royal Mughal: Flat 20% OFF on orders above ₹500',
-    time: '2h ago',
-    payload: NotificationPayload(target: NotificationTarget.offer, entityId: 'royal-mughal-offer'),
-  ),
-  AppNotification(
-    id: 'n2',
-    icon: Icons.verified,
-    colorValue: 0xFF0E6B4F,
-    title: 'Booking confirmed',
-    body: 'Your table at Royal Restaurant & Banquet is set for 8 PM',
-    time: '5h ago',
-    payload: NotificationPayload(target: NotificationTarget.business, entityId: 'royal-mughal'),
-  ),
-  AppNotification(
-    id: 'n3',
-    icon: Icons.location_on_outlined,
-    colorValue: 0xFFE23A2E,
-    title: 'Weekend explore ideas',
-    body: 'Peetal Bazaar and Rudra Lake are trending this weekend',
-    time: '1d ago',
-    payload: NotificationPayload(target: NotificationTarget.exploreTab),
-  ),
-];
-
 /// Notification inbox sheet behind the bell icon. Every row carries a
 /// deep-link payload and navigates to its own destination on tap.
 ///
-/// Signed-in users see their API inbox; guests see the demo rows.
+/// Signed-in users see their API inbox; guests see an honest empty state
+/// (sign-in prompt) — no demo data.
 Future<void> showNotificationsSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
@@ -56,9 +25,8 @@ class _NotificationsSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final signedIn = ref.watch(authStateProvider);
-    final notifications =
-        signedIn ? ref.watch(notificationsProvider) : const AsyncValue<List<AppNotification>>.data(_guestNotifications);
-    final rows = notifications.valueOrNull ?? _guestNotifications;
+    final notifications = signedIn ? ref.watch(notificationsProvider) : null;
+    final rows = notifications?.valueOrNull ?? const <AppNotification>[];
 
     return SafeArea(
       child: Padding(
@@ -70,9 +38,30 @@ class _NotificationsSheet extends ConsumerWidget {
             Text('Notifications', style: AppTypography.title),
             const SizedBox(height: 12),
             if (rows.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Text('You are all caught up.', style: AppTypography.caption),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primarySoft,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.notifications_none_rounded,
+                          size: 26, color: AppColors.primary),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      signedIn
+                          ? 'You are all caught up.'
+                          : 'Sign in to see deal alerts and updates.',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.caption,
+                    ),
+                  ],
+                ),
               )
             else
               ...rows.map(

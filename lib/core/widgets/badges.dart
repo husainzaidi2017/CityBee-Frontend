@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
-/// Rating pills used on cards and detail headers.
-/// [RatingPill.green] — solid green pill "★ 4.6".
-/// [RatingPill.soft]  — light green pill with count "★ 4.6 (1.2K)".
+/// Rating pills used on cards and detail headers — one consistent brand
+/// orange treatment everywhere (solid = on light bg, soft = on imagery).
+/// [RatingPill.solid] — solid orange pill "★ 4.6".
+/// [RatingPill.soft]  — light orange pill with count "★ 4.6 (1.2K)".
 class RatingPill extends StatelessWidget {
   const RatingPill.green({super.key, required this.rating})
       : count = null,
-      _soft = false;
+        _soft = false;
 
   const RatingPill.soft({super.key, required this.rating, this.count})
       : _soft = true;
@@ -24,20 +25,20 @@ class RatingPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: soft ? AppColors.verifiedGreenSoft : AppColors.verifiedGreen,
+        color: soft ? AppColors.ratingSoft : AppColors.rating,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.star_rounded, size: 13, color: soft ? AppColors.verifiedGreen : Colors.white),
+          Icon(Icons.star_rounded, size: 13, color: soft ? AppColors.rating : Colors.white),
           const SizedBox(width: 3),
           Text(
             count == null ? rating : '$rating ($count)',
             style: TextStyle(
               fontSize: 11,
-              fontWeight: FontWeight.w800,
-              color: soft ? AppColors.verifiedGreen : Colors.white,
+              fontWeight: FontWeight.w700,
+              color: soft ? AppColors.ratingDark : Colors.white,
             ),
           ),
         ],

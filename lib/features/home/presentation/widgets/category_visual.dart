@@ -1,26 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../../../core/theme/app_colors.dart';
-
-/// Icon + tint for each category id — the single place that maps category
-/// data to visuals (used by Home grid and listing headers).
+/// Resolve API slugs and legacy category IDs without changing navigation IDs.
 class CategoryVisual {
-  const CategoryVisual(this.icon, this.foreground, this.background);
+  const CategoryVisual(this.assetName);
+  final String assetName;
+  String get assetPath => 'assets/categories/$assetName.svg';
 
-  final IconData icon;
-  final Color foreground;
-  final Color background;
+  static CategoryVisual of(String id) =>
+      CategoryVisual(switch (id.trim().toLowerCase()) {
+        'fashion' => 'fashion',
+        'shops' || 'shop' || 'grocery' || 'groceries' => 'shops',
+        'dining' || 'restaurant' || 'restaurants' => 'restaurants',
+        'doctor' || 'doctors' => 'doctors',
+        'hotel' || 'hotels' => 'hotels',
+        // Barber merged into Salons (category removed from the database —
+        // its businesses were relinked to salons).
+        'barber' || 'barbers' => 'salons',
+        'heritage' || 'heritages' => 'heritage',
+        'salon' || 'salons' || 'spa' => 'salons',
+        'mall' || 'malls' => 'malls',
+        'cinema' || 'cinemas' => 'cinemas',
+        'gym' || 'gyms' => 'gym',
+        'bar' || 'bars' => 'bar',
+        'cafe' || 'cafes' => 'cafe',
+        _ => 'shop',
+      });
+}
 
-  static CategoryVisual of(String id) => switch (id) {
-        'fashion' => const CategoryVisual(Icons.checkroom, AppColors.catFashion, AppColors.catFashionSoft),
-        'grocery' => const CategoryVisual(Icons.shopping_basket, AppColors.catGrocery, AppColors.catGrocerySoft),
-        'dining' => const CategoryVisual(Icons.restaurant, AppColors.catFood, AppColors.catFoodSoft),
-        'doctors' => const CategoryVisual(Icons.medical_services, AppColors.catDoctor, AppColors.catDoctorSoft),
-        'hotels' => const CategoryVisual(Icons.hotel, AppColors.catHotel, AppColors.catHotelSoft),
-        'barbers' => const CategoryVisual(Icons.content_cut, AppColors.catBarber, AppColors.catBarberSoft),
-        'heritage' => const CategoryVisual(Icons.account_balance, AppColors.catHeritage, AppColors.catHeritageSoft),
-        'salons' => const CategoryVisual(Icons.spa, AppColors.catSalon, AppColors.catSalonSoft),
-        'malls' => const CategoryVisual(Icons.local_mall, AppColors.catDoctor, AppColors.catDoctorSoft),
-        _ => const CategoryVisual(Icons.storefront, AppColors.primary, AppColors.primarySoft),
-      };
+/// Original multicolor illustrations, shared by Home and All Categories.
+class CategoryIcon extends StatelessWidget {
+  const CategoryIcon({super.key, required this.visual, this.size = 44});
+  final CategoryVisual visual;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => SvgPicture.asset(
+    visual.assetPath,
+    width: size,
+    height: size,
+    excludeFromSemantics: true,
+  );
 }

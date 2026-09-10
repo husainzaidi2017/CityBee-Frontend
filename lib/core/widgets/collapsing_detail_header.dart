@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../theme/app_animation.dart';
@@ -30,6 +31,7 @@ class CollapsingDetailHeader extends StatelessWidget {
     this.badge,
     this.onPageChanged,
     this.pageIndex = 0,
+    this.onImageTap,
   });
 
   /// Page title shown once the header collapses.
@@ -59,6 +61,10 @@ class CollapsingDetailHeader extends StatelessWidget {
   final ValueChanged<int>? onPageChanged;
   final int pageIndex;
 
+  /// Tap a hero photo → open the full-screen zoomable viewer. When null,
+  /// photos are not tappable. Receives the tapped image index.
+  final void Function(int index)? onImageTap;
+
   /// Base expanded height for the hero. ~0.62 of screen width ≈ 1.5× the
   /// previous fixed height on common devices.
   static double heroHeight(BuildContext context) =>
@@ -79,6 +85,9 @@ class CollapsingDetailHeader extends StatelessWidget {
       backgroundColor: AppColors.surface,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
+      // No Material shadow under the collapsed app bar — the content's own
+      // card shadows must not glow out from under the hero.
+      shadowColor: Colors.transparent,
       flexibleSpace: LayoutBuilder(
         builder: (context, constraints) {
           final currentHeight = constraints.biggest.height;
@@ -92,37 +101,67 @@ class CollapsingDetailHeader extends StatelessWidget {
           return Stack(
             fit: StackFit.expand,
             children: [
-              // ── Hero image (cover, clipped) ────────────────────────
+              // ── Hero image ────────────────────────────────────────────
               if (isExpanded)
                 Positioned.fill(
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
                       if (images.length > 1)
+                        // Blurred cover-crop of the current photo as the
+                        // backdrop (ImageFiltered — cheap, never blurs the
+                        // sharp photo above it), sharp photo contained on
+                        // top, swipeable PageView.
+                        _BlurredBackdrop(
+                          url: images[pageIndex.clamp(0, images.length - 1)],
+                        )
+                      else
+                        GestureDetector(
+                          onTap:
+                              onImageTap != null ? () => onImageTap!(0) : null,
+                          child: AppImage(
+                            url: image,
+                            fallbackIcon: fallbackIcon,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+
+                      if (images.length > 1)
                         PageView.builder(
                           onPageChanged: onPageChanged,
                           itemCount: images.length,
-                          itemBuilder: (context, i) => AppImage(
-                            url: images[i],
-                            fallbackIcon: fallbackIcon,
+                          itemBuilder: (context, i) => GestureDetector(
+                            // Tap → full-screen zoomable viewer.
+                            onTap:
+                                onImageTap != null ? () => onImageTap!(i) : null,
+                            child: Center(
+                              child: AppImage(
+                                url: images[i],
+                                fallbackIcon: fallbackIcon,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
                           ),
-                        )
-                      else
-                        AppImage(url: image, fallbackIcon: fallbackIcon),
+                        ),
 
                       // Soft gradient so the overlay text/badge reads well.
+                      // IgnorePointer: without it the full-size gradient box
+                      // sits ABOVE the PageView in the Stack and eats every
+                      // swipe — the carousel gets stuck on page 1.
                       const Positioned.fill(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              stops: [0, 0.55, 1],
-                              colors: [
-                                Color(0x40000000),
-                                Colors.transparent,
-                                Color(0x59000000),
-                              ],
+                        child: IgnorePointer(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                stops: [0, 0.55, 1],
+                                colors: [
+                                  Color(0x40000000),
+                                  Colors.transparent,
+                                  Color(0x59000000),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -133,22 +172,27 @@ class CollapsingDetailHeader extends StatelessWidget {
                           bottom: 10,
                           left: 0,
                           right: 0,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              for (var i = 0; i < images.length; i++)
-                                AnimatedContainer(
-                                  duration: AppAnimation.fast,
-                                  curve: AppAnimation.curve,
-                                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                                  width: i == pageIndex ? 18 : 6,
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                    color: i == pageIndex ? Colors.white : Colors.white54,
-                                    borderRadius: BorderRadius.circular(999),
+                          child: IgnorePointer(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                for (var i = 0; i < images.length; i++)
+                                  AnimatedContainer(
+                                    duration: AppAnimation.fast,
+                                    curve: AppAnimation.curve,
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 3),
+                                    width: i == pageIndex ? 18 : 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: i == pageIndex
+                                          ? Colors.white
+                                          : Colors.white54,
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
 
@@ -258,6 +302,47 @@ class _HeaderIcon extends StatelessWidget {
         ),
         child: Icon(icon, size: 18, color: fg),
       ),
+    );
+  }
+}
+
+/// Blurred, cover-cropped backdrop for the multi-image hero — the current
+/// photo fills the frame (blurred) behind the contained sharp version.
+///
+/// Uses ImageFiltered (blurs ONLY its own child) — BackdropFilter here
+/// blurred the whole hero layer including the sharp photo above it.
+class _BlurredBackdrop extends StatelessWidget {
+  const _BlurredBackdrop({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Blurred cover-cropped image FILLING the whole hero (the
+        // letterbox sides behind a contained portrait photo are the image
+        // itself, blurred — never flat grey). Scaled slightly past the
+        // frame so the blur edges never show.
+        Transform.scale(
+          scale: 1.15,
+          child: ImageFiltered(
+            imageFilter:
+                ImageFilter.blur(sigmaX: 28, sigmaY: 28, tileMode: TileMode.decal),
+            child: AppImage(
+              url: url,
+              // fill: stretches a 540-wide portrait to frame width —
+              // acceptable here because the result is heavily blurred
+              // background texture, not the sharp photo.
+              fit: BoxFit.fill,
+              memCacheWidth: 480,
+            ),
+          ),
+        ),
+        // Dark veil so the sharp photo and dots read clearly on top.
+        Container(color: Colors.black.withValues(alpha: 0.30)),
+      ],
     );
   }
 }

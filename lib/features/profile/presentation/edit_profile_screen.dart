@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/app_image.dart';
 import '../../../core/widgets/sub_page_scaffold.dart';
@@ -172,7 +173,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: AppColors.border),
+                  boxShadow: AppShadows.card,
                 ),
                 child: Column(
                   children: [

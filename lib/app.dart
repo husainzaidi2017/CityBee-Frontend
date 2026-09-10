@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/constants/app_config.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/skeleton.dart';
 import 'providers/app_providers.dart';
 import 'routing/app_router.dart';
 
@@ -32,6 +33,8 @@ class _CityBeeAppState extends ConsumerState<CityBeeApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       routerConfig: appRouter,
+      // One shared shimmer controller for every skeleton in the app.
+      builder: (context, child) => Shimmer(child: child ?? const SizedBox.shrink()),
     );
   }
 }

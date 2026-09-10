@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import 'package:localgo/core/theme/app_shadows.dart';
 import 'package:localgo/core/theme/app_typography.dart';
 import 'package:localgo/core/widgets/app_image.dart';
 import 'package:localgo/core/widgets/chips.dart';
 import 'package:localgo/core/widgets/location_app_bar.dart';
 import 'package:localgo/core/widgets/search_bar.dart';
 import 'package:localgo/core/widgets/section_header.dart';
+import 'package:localgo/core/widgets/skeleton.dart';
 import 'package:localgo/core/widgets/states_view.dart';
 import 'package:localgo/data/mock/mock_data.dart';
 import 'package:localgo/data/repositories/business_repository.dart';
@@ -41,31 +43,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final popular = ref.watch(popularBusinessesProvider(_popularFilter));
     final places = ref.watch(placesProvider);
     final offersCount = ref.watch(offersCountProvider).valueOrNull ?? 0;
+    final categoryCount =
+        categories.valueOrNull?.length ?? 10;
 
     return ColoredBox(
       color: AppColors.background,
       child: Column(
         children: [
           const LocationAppBar(),
+          // ── Fixed search bar (header stays, content scrolls) ────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: AppSearchBar(
+              hint: 'Search anything in ${location.displayName}…',
+              readOnly: true,
+              onTap: () => context.push('/search'),
+            ),
+          ),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 28),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Search ───────────────────────────────────────────
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: AppSearchBar(
-                      hint: 'Search anything in ${location.displayName}…',
-                      readOnly: true,
-                      onTap: () => context.push('/search'),
-                    ),
-                  ),
+                  // ── Quick-shortcut chips ─────────────────────────────
                   const SizedBox(height: 10),
-                  // Quick-shortcut chips: 38px rail so the 34px chips never clip.
                   SizedBox(
-                    height: 38,
+                    height: 42,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -80,8 +84,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             0 => context.go('/offers'),
                             // Cinemas Open → cinemas listing.
                             1 => context.push('/category/cinemas'),
-                            // Biryani & Food → restaurants & dining listing.
-                            _ => context.push('/category/dining'),
+                            // Biryani & Food → restaurants listing.
+                            _ => context.push('/category/restaurants'),
                           },
                         ),
                       ),
@@ -90,20 +94,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   // ── Hero banner ─────────────────────────────────────
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                    child: HomeHeroBanner(),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: HomeHeroBanner(offersCount: offersCount),
                   ),
 
                   // ── Explore Near You ────────────────────────────────
                   _Section(
                     header: SectionHeader(
                       title: 'Explore Near You',
-                      trailingLabel: 'View All (10) >',
+                      trailingLabel: 'View All ($categoryCount)',
                       onTrailingTap: () => context.push('/categories'),
                     ),
                     child: categories.when(
-                      data: (list) => ExploreNearbyGrid(categories: list),
-                      loading: () => const _RailSkeleton(height: 190),
+                      data: (list) => list.isEmpty
+                          ? StatesView.empty(
+                              icon: Icons.grid_view_outlined,
+                              message: 'No categories available yet.',
+                            )
+                          : ExploreNearbyGrid(categories: list),
+                      loading: () => const SkeletonGrid(tiles: 8, tileHeight: 88),
                       error: (e, _) => _InlineError(onRetry: () => ref.invalidate(categoriesProvider)),
                     ),
                   ),
@@ -116,15 +125,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                         child: SectionHeader(
                           title: 'Offers Near You',
-                          trailingLabel: 'See All ($offersCount) >',
+                          trailingLabel: 'See All ($offersCount)',
                           onTrailingTap: () => context.go('/offers'),
                         ),
                       ),
                       offers.when(
-                        data: (list) => OffersRail(
-                          offers: list.where((o) => !o.featured).take(4).toList(),
-                        ),
-                        loading: () => const _RailSkeleton(height: 196, indented: true),
+                        data: (list) {
+                          final visible = list.where((o) => !o.featured).take(4).toList();
+                          return visible.isEmpty
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 16),
+                                  child: _InlineEmpty(
+                                    icon: Icons.local_offer_outlined,
+                                    message: 'No offers live right now — check back soon.',
+                                  ),
+                                )
+                              : OffersRail(offers: visible);
+                        },
+                        loading: () => const SkeletonRail(height: 196, indented: false),
                         error: (e, _) => _InlineError(onRetry: () => ref.invalidate(offersByTagProvider('All'))),
                       ),
                     ],
@@ -160,13 +178,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         const SizedBox(height: 12),
                         popular.when(
-                          data: (list) => Column(
-                            children: list
-                                .take(4)
-                                .map((b) => PopularBusinessCard(business: b))
-                                .toList(),
-                          ),
-                          loading: () => const _RailSkeleton(height: 240),
+                          data: (list) => list.isEmpty
+                              ? const _InlineEmpty(
+                                  icon: Icons.storefront_outlined,
+                                  message: 'No popular spots nearby yet.',
+                                )
+                              : Column(
+                                  children: list
+                                      .take(4)
+                                      .map((b) => PopularBusinessCard(business: b))
+                                      .toList(),
+                                ),
+                          loading: () => const SkeletonList(itemCount: 3, itemHeight: 116),
                           error: (e, _) => _InlineError(
                             onRetry: () => ref.invalidate(
                               popularBusinessesProvider(_popularFilter),
@@ -185,13 +208,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                         child: SectionHeader(
                           title: 'Explore ${location.displayName}',
-                          trailingLabel: 'See All >',
-                          onTrailingTap: () => context.go('/explore'),
+                          trailingLabel: 'See All',
+                          onTrailingTap: () => context.push('/explore-city'),
                         ),
                       ),
                       places.when(
-                        data: (list) => _CityPlacesRail(places: list.take(3).toList()),
-                        loading: () => const _RailSkeleton(height: 150, indented: true),
+                        data: (list) => list.isEmpty
+                            ? const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16),
+                                child: _InlineEmpty(
+                                  icon: Icons.explore_outlined,
+                                  message: 'No places to explore here yet.',
+                                ),
+                              )
+                            : _CityPlacesRail(places: list.take(3).toList()),
+                        loading: () => const SkeletonRail(height: 150, itemWidth: 190, indented: false),
                         error: (e, _) => _InlineError(onRetry: () => ref.invalidate(placesProvider)),
                       ),
                     ],
@@ -203,19 +234,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: OwnerCtaCard(),
                   ),
                   const SizedBox(height: 20),
-                  Center(
-                    child: Text(
-                      'About   ·   Help   ·   Terms',
-                      style: AppTypography.label.copyWith(fontSize: 10),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Center(
-                    child: Text(
-                      'CityBee · Made in ${location.displayName} 💚',
-                      style: AppTypography.label.copyWith(fontSize: 9.5),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -249,6 +267,39 @@ class _Section extends StatelessWidget {
   }
 }
 
+/// Compact inline empty placeholder for home sections (no giant centered
+/// state — keeps the page flowing).
+class _InlineEmpty extends StatelessWidget {
+  const _InlineEmpty({required this.icon, required this.message});
+
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.card,
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 26, color: AppColors.textMuted),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: AppTypography.caption,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Horizontal "Explore City" place cards.
 class _CityPlacesRail extends StatelessWidget {
   const _CityPlacesRail({required this.places});
@@ -258,7 +309,7 @@ class _CityPlacesRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 150,
+      height: 168,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -274,21 +325,19 @@ class _CityPlacesRail extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border, width: 1),
+                boxShadow: AppShadows.card,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    height: 86,
-                    width: double.infinity,
+                  Expanded(
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
                         AppImage(url: place.image, fallbackIcon: Icons.photo_camera_outlined),
                         Positioned(
                           left: 8,
-                          bottom: 6,
+                          bottom: 8,
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
@@ -305,7 +354,7 @@ class _CityPlacesRail extends StatelessWidget {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 7, 10, 8),
+                    padding: const EdgeInsets.fromLTRB(10, 8, 10, 9),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -313,14 +362,14 @@ class _CityPlacesRail extends StatelessWidget {
                           place.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppTypography.titleSm.copyWith(fontSize: 13),
+                          style: AppTypography.titleSm.copyWith(fontSize: 13.5),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           place.metaLine,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppTypography.label.copyWith(fontSize: 9.5),
+                          style: AppTypography.label.copyWith(fontSize: 10.5),
                         ),
                       ],
                     ),
@@ -330,41 +379,6 @@ class _CityPlacesRail extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _RailSkeleton extends StatelessWidget {
-  const _RailSkeleton({required this.height, this.indented = false});
-
-  final double height;
-  final bool indented;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: height,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: indented ? 16 : 0),
-        itemCount: 2,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (_, __) => Container(
-          width: 236,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border, width: 1),
-          ),
-          child: const Center(
-            child: SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -383,7 +397,7 @@ class _InlineError extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: StatesView.error(
         message: 'Could not load this section.',

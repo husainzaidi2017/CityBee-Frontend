@@ -13,7 +13,7 @@ enum PopularFilter { all, dining, shopping, health }
 abstract class BusinessRepository {
   Future<List<Business>> getByCategory(String categoryId, {double? lat, double? lng});
   Future<List<Business>> getPopular({PopularFilter filter, double? lat, double? lng});
-  Future<Business?> getById(String id);
+  Future<Business?> getById(String id, {double? lat, double? lng});
   Future<List<Business>> search(String query);
 }
 
@@ -36,8 +36,8 @@ class MockBusinessRepository implements BusinessRepository {
   }
 
   static List<Business> _filterPopular(List<Business> all, PopularFilter filter) {
-    final dining = {'dining', 'grocery'};
-    final shopping = {'fashion', 'heritage', 'malls', 'salons'};
+    final dining = {'dining', 'restaurants'};
+    final shopping = {'fashion', 'heritage', 'heritages', 'malls', 'salons', 'shops', 'grocery'};
     final health = {'doctors', 'hotels'};
     return all.where((b) {
       switch (filter) {
@@ -54,7 +54,7 @@ class MockBusinessRepository implements BusinessRepository {
   }
 
   @override
-  Future<Business?> getById(String id) async =>
+  Future<Business?> getById(String id, {double? lat, double? lng}) async =>
       mockBusinesses.where((b) => b.id == id).firstOrNull;
 
   @override

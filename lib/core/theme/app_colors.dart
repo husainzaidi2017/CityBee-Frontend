@@ -47,6 +47,7 @@ abstract final class AppColors {
   /// Rating pill — orange brand tone (matches the new identity).
   static const Color rating = Color(0xFFFF6F00);
   static const Color ratingSoft = Color(0xFFFFF3E0);
+  static const Color ratingDark = Color(0xFFE65100);
   /// Semantic green: verified listings only.
   static const Color verifiedGreen = Color(0xFF16A34A);
   static const Color verifiedGreenSoft = Color(0xFFE7F6EC);

@@ -36,11 +36,12 @@ abstract final class AppConfig {
   /// Google OAuth *web* client ID — the same one configured on the
   /// Supabase Google provider. This is a public identifier (NOT a secret);
   /// Google's official "Sign in with Google" flows require it in the client
-  /// to request ID tokens. Set it once the OAuth client is created in
-  /// Google Cloud Console + Supabase (see README auth setup).
+  /// to request ID tokens. Baked in as the default so every build (debug,
+  /// release, CI) works without extra flags; override with
+  /// `--dart-define=GOOGLE_SERVER_CLIENT_ID=<id>` if it ever changes.
   static const String googleServerClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
-    defaultValue: '', // fill via --dart-define or here after Google Cloud setup
+    defaultValue: '918786981660-d40nsp4tksjab8jccuk2ngbcldaec0rt.apps.googleusercontent.com',
   );
 
   /// Deep link the Supabase auth flow returns to (email links / OAuth).

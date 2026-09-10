@@ -46,6 +46,7 @@ class Business {
     this.couponSubtitle,
     this.couponNote,
     // Doctor specifics
+    this.specialization,
     this.qualification,
     this.experienceYears,
     this.consultationFee,
@@ -113,6 +114,8 @@ class Business {
   final String? couponNote;
 
   // ── Doctor specifics ──────────────────────────────────────────────────
+  /// Doctor's speciality, e.g. "Dentist", "Orthopaedist" (doctor extension).
+  final String? specialization;
   final String? qualification;
   final int? experienceYears;
   final String? consultationFee;

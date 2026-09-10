@@ -4,17 +4,20 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/services/share_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/app_image.dart';
 import '../../../core/widgets/badges.dart';
 import '../../../core/widgets/pressable.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/place.dart';
 import '../../../providers/app_providers.dart';
 
 /// Explore tab: city guide hero, curated spots, food rail and tips —
-/// the "Explore City (Nickname)" discovery screen.
+/// the "Explore City" discovery screen. All copy is driven by the
+/// selected location so the screen works for any city.
 class ExploreScreen extends ConsumerWidget {
   const ExploreScreen({super.key});
 
@@ -40,7 +43,7 @@ class ExploreScreen extends ConsumerWidget {
                   Text('Explore ${location.displayName}', style: AppTypography.headline),
                   const SizedBox(height: 3),
                   Text(
-                    'Your guide to ${location.state ?? location.displayName} — brass, food & heritage',
+                    'Your local guide to ${location.state ?? location.displayName} — food, markets & heritage',
                     style: AppTypography.caption,
                   ),
                 ],
@@ -55,28 +58,41 @@ class ExploreScreen extends ConsumerWidget {
                     // ── Featured guide card ─────────────────────────
                     guide.maybeWhen(
                       data: (g) => _GuideCard(guide: g),
-                      orElse: () => const _ExploreSkeleton(height: 180),
+                      orElse: () => const SkeletonCard(
+                          height: 200, width: double.infinity, imageHeight: 200, radius: 18),
                     ),
                     const SizedBox(height: 20),
 
                     // ── Curated spotlights ──────────────────────────
                     const SectionHeader(title: 'Curated City Spotlights'),
                     const SizedBox(height: 10),
-                    ...placeList.map((place) => Padding(
-                          padding: const EdgeInsets.only(bottom: 11),
-                          child: _PlaceSpotlightCard(place: place),
-                        )),
+                    if (placeList.isEmpty)
+                      const _InlineEmpty(
+                        icon: Icons.explore_outlined,
+                        message: 'No places to explore here yet — check back soon.',
+                      )
+                    else
+                      ...placeList.map((place) => Padding(
+                            padding: const EdgeInsets.only(bottom: 11),
+                            child: _PlaceSpotlightCard(place: place),
+                          )),
                     const SizedBox(height: 10),
 
                     // ── Food rail ───────────────────────────────────
                     SectionHeader(
-                      title: 'Moradabadi Flavors & Food',
+                      title: 'Local Flavors & Food',
                       subtitle: 'Tried, tested & loved by locals',
                     ),
                     const SizedBox(height: 10),
                     foods.maybeWhen(
-                      data: (foodList) => _FoodRail(foods: foodList),
-                      orElse: () => const _ExploreSkeleton(height: 170, indented: true),
+                      data: (foodList) => foodList.isEmpty
+                          ? const _InlineEmpty(
+                              icon: Icons.restaurant_outlined,
+                              message: 'No local food picks here yet.',
+                            )
+                          : _FoodRail(foods: foodList),
+                      orElse: () => const SkeletonRail(
+                          height: 168, itemWidth: 150, indented: true),
                     ),
                     const SizedBox(height: 20),
 
@@ -87,10 +103,20 @@ class ExploreScreen extends ConsumerWidget {
                     const SizedBox(height: 18),
 
                     // ── Plan CTA ────────────────────────────────────
-                    const _PlanTripCta(),
+                    _PlanTripCta(cityName: location.displayName),
                   ],
                 ),
-                loading: () => StatesView.loading(message: 'Loading city guide…'),
+                loading: () => ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  children: const [
+                    SkeletonCard(
+                        height: 200, width: double.infinity, imageHeight: 200, radius: 18),
+                    SizedBox(height: 20),
+                    SkeletonBox(height: 16, width: 200, radius: 8),
+                    SizedBox(height: 12),
+                    SkeletonList(itemCount: 3, itemHeight: 124),
+                  ],
+                ),
                 error: (e, _) => StatesView.error(
                   message: 'Could not load places. Check your connection.',
                   onRetry: () => ref.invalidate(placesProvider),
@@ -99,6 +125,34 @@ class ExploreScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Compact inline empty placeholder for explore sections.
+class _InlineEmpty extends StatelessWidget {
+  const _InlineEmpty({required this.icon, required this.message});
+
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.card,
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 26, color: AppColors.textMuted),
+          const SizedBox(height: 8),
+          Text(message, textAlign: TextAlign.center, style: AppTypography.caption),
+        ],
       ),
     );
   }
@@ -162,7 +216,7 @@ class _GuideCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.border),
+          boxShadow: AppShadows.card,
         ),
         child: Stack(
           fit: StackFit.expand,
@@ -194,7 +248,7 @@ class _GuideCard extends StatelessWidget {
                     child: const Text(
                       'FEATURED GUIDE',
                       style: TextStyle(
-                        fontSize: 9,
+                        fontSize: 10.5,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         letterSpacing: 0.8,
@@ -255,7 +309,7 @@ class _PlaceSpotlightCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+          boxShadow: AppShadows.card,
         ),
         child: Row(
           children: [
@@ -302,12 +356,12 @@ class _PlaceSpotlightCard extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: AppColors.background,
                                 borderRadius: BorderRadius.circular(7),
-                                border: Border.all(color: AppColors.border),
+                                boxShadow: AppShadows.card,
                               ),
                               child: Text(
                                 tag,
                                 style: const TextStyle(
-                                  fontSize: 9.5,
+                                  fontSize: 10.5,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.textSecondary,
                                 ),
@@ -398,7 +452,7 @@ class _FoodRail extends StatelessWidget {
                   food.description,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTypography.label.copyWith(fontSize: 9.5),
+                  style: AppTypography.label.copyWith(fontSize: 10.5),
                 ),
               ],
             ),
@@ -415,12 +469,13 @@ class _TipsCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final location = ref.watch(selectedLocationProvider);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: Column(
         children: [
@@ -455,7 +510,7 @@ class _TipsCard extends ConsumerWidget {
                         Text(
                           switch (i) {
                             0 => 'Best Times to Visit',
-                            1 => 'Brass Bargaining',
+                            1 => 'Bargain Like a Local',
                             _ => 'Local Phrases',
                           },
                           style: AppTypography.bodyStrong,
@@ -464,8 +519,9 @@ class _TipsCard extends ConsumerWidget {
                         Text(
                           switch (i) {
                             0 =>
-                              'Mornings (8–11 AM) are cooler and workshops are most active.',
-                            1 => 'Compare at least three shops in Peetal Bazaar before you buy.',
+                              'Mornings (8–11 AM) are cooler and bazaars are most active.',
+                            1 =>
+                              'Compare at least three shops in ${location.displayName} before you buy.',
                             _ => 'A little Hindi goes a long way — “kitne ka hai?” (how much?).',
                           },
                           style: AppTypography.caption,
@@ -484,7 +540,9 @@ class _TipsCard extends ConsumerWidget {
 
 /// ── Plan-a-trip CTA ────────────────────────────────────────────────────
 class _PlanTripCta extends StatelessWidget {
-  const _PlanTripCta();
+  const _PlanTripCta({required this.cityName});
+
+  final String cityName;
 
   @override
   Widget build(BuildContext context) {
@@ -504,9 +562,9 @@ class _PlanTripCta extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Plan Your Peetal Nagri Trip',
-                  style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, color: Colors.white),
+                Text(
+                  'Plan Your $cityName Trip',
+                  style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, color: Colors.white),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -523,8 +581,8 @@ class _PlanTripCta extends StatelessWidget {
           const SizedBox(width: 10),
           GestureDetector(
             onTap: () => ShareService.shareApp(
-              note: 'I am planning a trip to Peetal Nagri (Moradabad) with CityBee — '
-                  'brass bazaars, biryani and heritage walks!',
+              note: 'I am planning a trip to $cityName with CityBee — '
+                  'bazaars, food and heritage walks!',
             ),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -539,33 +597,6 @@ class _PlanTripCta extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ExploreSkeleton extends StatelessWidget {
-  const _ExploreSkeleton({required this.height, this.indented = false});
-
-  final double height;
-  final bool indented;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      margin: EdgeInsets.symmetric(horizontal: indented ? 0 : 0),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: const Center(
-        child: SizedBox(
-          width: 22,
-          height: 22,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
       ),
     );
   }

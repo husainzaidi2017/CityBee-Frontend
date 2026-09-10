@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/share_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_launcher.dart';
 import '../../../core/widgets/badges.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/collapsing_detail_header.dart';
+import '../../../core/widgets/photo_viewer.dart';
 import '../../../core/widgets/map_preview.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/place.dart';
@@ -62,6 +64,14 @@ class _MissingPlace extends StatelessWidget {
   }
 }
 
+void _openViewer(BuildContext context, String imageUrl) {
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => PhotoViewerScreen(imageUrls: [imageUrl]),
+    ),
+  );
+}
+
 class _PlaceDetailBody extends ConsumerWidget {
   const _PlaceDetailBody({required this.place});
 
@@ -81,6 +91,7 @@ class _PlaceDetailBody extends ConsumerWidget {
                 image: place.image,
                 fallbackIcon: Icons.photo_camera_outlined,
                 isFavorite: isSaved,
+                onImageTap: (index) => _openViewer(context, place.image),
                 onFavoriteTap: () {
                   ref
                       .read(favoritesProvider.notifier)
@@ -225,7 +236,7 @@ class _MetaStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(13),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -251,63 +262,91 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(13),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          if (place.address.isNotEmpty) ...[
-            _InfoRow(
-              icon: Icons.location_on_outlined,
-              label: 'Address',
-              value: place.address,
-            ),
-            const Divider(height: 20),
-          ],
-          if (place.timings.isNotEmpty) ...[
-            _InfoRow(
-              icon: Icons.schedule_outlined,
-              label: 'Timings',
-              value: place.timings,
-            ),
-            const Divider(height: 20),
-          ],
-          if (place.entryFee.isNotEmpty)
-            _InfoRow(
-              icon: Icons.confirmation_number_outlined,
-              label: 'Entry',
-              value: place.entryFee,
-            ),
+    final rows = <List<Object?>>[
+      if (place.address.isNotEmpty)
+        [
+          'ADDRESS',
+          place.address,
+          'View Map',
+          () => AppLauncher.openWebsite(
+              'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(place.address.isEmpty ? place.name : place.address)}'),
         ],
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.icon, required this.label, required this.value});
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
+      if (place.timings.isNotEmpty) ['TIMINGS', place.timings, null, null],
+      if (place.entryFee.isNotEmpty) ['ENTRY FEE', place.entryFee, null, null],
+    ];
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: AppColors.primary),
-        const SizedBox(width: 9),
-        SizedBox(
-          width: 68,
-          child: Text(label, style: AppTypography.caption),
+        const SizedBox(height: 4),
+        Text('Contact Details', style: AppTypography.titleSm),
+        const SizedBox(height: 9),
+        Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: AppColors.border, width: 1),
+          ),
+          child: Column(
+            children: [
+              for (var i = 0; i < rows.length; i++) ...[
+                if (i > 0) const Divider(height: 1, color: AppColors.divider),
+                InkWell(
+                  onTap: rows[i][3] as VoidCallback?,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 96,
+                        color: AppColors.background,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 12),
+                        child: Text(
+                          rows[i][0] as String,
+                          style: TextStyle(
+                            fontFamily: AppTypography.bodyFamily,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.6,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            rows[i][1] as String,
+                            style: AppTypography.body.copyWith(
+                              fontSize: 13,
+                              color: AppColors.textPrimary,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (rows[i][2] != null)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: Text(
+                            rows[i][2] as String,
+                            style: TextStyle(
+                              fontFamily: AppTypography.bodyFamily,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
-        Expanded(child: Text(value, style: AppTypography.bodyStrong)),
       ],
     );
   }
 }
+

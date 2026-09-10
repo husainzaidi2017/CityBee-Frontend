@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_icons.dart';
+import '../../../providers/app_providers.dart';
 
 /// Root scaffold with the persistent 5-tab bottom navigation:
-/// Home · Offers · Services · Explore · More.
-class MainShell extends StatelessWidget {
+/// Home · Offers · Services · (Explore | My Business) · More.
+///
+/// Tab 3 is backend-driven: approved business owners see My Business
+/// instead of Explore (Explore stays reachable via More → Explore City).
+class MainShell extends ConsumerWidget {
   const MainShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isOwner =
+        ref.watch(ownerSummaryProvider).valueOrNull?.hasApprovedBusiness ?? false;
+
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: Container(
@@ -26,36 +35,39 @@ class MainShell extends StatelessWidget {
             child: Row(
               children: [
                 _NavItem(
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home_rounded,
+                  icon: AppIcons.homeOutline,
+                  activeIcon: AppIcons.home,
                   label: 'Home',
                   selected: navigationShell.currentIndex == 0,
                   onTap: () => _goBranch(0),
                 ),
                 _NavItem(
-                  icon: Icons.local_offer_outlined,
-                  activeIcon: Icons.local_offer_rounded,
+                  icon: AppIcons.offersOutline,
+                  activeIcon: AppIcons.offers,
                   label: 'Offers',
                   selected: navigationShell.currentIndex == 1,
                   onTap: () => _goBranch(1),
                 ),
                 _NavItem(
-                  icon: Icons.grid_view_outlined,
-                  activeIcon: Icons.grid_view_rounded,
+                  icon: AppIcons.servicesOutline,
+                  activeIcon: AppIcons.services,
                   label: 'Services',
                   selected: navigationShell.currentIndex == 2,
                   onTap: () => _goBranch(2),
                 ),
                 _NavItem(
-                  icon: Icons.explore_outlined,
-                  activeIcon: Icons.explore_rounded,
-                  label: 'Explore',
+                  icon: isOwner
+                      ? AppIcons.businessOutline
+                      : AppIcons.exploreOutline,
+                  activeIcon:
+                      isOwner ? AppIcons.business : AppIcons.explore,
+                  label: isOwner ? 'My Business' : 'Explore',
                   selected: navigationShell.currentIndex == 3,
                   onTap: () => _goBranch(3),
                 ),
                 _NavItem(
-                  icon: Icons.person_outline_rounded,
-                  activeIcon: Icons.person_rounded,
+                  icon: AppIcons.moreOutline,
+                  activeIcon: AppIcons.more,
                   label: 'More',
                   selected: navigationShell.currentIndex == 4,
                   onTap: () => _goBranch(4),
@@ -85,8 +97,9 @@ class _NavItem extends StatelessWidget {
     required this.onTap,
   });
 
-  final IconData icon;
-  final IconData activeIcon;
+  /// SVG asset paths (outline + filled variants).
+  final String icon;
+  final String activeIcon;
   final String label;
   final bool selected;
   final VoidCallback onTap;
@@ -105,30 +118,35 @@ class _NavItem extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Icon pops up slightly when selected.
-              AnimatedScale(
-                scale: selected ? 1.12 : 1.0,
+              // Soft brand pill behind the selected icon.
+              AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutBack,
+                curve: Curves.easeOut,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? AppColors.primary.withValues(alpha: 0.12)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(999),
+                ),
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 180),
                   transitionBuilder: (child, animation) =>
                       ScaleTransition(scale: animation, child: child),
-                  child: Icon(
+                  child: AppIcons.nav(
                     selected ? activeIcon : icon,
                     key: ValueKey(selected),
-                    size: 23,
-                    color: color,
                   ),
                 ),
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 2),
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOut,
                 style: TextStyle(
+                  fontFamily: 'Outfit',
                   fontSize: 10.5,
-                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                   color: color,
                 ),
                 child: Text(label, maxLines: 1),

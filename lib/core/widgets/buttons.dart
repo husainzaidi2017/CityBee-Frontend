@@ -13,8 +13,8 @@ class PrimaryPillButton extends StatelessWidget {
     this.backgroundColor = AppColors.primary,
     this.foregroundColor = Colors.white,
     this.borderColor,
-    this.padding = const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-    this.fontSize = 13,
+    this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+    this.fontSize = 13.5,
   });
 
   final String label;
@@ -62,42 +62,61 @@ class PrimaryPillButton extends StatelessWidget {
   }
 }
 
-/// Compact outlined action button used inside card rows (Call / Route / Menu).
+/// Compact action button used inside card rows (Call / Route / WhatsApp).
+/// Icon + label, ~40px tall — comfortable thumb target. `filled` renders
+/// the single primary CTA in brand orange.
 class CardActionButton extends StatelessWidget {
   const CardActionButton({
     super.key,
     required this.label,
     required this.onTap,
     this.filled = false,
+    this.icon,
   });
 
   final String label;
   final VoidCallback? onTap;
   final bool filled;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
+    final background = filled ? AppColors.primary : AppColors.background;
+    final foreground = filled ? Colors.white : AppColors.textPrimary;
     return Expanded(
       child: Material(
-        color: filled ? AppColors.primary : AppColors.surface,
-        borderRadius: BorderRadius.circular(9),
+        color: background,
+        borderRadius: BorderRadius.circular(11),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(9),
+          borderRadius: BorderRadius.circular(11),
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(11),
               border: filled ? null : Border.all(color: AppColors.border, width: 1.1),
             ),
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: filled ? Colors.white : AppColors.textPrimary,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 15, color: filled ? foreground : AppColors.primary),
+                  const SizedBox(width: 6),
+                ],
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: foreground,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

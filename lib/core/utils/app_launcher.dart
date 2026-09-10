@@ -60,8 +60,10 @@ abstract final class AppLauncher {
   }
 
   static Future<bool> directions(double lat, double lng, {String? label}) async {
-    final query = label == null ? '$lat,$lng' : '${Uri.encodeComponent(label)}@$lat,$lng';
-    final uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$query');
+    // Pure coordinates as the destination — a labeled query makes Google
+    // Maps SEARCH the label (often a wrong place) instead of navigating.
+    final uri = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
     final ok = await canLaunchUrl(uri);
     if (ok) await _open(uri);
     return ok;

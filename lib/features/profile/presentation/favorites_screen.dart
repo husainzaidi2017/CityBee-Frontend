@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/app_image.dart';
 import '../../../core/widgets/states_view.dart';
@@ -33,10 +34,10 @@ class FavoritesScreen extends ConsumerWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, size: 20),
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
                     onPressed: () => context.pop(),
                   ),
-                  Text('My Favorites', style: AppTypography.title.copyWith(fontSize: 16)),
+                  Text('My Favorites', style: AppTypography.title),
                 ],
               ),
             ),
@@ -111,7 +112,7 @@ class _FavoriteBusinessTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
+          boxShadow: AppShadows.card,
         ),
         child: Row(
           children: [
@@ -161,7 +162,7 @@ class _FavoritePlaceTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
+          boxShadow: AppShadows.card,
         ),
         child: Row(
           children: [

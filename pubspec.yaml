@@ -20,6 +20,7 @@ dependencies:
   go_router: ^14.6.2
 
   # Images
+  image_picker: ^1.2.3
   cached_network_image: ^3.4.1
 
   # Official CityBee SVG logo
@@ -33,12 +34,16 @@ dependencies:
 
   # Location
   geolocator: ^13.0.3
+  flutter_map: ^8.3.2
+  latlong2: ^0.9.1
 
   # Formatting
   intl: ^0.20.2
 
   # Backend API access
   http: ^1.2.2
+  http_parser: ^4.1.2
+  mime: ^2.0.0
 
   # Local persistence (selected location, guest state)
   shared_preferences: ^2.3.2
@@ -58,6 +63,8 @@ flutter:
 
   assets:
     - assets/brand/
+    - assets/categories/
+    - assets/icons/
 
   fonts:
     # Outfit — headings, section titles, display text (600/700/800).

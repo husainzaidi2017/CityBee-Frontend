@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_animation.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/fade_slide_in.dart';
 import '../../../core/widgets/pressable.dart';
+import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/app_category.dart';
 import '../../../providers/app_providers.dart';
@@ -36,10 +37,16 @@ class AllCategoriesScreen extends ConsumerWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 18,
+                    ),
                     onPressed: () => context.pop(),
                   ),
-                  Text('All Categories', style: AppTypography.title.copyWith(fontSize: 17)),
+                  Text(
+                    'All Categories',
+                    style: AppTypography.title.copyWith(fontSize: 17),
+                  ),
                 ],
               ),
             ),
@@ -66,7 +73,18 @@ class AllCategoriesScreen extends ConsumerWidget {
                     child: _CategoryTile(category: list[index]),
                   ),
                 ),
-                loading: () => StatesView.loading(message: 'Loading categories…'),
+                loading: () => GridView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.05,
+                  ),
+                  itemCount: 9,
+                  itemBuilder: (_, __) =>
+                      const SkeletonBox(height: double.infinity, radius: 18),
+                ),
                 error: (e, _) => StatesView.error(
                   message: 'Could not load categories.',
                   onRetry: () => ref.invalidate(categoriesProvider),
@@ -95,26 +113,13 @@ class _CategoryTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.border),
-          boxShadow: const [
-            BoxShadow(color: Color(0x080F172A), blurRadius: 8, offset: Offset(0, 2)),
-          ],
+          boxShadow: AppShadows.card,
         ),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            AnimatedContainer(
-              duration: AppAnimation.normal,
-              curve: AppAnimation.curve,
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: visual.background,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(visual.icon, color: visual.foreground, size: 26),
-            ),
+            CategoryIcon(visual: visual, size: 52),
             const SizedBox(height: 9),
             Text(
               category.name,

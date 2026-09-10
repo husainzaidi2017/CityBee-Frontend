@@ -2,29 +2,73 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_launcher.dart';
+import '../../../core/utils/fuzzy_search.dart';
 import '../../../core/widgets/app_image.dart';
 import '../../../core/widgets/search_bar.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../data/mock/mock_services.dart';
 import '../../../domain/models/service_item.dart';
 import '../../../providers/app_providers.dart';
 
-/// Services tab: "City Services Hub" — urgent helplines, verified
-/// specialists by section, events and legal aid.
-class ServicesScreen extends ConsumerWidget {
+/// Icon for each trade category tile.
+IconData _categoryIcon(String id) => switch (id) {
+      'electrician' => Icons.bolt_rounded,
+      'plumber' => Icons.plumbing_rounded,
+      'carpenter' => Icons.carpenter_rounded,
+      'ac-fridge' => Icons.ac_unit_rounded,
+      'mechanic' => Icons.handyman_rounded,
+      'painter' => Icons.format_paint_rounded,
+      'cleaning' => Icons.cleaning_services_rounded,
+      'pest' => Icons.pest_control_rounded,
+      _ => Icons.home_repair_service_rounded,
+    };
+
+/// Services tab — the simple Indian-market home-services hub:
+/// emergency helplines, a trade category grid (Electrician, Plumber,
+/// Carpenter, Mechanic, …), top experts, occasions and legal help.
+class ServicesScreen extends ConsumerStatefulWidget {
   const ServicesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ServicesScreen> createState() => _ServicesScreenState();
+}
+
+class _ServicesScreenState extends ConsumerState<ServicesScreen> {
+  /// Selected trade filter (null = show all experts).
+  String? _category;
+
+  /// Live search query for the experts list.
+  final _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  bool _matchesQuery(ServiceItem s) => FuzzySearch.matches(
+        _query,
+        [
+          s.name,
+          if (s.category != null) s.category!,
+          s.servicesSummary,
+          s.trustNote,
+        ].join(' '),
+      );
+
+  @override
+  Widget build(BuildContext context) {
     final location = ref.watch(selectedLocationProvider);
-    final helplines = ref.watch(helplinesProvider);
     final services = ref.watch(servicesProvider);
     final events = ref.watch(eventServicesProvider);
     final legal = ref.watch(legalServiceProvider);
-    final specialistCount = ref.watch(specialistCountProvider).valueOrNull ?? 340;
+    final searching = _query.trim().isNotEmpty;
 
     return ColoredBox(
       color: AppColors.background,
@@ -39,20 +83,34 @@ class ServicesScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${location.displayName} Services Hub',
+                  Text('${location.displayName} Services',
                       style: AppTypography.headline),
                   const SizedBox(height: 3),
                   Text(
-                    'Everything you need in $specialistCount+ verified experts',
+                    'Trusted local experts — at your home in 60 minutes',
                     style: AppTypography.caption,
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 12),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: AppSearchBar(hint: 'Search service, expert, helpline…'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: AppSearchBar(
+                hint: 'Search electrician, plumber, carpenter…',
+                controller: _searchController,
+                onChanged: (value) => setState(() => _query = value),
+                trailing: searching
+                    ? IconButton(
+                        icon: const Icon(Icons.close_rounded,
+                            size: 18, color: AppColors.textSecondary),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _query = '');
+                        },
+                      )
+                    : null,
+              ),
             ),
             const SizedBox(height: 12),
 
@@ -61,68 +119,158 @@ class ServicesScreen extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                 children: [
-                  // Urgent & City Helplines
-                  helplines.when(
-                    data: (list) => _HelplinesCard(helplines: list),
-                    loading: () => const _SectionSkeleton(),
-                    error: (e, _) => _InlineError(
-                        onRetry: () => ref.invalidate(helplinesProvider)),
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Brass Shield banner
-                  const _BrassShieldBanner(),
-                  const SizedBox(height: 18),
-
-                  // Specialist sections
-                  services.when(
-                    data: (list) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (var i = 0; i < serviceSectionTitles.length; i++)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: _ServiceSectionCard(
-                              title: serviceSectionTitles[i],
-                              services: _servicesForSection(list, i),
+                  // ── Search results (replaces grid + experts) ───────
+                  if (searching)
+                    services.when(
+                      data: (list) {
+                        final results =
+                            list.where(_matchesQuery).toList();
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Results for "$_query"',
+                                    style: AppTypography.title,
+                                  ),
+                                ),
+                                Text(
+                                  '${results.length} found',
+                                  style: AppTypography.label,
+                                ),
+                              ],
                             ),
-                          ),
-                      ],
+                            const SizedBox(height: 10),
+                            if (results.isEmpty)
+                              _InlineEmpty(
+                                icon: Icons.search_rounded,
+                                message:
+                                    'No experts match "$_query". Try "electrician", "plumber", "AC"…',
+                              )
+                            else
+                              ...results.map((s) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: _SpecialistCard(service: s),
+                                  )),
+                          ],
+                        );
+                      },
+                      loading: () => const _SectionSkeleton(),
+                      error: (e, _) => _InlineError(
+                          onRetry: () => ref.invalidate(servicesProvider)),
+                    )
+                  else ...[
+                    // ── Trade category grid ────────────────────────────
+                    const SectionHeader(title: 'Book a Service'),
+                    const SizedBox(height: 10),
+                    _CategoryGrid(
+                      selected: _category,
+                      onTap: (id) => setState(
+                          () => _category = _category == id ? null : id),
                     ),
-                    loading: () => const _SectionSkeleton(),
-                    error: (e, _) => _InlineError(
-                        onRetry: () => ref.invalidate(servicesProvider)),
-                  ),
-                  const SizedBox(height: 8),
+                    const SizedBox(height: 18),
 
-                  // Events, weddings & religious
-                  SectionHeader(
-                    title: 'Events, Weddings & Religious',
-                    subtitle: 'Pandits, mehndi artists & decorators',
-                  ),
-                  const SizedBox(height: 10),
-                  events.when(
-                    data: (list) => Row(
-                      children: [
-                        for (var i = 0; i < list.length; i++) ...[
-                          Expanded(child: _EventCard(service: list[i])),
-                          if (i < list.length - 1) const SizedBox(width: 10),
+                    // ── Experts (filtered by selected trade) ───────────
+                    services.when(
+                      data: (list) {
+                        final selectedLabel = _category == null
+                            ? null
+                            : serviceCategories
+                                .firstWhere((c) => c.id == _category)
+                                .label;
+                        final experts = _category == null
+                            ? list
+                            : list
+                                .where((s) => s.category == _category)
+                                .toList();
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    selectedLabel == null
+                                        ? 'Top Experts Near You'
+                                        : '$selectedLabel Experts',
+                                    style: AppTypography.title,
+                                  ),
+                                ),
+                                if (selectedLabel != null)
+                                  GestureDetector(
+                                    onTap: () =>
+                                        setState(() => _category = null),
+                                    behavior: HitTestBehavior.opaque,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.close_rounded,
+                                            size: 14,
+                                            color: AppColors.primary),
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          'Clear',
+                                          style: AppTypography.label.copyWith(
+                                              color: AppColors.primary,
+                                              fontWeight: FontWeight.w700),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            if (experts.isEmpty)
+                              _InlineEmpty(
+                                icon: Icons.search_rounded,
+                                message:
+                                    'No $selectedLabel experts listed here yet — check back soon.',
+                              )
+                            else
+                              ...experts.map((s) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: _SpecialistCard(service: s),
+                                  )),
+                          ],
+                        );
+                      },
+                      loading: () => const _SectionSkeleton(),
+                      error: (e, _) => _InlineError(
+                          onRetry: () => ref.invalidate(servicesProvider)),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Pandit, mehndi & occasions
+                    const SectionHeader(title: 'Pandit, Mehndi & Occasions'),
+                    const SizedBox(height: 10),
+                    events.when(
+                      data: (list) => Row(
+                        children: [
+                          for (var i = 0; i < list.length; i++) ...[
+                            Expanded(child: _EventCard(service: list[i])),
+                            if (i < list.length - 1)
+                              const SizedBox(width: 10),
+                          ],
                         ],
-                      ],
+                      ),
+                      loading: () => const _SectionSkeleton(),
+                      error: (e, _) => _InlineError(
+                          onRetry: () => ref.invalidate(eventServicesProvider)),
                     ),
-                    loading: () => const _SectionSkeleton(),
-                    error: (e, _) => _InlineError(
-                        onRetry: () => ref.invalidate(eventServicesProvider)),
-                  ),
-                  const SizedBox(height: 18),
+                    const SizedBox(height: 18),
 
-                  // Legal aid
-                  legal.when(
-                    data: (service) => _LegalAidCard(service: service),
-                    loading: () => const _SectionSkeleton(),
-                    error: (e, _) => _InlineError(
-                        onRetry: () => ref.invalidate(legalServiceProvider)),
-                  ),
+                    // Legal & documentation
+                    const SectionHeader(title: 'Legal & Documentation'),
+                    const SizedBox(height: 10),
+                    legal.when(
+                      data: (service) => _LegalAidCard(service: service),
+                      loading: () => const _SectionSkeleton(),
+                      error: (e, _) => _InlineError(
+                          onRetry: () => ref.invalidate(legalServiceProvider)),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -131,185 +279,102 @@ class ServicesScreen extends ConsumerWidget {
       ),
     );
   }
-
-  List<ServiceItem> _servicesForSection(List<ServiceItem> all, int section) =>
-      switch (section) {
-        0 => all.where((s) => s.id == 'ac-care' || s.id == 'plumbing').toList(),
-        1 => all.where((s) => s.id == 'brass-guild').toList(),
-        2 => all.where((s) => s.id == 'homecare').toList(),
-        _ => all.where((s) => s.id == 'roadside').toList(),
-      };
 }
 
-/// ── Helplines card ─────────────────────────────────────────────────────
-class _HelplinesCard extends StatelessWidget {
-  const _HelplinesCard({required this.helplines});
+/// ── Trade category grid: 4×2 tiles, named for the Indian market ────────
+class _CategoryGrid extends StatelessWidget {
+  const _CategoryGrid({required this.selected, required this.onTap});
 
-  final List<Helpline> helplines;
+  final String? selected;
+  final ValueChanged<String> onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 0.94,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.emergency_rounded, size: 17, color: AppColors.brandRed),
-              const SizedBox(width: 6),
-              Expanded(child: Text('Urgent & City Helplines', style: AppTypography.titleSm)),
-              Text('Tap to dial', style: AppTypography.label.copyWith(fontSize: 9.5)),
-            ],
-          ),
-          const SizedBox(height: 11),
-          ...helplines.map((h) => Padding(
-                padding: const EdgeInsets.only(bottom: 7),
-                child: _HelplineRow(helpline: h),
-              )),
-        ],
-      ),
-    );
-  }
-}
-
-class _HelplineRow extends StatelessWidget {
-  const _HelplineRow({required this.helpline});
-
-  final Helpline helpline;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = Color(helpline.colorValue);
-    return GestureDetector(
-      onTap: () => AppLauncher.call(helpline.number),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(11),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(9),
-              ),
-              child: Icon(_iconFor(helpline.number), color: Colors.white, size: 16),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(helpline.label, style: AppTypography.bodyStrong),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                helpline.number,
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  IconData _iconFor(String number) => switch (number) {
-        '108' => Icons.medical_services,
-        '112' => Icons.local_police_outlined,
-        '1912' => Icons.bolt_rounded,
-        '155213' => Icons.apartment,
-        _ => Icons.local_pharmacy_outlined,
-      };
-}
-
-/// ── Brass Shield banner ────────────────────────────────────────────────
-class _BrassShieldBanner extends StatelessWidget {
-  const _BrassShieldBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.bannerOrangeTop, AppColors.bannerOrangeBottom],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
+      itemCount: serviceCategories.length,
+      itemBuilder: (context, index) {
+        final cat = serviceCategories[index];
+        final isSelected = cat.id == selected;
+        return GestureDetector(
+          onTap: () => onTap(cat.id),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            curve: Curves.easeOut,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(12),
+              color: isSelected ? AppColors.primary : AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: AppShadows.card,
             ),
-            child: const Icon(Icons.shield_outlined, color: Colors.white, size: 22),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'Brass Shield Protection',
-                  style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: Colors.white),
+                Icon(
+                  _categoryIcon(cat.id),
+                  size: 24,
+                  color: isSelected ? Colors.white : AppColors.primary,
                 ),
-                SizedBox(height: 3),
-                Text(
-                  'Every specialist is ID-verified & background-checked.',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white70),
+                const SizedBox(height: 6),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    cat.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.label.copyWith(
+                      fontSize: 11,
+                      color: isSelected
+                          ? Colors.white
+                          : AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right_rounded, color: Colors.white70),
+        );
+      },
+    );
+  }
+}
+
+/// Compact inline empty state for a filtered expert list.
+class _InlineEmpty extends StatelessWidget {
+  const _InlineEmpty({required this.icon, required this.message});
+
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.card,
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 26, color: AppColors.textMuted),
+          const SizedBox(height: 8),
+          Text(message, textAlign: TextAlign.center, style: AppTypography.caption),
         ],
       ),
     );
   }
 }
-
-/// ── Specialist section card ────────────────────────────────────────────
-class _ServiceSectionCard extends StatelessWidget {
-  const _ServiceSectionCard({required this.title, required this.services});
-
-  final String title;
-  final List<ServiceItem> services;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(title: title),
-        const SizedBox(height: 10),
-        ...services.map((s) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _SpecialistCard(service: s),
-            )),
-      ],
-    );
-  }
-}
-
 class _SpecialistCard extends StatelessWidget {
   const _SpecialistCard({required this.service});
 
@@ -322,7 +387,7 @@ class _SpecialistCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,7 +413,7 @@ class _SpecialistCard extends StatelessWidget {
                     child: Text(
                       service.badge,
                       style: const TextStyle(
-                          fontSize: 8.5, fontWeight: FontWeight.w800, color: Colors.white),
+                          fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.white),
                     ),
                   ),
                 ),
@@ -401,7 +466,7 @@ class _SpecialistCard extends StatelessWidget {
                         '${service.statsText} · ${service.trustNote}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTypography.label.copyWith(fontSize: 9.5),
+                        style: AppTypography.label.copyWith(fontSize: 10.5),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -444,7 +509,7 @@ class _EventCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -470,7 +535,7 @@ class _EventCard extends StatelessWidget {
                   '${service.priceText} · ${service.etaText}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTypography.label.copyWith(fontSize: 9.5),
+                  style: AppTypography.label.copyWith(fontSize: 10.5),
                 ),
                 const SizedBox(height: 7),
                 GestureDetector(
@@ -512,7 +577,7 @@ class _LegalAidCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: Row(
         children: [
@@ -570,17 +635,30 @@ class _SectionSkeleton extends StatelessWidget {
     return Container(
       height: 110,
       margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
-      child: const Center(
-        child: SizedBox(
-          width: 22,
-          height: 22,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
+      child: Row(
+        children: const [
+          SkeletonBox(width: 92, height: double.infinity, radius: 12),
+          SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SkeletonBox(width: 150, height: 13, radius: 6),
+                SizedBox(height: 9),
+                SkeletonBox(width: 200, height: 10, radius: 5),
+                SizedBox(height: 9),
+                SkeletonBox(width: 120, height: 10, radius: 5),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -599,7 +677,7 @@ class _InlineError extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: StatesView.error(message: 'Could not load this section.', onRetry: onRetry),
     );

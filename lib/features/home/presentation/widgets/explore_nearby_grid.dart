@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/app_animation.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/pressable.dart';
 import '../../../../domain/models/app_category.dart';
@@ -51,31 +51,13 @@ class _CategoryTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(color: AppColors.border, width: 1),
-          boxShadow: const [
-            // Hairline ambient shadow so tiles feel tappable, not floating.
-            BoxShadow(
-              color: Color(0x080F172A),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
+          boxShadow: AppShadows.card,
         ),
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            AnimatedContainer(
-              duration: AppAnimation.normal,
-              curve: AppAnimation.curve,
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: visual.background,
-                borderRadius: BorderRadius.circular(13),
-              ),
-              child: Icon(visual.icon, color: visual.foreground, size: 21),
-            ),
+            CategoryIcon(visual: visual, size: 42),
             const SizedBox(height: 7),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -83,7 +65,10 @@ class _CategoryTile extends StatelessWidget {
                 category.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTypography.label.copyWith(fontSize: 10.5, color: AppColors.textPrimary),
+                style: AppTypography.label.copyWith(
+                  fontSize: 11,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
           ],

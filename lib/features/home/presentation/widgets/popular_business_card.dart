@@ -6,9 +6,9 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/app_launcher.dart';
+import '../../../../core/widgets/app_icons.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/badges.dart';
-import '../../../../core/widgets/buttons.dart';
 import '../../../../core/widgets/pressable.dart';
 import '../../../../domain/models/business.dart';
 
@@ -41,7 +41,11 @@ class PopularBusinessCard extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: AppImage(url: business.images.firstOrNull ?? '', width: 92, height: 92),
+                    child: AppImage(
+                      url: business.images.firstOrNull ?? '',
+                      width: 92,
+                      height: 92,
+                    ),
                   ),
                   Positioned(
                     bottom: 4,
@@ -54,69 +58,108 @@ class PopularBusinessCard extends StatelessWidget {
             const SizedBox(width: 11),
             // ── content ──────────────────────────────────────────────
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    business.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.titleSm,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    business.tagline,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.caption,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on_outlined, size: 12, color: AppColors.textSecondary),
-                      const SizedBox(width: 2),
-                      Expanded(
-                        child: Text(
-                          '${business.area.isEmpty ? business.cityName : business.area} · ${business.distanceLabel} km',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.label,
+              child: SizedBox(
+                height: 92,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      business.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.titleSm,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      business.tagline,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.caption,
+                    ),
+                    const Spacer(),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.location_on_outlined,
+                                size: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                              const SizedBox(width: 2),
+                              Expanded(
+                                child: Text(
+                                  '${business.area.isEmpty ? business.cityName : business.area} · ${business.distanceLabel} km',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.label,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      CardActionButton(
-                        label: 'Call',
-                        icon: Icons.call_outlined,
-                        onTap: () => AppLauncher.call(business.phone),
-                      ),
-                      const SizedBox(width: 6),
-                      CardActionButton(
-                        label: 'Route',
-                        icon: Icons.near_me_outlined,
-                        onTap: () => AppLauncher.directions(
-                          business.latitude,
-                          business.longitude,
-                          label: business.name,
+                        const SizedBox(width: 8),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _IconAction(
+                              icon: AppIcons.callAsset,
+                              onTap: () => AppLauncher.call(business.phone),
+                            ),
+                            const SizedBox(width: 6),
+                            _IconAction(
+                              icon: AppIcons.whatsappAsset,
+                              onTap: () =>
+                                  AppLauncher.whatsapp(business.whatsapp),
+                            ),
+                            const SizedBox(width: 6),
+                            _IconAction(
+                              icon: AppIcons.directionsAsset,
+                              onTap: () => AppLauncher.directions(
+                                business.latitude,
+                                business.longitude,
+                                label: business.name,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      CardActionButton(
-                        label: 'WhatsApp',
-                        icon: Icons.chat_bubble_outline_rounded,
-                        filled: true,
-                        onTap: () => AppLauncher.whatsapp(business.whatsapp),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Circular icon-only quick action (Call / Route / WhatsApp) — no label,
+/// 40px tap target with the custom SVG brand icons.
+class _IconAction extends StatelessWidget {
+  const _IconAction({required this.icon, required this.onTap});
+
+  final String icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      pressedScale: 0.92,
+      child: Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.border, width: 1),
+        ),
+        child: Center(child: AppIcons.action(icon, size: 15)),
       ),
     );
   }

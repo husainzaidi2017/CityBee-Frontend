@@ -10,7 +10,8 @@ import '../../../domain/models/owner_business.dart';
 /// Every call carries the Supabase JWT; the backend derives the owner from
 /// the token and verifies ownership server-side.
 class ApiOwnerRepository {
-  ApiOwnerRepository(this._api, {http.Client? client}) : _client = client ?? http.Client();
+  ApiOwnerRepository(this._api, {http.Client? client})
+    : _client = client ?? http.Client();
 
   final ApiClient _api;
   final http.Client _client;
@@ -31,7 +32,9 @@ class ApiOwnerRepository {
 
   Future<OwnerBusinessDetails?> businessDetails(String businessId) async {
     final data = await _api.get('/me/businesses/$businessId');
-    return data is Map<String, dynamic> ? OwnerBusinessDetails.fromJson(data) : null;
+    return data is Map<String, dynamic>
+        ? OwnerBusinessDetails.fromJson(data)
+        : null;
   }
 
   // ── common fields ─────────────────────────────────────────────────────
@@ -51,24 +54,62 @@ class ApiOwnerRepository {
     String? openingHours,
     double? latitude,
     double? longitude,
-  }) =>
-      _api.patch('/me/businesses/$businessId', body: {
-        if (name != null) 'name': name,
-        if (tagline != null) 'tagline': tagline,
-        if (description != null) 'description': description,
-        if (phone != null) 'phone': phone,
-        if (whatsapp != null) 'whatsapp': whatsapp,
-        if (email != null) 'email': email,
-        if (website != null) 'website': website,
-        if (address != null) 'address': address,
-        if (locality != null) 'locality': locality,
-        if (postalCode != null) 'postalCode': postalCode,
-        if (openingHours != null) 'openingHours': openingHours,
-        if (latitude != null && longitude != null) ...{
-          'latitude': latitude,
-          'longitude': longitude,
-        },
-      });
+  }) => _api.patch(
+    '/me/businesses/$businessId',
+    body: {
+      if (name != null) 'name': name,
+      if (tagline != null) 'tagline': tagline,
+      if (description != null) 'description': description,
+      if (phone != null) 'phone': phone,
+      if (whatsapp != null) 'whatsapp': whatsapp,
+      if (email != null) 'email': email,
+      if (website != null) 'website': website,
+      if (address != null) 'address': address,
+      if (locality != null) 'locality': locality,
+      if (postalCode != null) 'postalCode': postalCode,
+      if (openingHours != null) 'openingHours': openingHours,
+      if (latitude != null && longitude != null) ...{
+        'latitude': latitude,
+        'longitude': longitude,
+      },
+    },
+  );
+
+  Future<void> requestBusinessUpdate(
+    String businessId, {
+    String? name,
+    String? tagline,
+    String? description,
+    String? phone,
+    String? whatsapp,
+    String? email,
+    String? website,
+    String? address,
+    String? locality,
+    String? postalCode,
+    String? openingHours,
+    double? latitude,
+    double? longitude,
+  }) => _api.post(
+    '/me/businesses/$businessId/change-request',
+    body: {
+      if (name != null) 'name': name,
+      if (tagline != null) 'tagline': tagline,
+      if (description != null) 'description': description,
+      if (phone != null) 'phone': phone,
+      if (whatsapp != null) 'whatsapp': whatsapp,
+      if (email != null) 'email': email,
+      if (website != null) 'website': website,
+      if (address != null) 'address': address,
+      if (locality != null) 'locality': locality,
+      if (postalCode != null) 'postalCode': postalCode,
+      if (openingHours != null) 'openingHours': openingHours,
+      if (latitude != null && longitude != null) ...{
+        'latitude': latitude,
+        'longitude': longitude,
+      },
+    },
+  );
 
   // ── hours ─────────────────────────────────────────────────────────────
 
@@ -81,17 +122,20 @@ class ApiOwnerRepository {
   }
 
   Future<void> updateHours(String businessId, List<BusinessHour> hours) =>
-      _api.put('/me/businesses/$businessId/hours', body: {
-        'hours': [
-          for (final h in hours)
-            {
-              'dayOfWeek': h.dayOfWeek,
-              'isClosed': h.isClosed,
-              'openTime': h.openTime,
-              'closeTime': h.closeTime,
-            },
-        ],
-      });
+      _api.put(
+        '/me/businesses/$businessId/hours',
+        body: {
+          'hours': [
+            for (final h in hours)
+              {
+                'dayOfWeek': h.dayOfWeek,
+                'isClosed': h.isClosed,
+                'openTime': h.openTime,
+                'closeTime': h.closeTime,
+              },
+          ],
+        },
+      );
 
   // ── offers ────────────────────────────────────────────────────────────
 
@@ -103,16 +147,21 @@ class ApiOwnerRepository {
   Future<void> createOffer(String businessId, Map<String, dynamic> body) =>
       _api.post('/me/businesses/$businessId/offers', body: body);
 
-  Future<void> updateOffer(String businessId, String offerId, Map<String, dynamic> body) =>
-      _api.patch('/me/businesses/$businessId/offers/$offerId', body: body);
+  Future<void> updateOffer(
+    String businessId,
+    String offerId,
+    Map<String, dynamic> body,
+  ) => _api.patch('/me/businesses/$businessId/offers/$offerId', body: body);
 
   Future<void> deleteOffer(String businessId, String offerId) =>
       _api.delete('/me/businesses/$businessId/offers/$offerId');
 
   // ── menu ──────────────────────────────────────────────────────────────
 
-  Future<void> createMenuCategory(String businessId, String name) =>
-      _api.post('/me/businesses/$businessId/menu/categories', body: {'name': name});
+  Future<void> createMenuCategory(String businessId, String name) => _api.post(
+    '/me/businesses/$businessId/menu/categories',
+    body: {'name': name},
+  );
 
   Future<void> deleteMenuCategory(String businessId, String categoryId) =>
       _api.delete('/me/businesses/$businessId/menu/categories/$categoryId');
@@ -120,8 +169,11 @@ class ApiOwnerRepository {
   Future<void> createMenuItem(String businessId, Map<String, dynamic> body) =>
       _api.post('/me/businesses/$businessId/menu/items', body: body);
 
-  Future<void> updateMenuItem(String businessId, String itemId, Map<String, dynamic> body) =>
-      _api.patch('/me/businesses/$businessId/menu/items/$itemId', body: body);
+  Future<void> updateMenuItem(
+    String businessId,
+    String itemId,
+    Map<String, dynamic> body,
+  ) => _api.patch('/me/businesses/$businessId/menu/items/$itemId', body: body);
 
   Future<void> deleteMenuItem(String businessId, String itemId) =>
       _api.delete('/me/businesses/$businessId/menu/items/$itemId');
@@ -131,8 +183,11 @@ class ApiOwnerRepository {
   Future<void> createService(String businessId, Map<String, dynamic> body) =>
       _api.post('/me/businesses/$businessId/services', body: body);
 
-  Future<void> updateService(String businessId, String serviceId, Map<String, dynamic> body) =>
-      _api.patch('/me/businesses/$businessId/services/$serviceId', body: body);
+  Future<void> updateService(
+    String businessId,
+    String serviceId,
+    Map<String, dynamic> body,
+  ) => _api.patch('/me/businesses/$businessId/services/$serviceId', body: body);
 
   Future<void> deleteService(String businessId, String serviceId) =>
       _api.delete('/me/businesses/$businessId/services/$serviceId');
@@ -149,7 +204,10 @@ class ApiOwnerRepository {
       _api.patch('/me/businesses/$businessId/hotel', body: body);
 
   Future<void> updateAmenities(String businessId, List<String> amenities) =>
-      _api.put('/me/businesses/$businessId/hotel/amenities', body: {'amenities': amenities});
+      _api.put(
+        '/me/businesses/$businessId/hotel/amenities',
+        body: {'amenities': amenities},
+      );
 
   // ── images ────────────────────────────────────────────────────────────
 
@@ -181,7 +239,9 @@ class ApiOwnerRepository {
         if (token != null && token.isNotEmpty) {
           request.headers['Authorization'] = 'Bearer $token';
         }
-        final streamed = await _client.send(request).timeout(const Duration(seconds: 60));
+        final streamed = await _client
+            .send(request)
+            .timeout(const Duration(seconds: 60));
         final response = await http.Response.fromStream(streamed);
         if (response.statusCode >= 400) {
           throw Exception('Upload failed (${response.statusCode})');
@@ -189,12 +249,15 @@ class ApiOwnerRepository {
         final body = _api.decodeBody(response.body) as Map<String, dynamic>;
         final secureUrl = body['secureUrl']?.toString() ?? '';
         final publicId = body['publicId']?.toString();
-        await _api.post('/uploads/associate', body: {
-          'imageUrl': secureUrl,
-          if (publicId != null) 'publicId': publicId,
-          'entityId': businessId,
-          'entityType': 'business',
-        });
+        await _api.post(
+          '/uploads/associate',
+          body: {
+            'imageUrl': secureUrl,
+            if (publicId != null) 'publicId': publicId,
+            'entityId': businessId,
+            'entityType': 'business',
+          },
+        );
         added++;
       } catch (e) {
         // Photo cap reached mid-batch — report what we have.

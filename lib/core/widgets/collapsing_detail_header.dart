@@ -323,20 +323,22 @@ class _BlurredBackdrop extends StatelessWidget {
       children: [
         // Blurred cover-cropped image FILLING the whole hero (the
         // letterbox sides behind a contained portrait photo are the image
-        // itself, blurred — never flat grey). Scaled slightly past the
-        // frame so the blur edges never show.
-        Transform.scale(
-          scale: 1.15,
-          child: ImageFiltered(
-            imageFilter:
-                ImageFilter.blur(sigmaX: 28, sigmaY: 28, tileMode: TileMode.decal),
-            child: AppImage(
-              url: url,
-              // fill: stretches a 540-wide portrait to frame width —
-              // acceptable here because the result is heavily blurred
-              // background texture, not the sharp photo.
-              fit: BoxFit.fill,
-              memCacheWidth: 480,
+        // itself, blurred — never flat grey). CLIPPED so the scaled blur
+        // can never paint outside the hero box (no orange shadow bleed).
+        ClipRect(
+          child: Transform.scale(
+            scale: 1.15,
+            child: ImageFiltered(
+              imageFilter:
+                  ImageFilter.blur(sigmaX: 28, sigmaY: 28, tileMode: TileMode.decal),
+              child: AppImage(
+                url: url,
+                // fill: stretches a 540-wide portrait to frame width —
+                // acceptable here because the result is heavily blurred
+                // background texture, not the sharp photo.
+                fit: BoxFit.fill,
+                memCacheWidth: 480,
+              ),
             ),
           ),
         ),

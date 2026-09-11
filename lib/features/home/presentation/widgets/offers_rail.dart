@@ -25,9 +25,52 @@ class OffersRail extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: offers.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, index) => _HomeOfferCard(offer: offers[index]),
+        itemBuilder: (context, index) => _AnimatedOfferCard(
+          index: index,
+          child: _HomeOfferCard(offer: offers[index]),
+        ),
       ),
     );
+  }
+}
+
+class _AnimatedOfferCard extends StatefulWidget {
+  const _AnimatedOfferCard({required this.index, required this.child});
+
+  final int index;
+  final Widget child;
+
+  @override
+  State<_AnimatedOfferCard> createState() => _AnimatedOfferCardState();
+}
+
+class _AnimatedOfferCardState extends State<_AnimatedOfferCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 1300 + widget.index * 120),
+    )..repeat(reverse: true);
+    _scale = Tween<double>(
+      begin: 0.985,
+      end: 1.015,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(scale: _scale, child: widget.child);
   }
 }
 
@@ -58,13 +101,20 @@ class _HomeOfferCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  AppImage(url: offer.image, fallbackIcon: Icons.local_offer_rounded),
+                  AppImage(
+                    url: offer.image,
+                    fallbackIcon: Icons.local_offer_rounded,
+                  ),
                   const DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Colors.transparent, Color(0xCC000000)],
+                        colors: [
+                          Colors.transparent,
+                          Colors.transparent,
+                          Color(0xCC000000),
+                        ],
                       ),
                     ),
                   ),
@@ -72,7 +122,10 @@ class _HomeOfferCard extends StatelessWidget {
                     top: 8,
                     left: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.badgeOrange,
                         borderRadius: BorderRadius.circular(7),
@@ -133,7 +186,11 @@ class _HomeOfferCard extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.location_on_outlined, size: 12, color: AppColors.textSecondary),
+                            const Icon(
+                              Icons.location_on_outlined,
+                              size: 12,
+                              color: AppColors.textSecondary,
+                            ),
                             const SizedBox(width: 2),
                             Expanded(
                               child: Text(
@@ -146,7 +203,9 @@ class _HomeOfferCard extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 3),
-                        RatingPill.soft(rating: offer.rating.toStringAsFixed(1)),
+                        RatingPill.soft(
+                          rating: offer.rating.toStringAsFixed(1),
+                        ),
                       ],
                     ),
                   ),
@@ -159,5 +218,6 @@ class _HomeOfferCard extends StatelessWidget {
     );
   }
 
-  String _titleLine(Offer offer) => offer.subtitle.replaceFirst(RegExp('^on '), '');
+  String _titleLine(Offer offer) =>
+      offer.subtitle.replaceFirst(RegExp('^on '), '');
 }

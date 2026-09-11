@@ -22,7 +22,11 @@ import '../../home/presentation/widgets/category_visual.dart';
 /// 1 Category → 2 Details → 3 Address & Location → 4 Category Details
 /// → 5 Photos → 6 Review & Submit → success screen.
 class ListBusinessScreen extends ConsumerStatefulWidget {
-  const ListBusinessScreen({super.key});
+  /// When set, the wizard runs in EDIT mode: it prefills from this
+  /// rejected submission and PATCHes + resubmits instead of creating new.
+  const ListBusinessScreen({super.key, this.editSubmissionId});
+
+  final String? editSubmissionId;
 
   @override
   ConsumerState<ListBusinessScreen> createState() => _ListBusinessScreenState();
@@ -34,6 +38,36 @@ class _ListBusinessScreenState extends ConsumerState<ListBusinessScreen> {
   final Map<String, String> _uploadedPhotos = {};
   int _step = 0;
   bool _submitting = false;
+  bool _loadingEdit = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final id = widget.editSubmissionId;
+    if (id != null) _loadForEdit(id);
+  }
+
+  Future<void> _loadForEdit(String id) async {
+    setState(() => _loadingEdit = true);
+    try {
+      final detail =
+          await ref.read(listingRepositoryProvider).submissionDetail(id);
+      _draft.applyDetail(detail);
+      _draft.imageUrls =
+          ((detail['imageUrls'] as List?) ?? const [])
+              .map((e) => e.toString())
+              .toList();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Could not load the submission for editing.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loadingEdit = false);
+    }
+  }
 
   static const _stepTitles = [
     'Business Type',
@@ -46,6 +80,15 @@ class _ListBusinessScreenState extends ConsumerState<ListBusinessScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loadingEdit) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(backgroundColor: AppColors.surface),
+        body: const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
     // Guest gate: listing a business requires an account (so the approved
     // business can be owned). After sign-in the user returns here.
     final signedIn = ref.watch(authStateProvider);
@@ -124,7 +167,11 @@ class _ListBusinessScreenState extends ConsumerState<ListBusinessScreen> {
             }
           },
         ),
-        title: Text('List Your Business', style: AppTypography.title),
+        title: Text(
+            widget.editSubmissionId != null
+                ? 'Edit Your Listing'
+                : 'List Your Business',
+            style: AppTypography.title),
       ),
       body: SafeArea(
         child: Column(
@@ -204,7 +251,14 @@ class _ListBusinessScreenState extends ConsumerState<ListBusinessScreen> {
         urls.add(url);
       }
       _draft.imageUrls = urls;
-      await ref.read(listingRepositoryProvider).submit(_draft);
+      final editId = widget.editSubmissionId;
+      if (editId != null) {
+        // Edit mode: update the rejected submission, then flip to pending.
+        await repo.editSubmission(editId, _draft.toBody());
+        await repo.resubmit(editId);
+      } else {
+        await repo.submit(_draft);
+      }
       if (!mounted) return;
       // Success → dedicated screen via the ROUTER (native push would put it
       // outside GoRouter's tree and break its buttons).

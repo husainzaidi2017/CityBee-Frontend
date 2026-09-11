@@ -26,6 +26,18 @@ class ApiListingRepository {
     return ListingSubmission.fromList(data);
   }
 
+  /// Full detail of one own submission — prefills the edit wizard.
+  Future<Map<String, dynamic>> submissionDetail(String submissionId) async {
+    final data = await _api.get('/me/business-listings/$submissionId');
+    return data is Map<String, dynamic> ? data : const {};
+  }
+
+  /// Edit a rejected own submission (fields the wizard collects).
+  Future<void> editSubmission(
+      String submissionId, Map<String, dynamic> body) async {
+    await _api.patch('/me/business-listings/$submissionId', body: body);
+  }
+
   /// Resubmit a rejected listing.
   Future<void> resubmit(String submissionId) =>
       _api.post('/me/business-listings/$submissionId/resubmit');

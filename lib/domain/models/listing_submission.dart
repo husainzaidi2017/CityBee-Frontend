@@ -155,4 +155,41 @@ class ListingDraft {
         if (isSalon && serviceNames.isNotEmpty) 'serviceNames': serviceNames,
         if (imageUrls.isNotEmpty) 'imageUrls': imageUrls,
       };
+
+
+  /// Prefills the draft from a submission detail (edit & resubmit flow).
+  void applyDetail(Map<String, dynamic> d) {
+    categorySlug = d['categorySlug']?.toString();
+    businessName = d['businessName']?.toString() ?? '';
+    tagline = d['tagline']?.toString() ?? '';
+    description = d['description']?.toString() ?? '';
+    phone = d['phone']?.toString() ?? '';
+    whatsapp = d['whatsapp']?.toString() ?? '';
+    email = d['email']?.toString() ?? '';
+    website = d['website']?.toString() ?? '';
+    address = d['address']?.toString() ?? '';
+    locality = d['locality']?.toString() ?? '';
+    cityName = d['cityName']?.toString() ?? '';
+    cityLat = (d['cityLat'] as num?)?.toDouble();
+    cityLng = (d['cityLng'] as num?)?.toDouble();
+    bizLat = (d['bizLat'] as num?)?.toDouble();
+    bizLng = (d['bizLng'] as num?)?.toDouble();
+    openingHours = d['openingHours']?.toString() ?? '';
+    specialization = d['specialization']?.toString();
+    qualification = d['qualification']?.toString();
+    experienceYears = (d['experienceYears'] as num?)?.toInt();
+    consultationFee = d['consultationFee']?.toString();
+    cuisine = d['cuisine']?.toString();
+    priceRange = d['priceRange']?.toString();
+    vegType = d['vegType']?.toString() ?? 'mixed';
+    hotelType = d['hotelType']?.toString();
+    checkInTime = d['checkInTime']?.toString();
+    checkOutTime = d['checkOutTime']?.toString();
+    amenities = (d['amenities'] as List? ?? const [])
+        .map((e) => e.toString())
+        .toList();
+    imageUrls = (d['imageUrls'] as List? ?? const [])
+        .map((e) => e.toString())
+        .toList();
+  }
 }

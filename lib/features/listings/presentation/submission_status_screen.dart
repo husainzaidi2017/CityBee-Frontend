@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -158,28 +159,12 @@ class _SubmissionCard extends ConsumerWidget {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(999)),
                 ),
-                onPressed: () async {
-                  try {
-                    await ref
-                        .read(listingRepositoryProvider)
-                        .resubmit(submission.id);
-                    ref.invalidate(mySubmissionsProvider);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Resubmitted — back under review.')),
-                      );
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Could not resubmit. Try again.')),
-                      );
-                    }
-                  }
-                },
-                icon: const Icon(Icons.refresh_rounded, size: 16),
+                // Opens the wizard PREFILLED with this submission — the
+                // user fixes the issues, then Save & Resubmit flips it
+                // back to pending.
+                onPressed: () =>
+                    context.push('/list-business?edit=${submission.id}'),
+                icon: const Icon(Icons.edit_rounded, size: 16),
                 label: const Text('Edit & Resubmit'),
               ),
             ),

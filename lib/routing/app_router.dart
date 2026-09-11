@@ -88,9 +88,12 @@ final appRouter = GoRouter(
     ),
     // List Your Business wizard (its screen gates guests itself and
     // forwards to /login, returning here after sign-in via ?then=/list-business).
+    // ?edit=<submissionId> opens it prefilled for edit & resubmit.
     GoRoute(
       path: '/list-business',
-      builder: (_, __) => const ListBusinessScreen(),
+      builder: (context, state) => ListBusinessScreen(
+        editSubmissionId: state.uri.queryParameters['edit'],
+      ),
     ),
     // Submission status: every listing the user submitted, with live state.
     GoRoute(

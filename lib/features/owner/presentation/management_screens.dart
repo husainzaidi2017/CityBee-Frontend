@@ -16,7 +16,12 @@ import '../../../providers/app_providers.dart';
 /// ── shared bits ─────────────────────────────────────────────────────────
 
 class OwnerScaffold extends StatelessWidget {
-  const OwnerScaffold({super.key, required this.title, required this.body, this.fab});
+  const OwnerScaffold({
+    super.key,
+    required this.title,
+    required this.body,
+    this.fab,
+  });
 
   final String title;
   final Widget body;
@@ -63,7 +68,10 @@ class LabeledField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.label.copyWith(color: AppColors.textPrimary)),
+        Text(
+          label,
+          style: AppTypography.label.copyWith(color: AppColors.textPrimary),
+        ),
         const SizedBox(height: 5),
         TextField(
           controller: controller,
@@ -94,8 +102,9 @@ Future<bool> _saveWithFeedback(
     navigator.pop(true);
     return true;
   } catch (e) {
-    messenger.showSnackBar(SnackBar(
-        content: Text('Could not save. Please check and try again.')));
+    messenger.showSnackBar(
+      SnackBar(content: Text('Could not save. Please check and try again.')),
+    );
     return false;
   }
 }
@@ -116,8 +125,9 @@ class _EditBusinessProfileScreenState
     extends ConsumerState<EditBusinessProfileScreen> {
   late final _name = TextEditingController(text: widget.details.name);
   late final _tagline = TextEditingController(text: widget.details.tagline);
-  late final _description =
-      TextEditingController(text: widget.details.description);
+  late final _description = TextEditingController(
+    text: widget.details.description,
+  );
   late final _phone = TextEditingController(text: widget.details.phone);
   late final _whatsapp = TextEditingController(text: widget.details.whatsapp);
   late final _email = TextEditingController(text: widget.details.email);
@@ -130,8 +140,16 @@ class _EditBusinessProfileScreenState
   @override
   void dispose() {
     for (final c in [
-      _name, _tagline, _description, _phone, _whatsapp,
-      _email, _website, _address, _locality, _postal,
+      _name,
+      _tagline,
+      _description,
+      _phone,
+      _whatsapp,
+      _email,
+      _website,
+      _address,
+      _locality,
+      _postal,
     ]) {
       c.dispose();
     }
@@ -141,14 +159,15 @@ class _EditBusinessProfileScreenState
   Future<void> _save() async {
     if (_name.text.trim().length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Business name is too short.')));
+        const SnackBar(content: Text('Business name is too short.')),
+      );
       return;
     }
     setState(() => _saving = true);
     final repo = ref.read(ownerRepositoryProvider);
     final ok = await _saveWithFeedback(
       context,
-      () => repo.updateBusiness(
+      () => repo.requestBusinessUpdate(
         widget.details.id,
         name: _name.text.trim(),
         tagline: _tagline.text.trim(),
@@ -161,6 +180,7 @@ class _EditBusinessProfileScreenState
         locality: _locality.text.trim(),
         postalCode: _postal.text.trim(),
       ),
+      successMessage: 'Sent for admin approval',
     );
     if (ok) _changed(ref);
     if (mounted) setState(() => _saving = false);
@@ -180,46 +200,57 @@ class _EditBusinessProfileScreenState
                   LabeledField(label: 'Business name', controller: _name),
                   const SizedBox(height: 12),
                   LabeledField(
-                      label: 'Tagline (short line under the name)',
-                      controller: _tagline),
+                    label: 'Tagline (short line under the name)',
+                    controller: _tagline,
+                  ),
                   const SizedBox(height: 12),
                   LabeledField(
-                      label: 'Description',
-                      controller: _description,
-                      maxLines: 4),
+                    label: 'Description',
+                    controller: _description,
+                    maxLines: 4,
+                  ),
                   const SizedBox(height: 16),
                   Text('Contact', style: AppTypography.titleSm),
                   const SizedBox(height: 10),
                   LabeledField(
-                      label: 'Phone',
-                      controller: _phone,
-                      keyboardType: TextInputType.phone),
+                    label: 'Phone',
+                    controller: _phone,
+                    keyboardType: TextInputType.phone,
+                  ),
                   const SizedBox(height: 12),
                   LabeledField(
-                      label: 'WhatsApp',
-                      controller: _whatsapp,
-                      keyboardType: TextInputType.phone),
+                    label: 'WhatsApp',
+                    controller: _whatsapp,
+                    keyboardType: TextInputType.phone,
+                  ),
                   const SizedBox(height: 12),
                   LabeledField(
-                      label: 'Email',
-                      controller: _email,
-                      keyboardType: TextInputType.emailAddress),
+                    label: 'Email',
+                    controller: _email,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
                   const SizedBox(height: 12),
                   LabeledField(
-                      label: 'Website',
-                      controller: _website,
-                      keyboardType: TextInputType.url),
+                    label: 'Website',
+                    controller: _website,
+                    keyboardType: TextInputType.url,
+                  ),
                   const SizedBox(height: 16),
                   Text('Location', style: AppTypography.titleSm),
                   const SizedBox(height: 10),
-                  LabeledField(label: 'Address', controller: _address, maxLines: 2),
+                  LabeledField(
+                    label: 'Address',
+                    controller: _address,
+                    maxLines: 2,
+                  ),
                   const SizedBox(height: 12),
                   LabeledField(label: 'Locality / Area', controller: _locality),
                   const SizedBox(height: 12),
                   LabeledField(
-                      label: 'Postal code',
-                      controller: _postal,
-                      keyboardType: TextInputType.number),
+                    label: 'Postal code',
+                    controller: _postal,
+                    keyboardType: TextInputType.number,
+                  ),
                 ],
               ),
             ),
@@ -234,7 +265,8 @@ class _EditBusinessProfileScreenState
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(999)),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
                     ),
                     onPressed: _saving ? null : _save,
                     child: _saving
@@ -242,8 +274,11 @@ class _EditBusinessProfileScreenState
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
-                        : const Text('Save Changes'),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Send for Approval'),
                   ),
                 ),
               ),
@@ -258,7 +293,13 @@ class _EditBusinessProfileScreenState
 // ── Business hours ───────────────────────────────────────────────────────
 
 const _dayNames = [
-  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
 ];
 
 class BusinessHoursScreen extends ConsumerStatefulWidget {
@@ -284,7 +325,11 @@ class _BusinessHoursScreenState extends ConsumerState<BusinessHoursScreen> {
           .firstOrNull;
       return existing ??
           BusinessHour(
-              dayOfWeek: i, isClosed: false, openTime: '09:00', closeTime: '21:00');
+            dayOfWeek: i,
+            isClosed: false,
+            openTime: '09:00',
+            closeTime: '21:00',
+          );
     });
   }
 
@@ -295,14 +340,17 @@ class _BusinessHoursScreenState extends ConsumerState<BusinessHoursScreen> {
     final picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay(
-          hour: int.tryParse(parts[0]) ?? 9,
-          minute: int.tryParse(parts[1]) ?? 0),
+        hour: int.tryParse(parts[0]) ?? 9,
+        minute: int.tryParse(parts[1]) ?? 0,
+      ),
     );
     if (picked == null) return;
     final value =
         '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
     setState(() {
-      _hours[index] = (open ? current.copyWith(openTime: value) : current.copyWith(closeTime: value));
+      _hours[index] = (open
+          ? current.copyWith(openTime: value)
+          : current.copyWith(closeTime: value));
     });
   }
 
@@ -332,8 +380,10 @@ class _BusinessHoursScreenState extends ConsumerState<BusinessHoursScreen> {
                   final h = _hours[i];
                   return Container(
                     margin: const EdgeInsets.only(bottom: 9),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 13,
+                      vertical: 9,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(14),
@@ -344,15 +394,18 @@ class _BusinessHoursScreenState extends ConsumerState<BusinessHoursScreen> {
                         Row(
                           children: [
                             Expanded(
-                                child: Text(_dayNames[i],
-                                    style: AppTypography.bodyStrong)),
-                            Text('Closed',
-                                style: AppTypography.label),
+                              child: Text(
+                                _dayNames[i],
+                                style: AppTypography.bodyStrong,
+                              ),
+                            ),
+                            Text('Closed', style: AppTypography.label),
                             Switch(
                               value: h.isClosed,
                               activeThumbColor: AppColors.brandRed,
-                              onChanged: (v) => setState(() =>
-                                  _hours[i] = h.copyWith(isClosed: v)),
+                              onChanged: (v) => setState(
+                                () => _hours[i] = h.copyWith(isClosed: v),
+                              ),
                             ),
                           ],
                         ),
@@ -360,16 +413,21 @@ class _BusinessHoursScreenState extends ConsumerState<BusinessHoursScreen> {
                           Row(
                             children: [
                               _TimeChip(
-                                  label: h.openTime,
-                                  onTap: () => _pickTime(i, true)),
+                                label: h.openTime,
+                                onTap: () => _pickTime(i, true),
+                              ),
                               const Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 8),
-                                child: Icon(Icons.arrow_forward_rounded,
-                                    size: 14, color: AppColors.textMuted),
+                                child: Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 14,
+                                  color: AppColors.textMuted,
+                                ),
                               ),
                               _TimeChip(
-                                  label: h.closeTime,
-                                  onTap: () => _pickTime(i, false)),
+                                label: h.closeTime,
+                                onTap: () => _pickTime(i, false),
+                              ),
                             ],
                           ),
                       ],
@@ -389,7 +447,8 @@ class _BusinessHoursScreenState extends ConsumerState<BusinessHoursScreen> {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(999)),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
                     ),
                     onPressed: _saving ? null : _save,
                     child: _saving
@@ -397,7 +456,10 @@ class _BusinessHoursScreenState extends ConsumerState<BusinessHoursScreen> {
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
                         : const Text('Save Hours'),
                   ),
                 ),
@@ -429,8 +491,11 @@ class _TimeChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.schedule_rounded,
-                size: 13, color: AppColors.primary),
+            const Icon(
+              Icons.schedule_rounded,
+              size: 13,
+              color: AppColors.primary,
+            ),
             const SizedBox(width: 5),
             Text(label, style: AppTypography.bodyStrong),
           ],
@@ -458,7 +523,10 @@ class _BusinessPhotosScreenState extends ConsumerState<BusinessPhotosScreen> {
   Future<void> _addPhoto() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(
-        source: ImageSource.gallery, maxWidth: 1200, imageQuality: 80);
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      imageQuality: 80,
+    );
     if (picked == null) return;
     setState(() => _uploading = true);
     try {
@@ -468,16 +536,21 @@ class _BusinessPhotosScreenState extends ConsumerState<BusinessPhotosScreen> {
       _changed(ref);
       ref.invalidate(ownerBusinessDetailsProvider(widget.details.id));
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Photo added')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Photo added')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.toString().contains('IMAGE_LIMIT')
-              ? 'Maximum 5 photos allowed.'
-              : 'Upload failed. Please try again.'),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().contains('IMAGE_LIMIT')
+                  ? 'Maximum 5 photos allowed.'
+                  : 'Upload failed. Please try again.',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _uploading = false);
@@ -493,14 +566,18 @@ class _BusinessPhotosScreenState extends ConsumerState<BusinessPhotosScreen> {
           children: [
             if (!image.isPrimary)
               ListTile(
-                leading: const Icon(Icons.star_rounded,
-                    color: AppColors.primary),
+                leading: const Icon(
+                  Icons.star_rounded,
+                  color: AppColors.primary,
+                ),
                 title: const Text('Set as main photo'),
                 onTap: () => Navigator.pop(sheetContext, 'primary'),
               ),
             ListTile(
-              leading:
-                  const Icon(Icons.delete_outline_rounded, color: AppColors.brandRed),
+              leading: const Icon(
+                Icons.delete_outline_rounded,
+                color: AppColors.brandRed,
+              ),
               title: const Text('Delete photo'),
               onTap: () => Navigator.pop(sheetContext, 'delete'),
             ),
@@ -526,7 +603,8 @@ class _BusinessPhotosScreenState extends ConsumerState<BusinessPhotosScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Action failed. Please try again.')));
+          const SnackBar(content: Text('Action failed. Please try again.')),
+        );
       }
     }
   }
@@ -539,8 +617,7 @@ class _BusinessPhotosScreenState extends ConsumerState<BusinessPhotosScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('${images.length} of 5 photos',
-              style: AppTypography.caption),
+          Text('${images.length} of 5 photos', style: AppTypography.caption),
           const SizedBox(height: 10),
           GridView.builder(
             shrinkWrap: true,
@@ -564,11 +641,14 @@ class _BusinessPhotosScreenState extends ConsumerState<BusinessPhotosScreen> {
                     child: _uploading
                         ? const Center(
                             child: SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.primary)))
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          )
                         : Icon(
                             canAdd
                                 ? Icons.add_photo_alternate_outlined
@@ -595,16 +675,21 @@ class _BusinessPhotosScreenState extends ConsumerState<BusinessPhotosScreen> {
                         left: 6,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 7, vertical: 3),
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Text('MAIN',
-                              style: TextStyle(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white)),
+                          child: const Text(
+                            'MAIN',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                   ],
@@ -634,9 +719,11 @@ class ManageOffersScreen extends ConsumerWidget {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         onPressed: () async {
-          final created = await Navigator.of(context).push<bool>(MaterialPageRoute(
-            builder: (_) => CreateOfferScreen(businessId: details.id),
-          ));
+          final created = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (_) => CreateOfferScreen(businessId: details.id),
+            ),
+          );
           if (created == true) _changed(ref);
         },
         child: const Icon(Icons.add_rounded),
@@ -662,13 +749,14 @@ class ManageOffersScreen extends ConsumerWidget {
                               .deleteOffer(details.id, offer.id);
                           _changed(ref);
                           ref.invalidate(
-                              ownerBusinessDetailsProvider(details.id));
+                            ownerBusinessDetailsProvider(details.id),
+                          );
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                  content:
-                                      Text('Could not delete. Try again.')),
+                                content: Text('Could not delete. Try again.'),
+                              ),
                             );
                           }
                         }
@@ -708,10 +796,12 @@ class _OfferRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(offer.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.bodyStrong),
+                Text(
+                  offer.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodyStrong,
+                ),
                 const SizedBox(height: 3),
                 Text(
                   [
@@ -733,14 +823,18 @@ class _OfferRow extends StatelessWidget {
             child: Text(
               offer.phase.toUpperCase(),
               style: TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w700,
-                  color: phaseColor),
+                fontSize: 9.5,
+                fontWeight: FontWeight.w700,
+                color: phaseColor,
+              ),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline_rounded,
-                size: 20, color: AppColors.brandRed),
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              size: 20,
+              color: AppColors.brandRed,
+            ),
             onPressed: () => onDelete(),
           ),
         ],
@@ -792,7 +886,8 @@ class _CreateOfferScreenState extends ConsumerState<CreateOfferScreen> {
   Future<void> _publish() async {
     if (_title.text.trim().length < 3) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Enter an offer title (3+ letters).')));
+        const SnackBar(content: Text('Enter an offer title (3+ letters).')),
+      );
       return;
     }
     setState(() => _saving = true);
@@ -833,19 +928,22 @@ class _CreateOfferScreenState extends ConsumerState<CreateOfferScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
                 children: [
                   LabeledField(
-                      label: 'Offer title',
-                      controller: _title,
-                      hint: 'e.g. Weekend Special — 20% Off'),
+                    label: 'Offer title',
+                    controller: _title,
+                    hint: 'e.g. Weekend Special — 20% Off',
+                  ),
                   const SizedBox(height: 12),
                   LabeledField(
-                      label: 'Description',
-                      controller: _description,
-                      maxLines: 3),
+                    label: 'Description',
+                    controller: _description,
+                    maxLines: 3,
+                  ),
                   const SizedBox(height: 12),
                   LabeledField(
-                      label: 'Badge text',
-                      controller: _badge,
-                      hint: 'e.g. 20% OFF'),
+                    label: 'Badge text',
+                    controller: _badge,
+                    hint: 'e.g. 20% OFF',
+                  ),
                   const SizedBox(height: 12),
                   Text('Discount', style: AppTypography.titleSm),
                   const SizedBox(height: 8),
@@ -857,8 +955,8 @@ class _CreateOfferScreenState extends ConsumerState<CreateOfferScreen> {
                             type == 'percent'
                                 ? '%'
                                 : type == 'flat'
-                                    ? '₹ Flat'
-                                    : 'Other',
+                                ? '₹ Flat'
+                                : 'Other',
                           ),
                           selected: _discountType == type,
                           onSelected: (v) =>
@@ -877,8 +975,7 @@ class _CreateOfferScreenState extends ConsumerState<CreateOfferScreen> {
                         child: TextField(
                           controller: _discountValue,
                           keyboardType: TextInputType.number,
-                          decoration:
-                              const InputDecoration(hintText: 'Value'),
+                          decoration: const InputDecoration(hintText: 'Value'),
                         ),
                       ),
                     ],
@@ -907,9 +1004,10 @@ class _CreateOfferScreenState extends ConsumerState<CreateOfferScreen> {
                   ),
                   const SizedBox(height: 12),
                   LabeledField(
-                      label: 'Terms (optional)',
-                      controller: _terms,
-                      maxLines: 2),
+                    label: 'Terms (optional)',
+                    controller: _terms,
+                    maxLines: 2,
+                  ),
                 ],
               ),
             ),
@@ -924,7 +1022,8 @@ class _CreateOfferScreenState extends ConsumerState<CreateOfferScreen> {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(999)),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
                     ),
                     onPressed: _saving ? null : _publish,
                     child: _saving
@@ -932,7 +1031,10 @@ class _CreateOfferScreenState extends ConsumerState<CreateOfferScreen> {
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
                         : const Text('Publish Offer'),
                   ),
                 ),
@@ -946,7 +1048,11 @@ class _CreateOfferScreenState extends ConsumerState<CreateOfferScreen> {
 }
 
 class _DateField extends StatelessWidget {
-  const _DateField({required this.label, required this.date, required this.onTap});
+  const _DateField({
+    required this.label,
+    required this.date,
+    required this.onTap,
+  });
 
   final String label;
   final DateTime? date;
@@ -965,8 +1071,11 @@ class _DateField extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today_rounded,
-                size: 15, color: AppColors.primary),
+            const Icon(
+              Icons.calendar_today_rounded,
+              size: 15,
+              color: AppColors.primary,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -1030,11 +1139,16 @@ class BusinessReviewsScreen extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.star_rounded,
-                              size: 15, color: AppColors.starAmber),
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 15,
+                            color: AppColors.starAmber,
+                          ),
                           const SizedBox(width: 3),
-                          Text(review.rating.toStringAsFixed(1),
-                              style: AppTypography.bodyStrong),
+                          Text(
+                            review.rating.toStringAsFixed(1),
+                            style: AppTypography.bodyStrong,
+                          ),
                           const Spacer(),
                           Text(review.author, style: AppTypography.label),
                         ],
@@ -1067,25 +1181,38 @@ class DoctorDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _DoctorDetailsScreenState extends ConsumerState<DoctorDetailsScreen> {
-  late final _name =
-      TextEditingController(text: widget.details.doctor?['name'] as String? ?? '');
+  late final _name = TextEditingController(
+    text: widget.details.doctor?['name'] as String? ?? '',
+  );
   late final _specialization = TextEditingController(
-      text: widget.details.doctor?['specialization'] as String? ?? '');
+    text: widget.details.doctor?['specialization'] as String? ?? '',
+  );
   late final _qualification = TextEditingController(
-      text: widget.details.doctor?['qualification'] as String? ?? '');
+    text: widget.details.doctor?['qualification'] as String? ?? '',
+  );
   late final _experience = TextEditingController(
-      text: (widget.details.doctor?['experienceYears'] ?? '').toString() == 'null'
-          ? ''
-          : (widget.details.doctor?['experienceYears'] ?? '').toString());
+    text: (widget.details.doctor?['experienceYears'] ?? '').toString() == 'null'
+        ? ''
+        : (widget.details.doctor?['experienceYears'] ?? '').toString(),
+  );
   late final _fee = TextEditingController(
-      text: widget.details.doctor?['consultationFee'] as String? ?? '');
-  late final _bio =
-      TextEditingController(text: widget.details.doctor?['bio'] as String? ?? '');
+    text: widget.details.doctor?['consultationFee'] as String? ?? '',
+  );
+  late final _bio = TextEditingController(
+    text: widget.details.doctor?['bio'] as String? ?? '',
+  );
   bool _saving = false;
 
   @override
   void dispose() {
-    for (final c in [_name, _specialization, _qualification, _experience, _fee, _bio]) {
+    for (final c in [
+      _name,
+      _specialization,
+      _qualification,
+      _experience,
+      _fee,
+      _bio,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -1124,30 +1251,34 @@ class _DoctorDetailsScreenState extends ConsumerState<DoctorDetailsScreen> {
                   LabeledField(label: 'Doctor name', controller: _name),
                   const SizedBox(height: 12),
                   LabeledField(
-                      label: 'Specialization',
-                      controller: _specialization,
-                      hint: 'e.g. Dentist, Orthopaedist'),
+                    label: 'Specialization',
+                    controller: _specialization,
+                    hint: 'e.g. Dentist, Orthopaedist',
+                  ),
                   const SizedBox(height: 12),
                   LabeledField(
-                      label: 'Qualification',
-                      controller: _qualification,
-                      hint: 'e.g. MBBS, MS (Orthopaedics)'),
+                    label: 'Qualification',
+                    controller: _qualification,
+                    hint: 'e.g. MBBS, MS (Orthopaedics)',
+                  ),
                   const SizedBox(height: 12),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: LabeledField(
-                            label: 'Experience (years)',
-                            controller: _experience,
-                            keyboardType: TextInputType.number),
+                          label: 'Experience (years)',
+                          controller: _experience,
+                          keyboardType: TextInputType.number,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: LabeledField(
-                            label: 'Consultation fee',
-                            controller: _fee,
-                            hint: '₹300'),
+                          label: 'Consultation fee',
+                          controller: _fee,
+                          hint: '₹300',
+                        ),
                       ),
                     ],
                   ),
@@ -1165,7 +1296,11 @@ class _DoctorDetailsScreenState extends ConsumerState<DoctorDetailsScreen> {
 }
 
 class _SaveBar extends StatelessWidget {
-  const _SaveBar({required this.label, required this.saving, required this.onSave});
+  const _SaveBar({
+    required this.label,
+    required this.saving,
+    required this.onSave,
+  });
 
   final String label;
   final bool saving;
@@ -1183,16 +1318,20 @@ class _SaveBar extends StatelessWidget {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
-              shape:
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
             ),
             onPressed: saving ? null : onSave,
             child: saving
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child:
-                        CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
                 : Text(label),
           ),
         ),
@@ -1209,30 +1348,42 @@ class HotelDetailsScreen extends ConsumerStatefulWidget {
   final OwnerBusinessDetails details;
 
   @override
-  ConsumerState<HotelDetailsScreen> createState() =>
-      _HotelDetailsScreenState();
+  ConsumerState<HotelDetailsScreen> createState() => _HotelDetailsScreenState();
 }
 
 class _HotelDetailsScreenState extends ConsumerState<HotelDetailsScreen> {
   late final _type = TextEditingController(
-      text: widget.details.hotel?['hotelType'] as String? ?? '');
+    text: widget.details.hotel?['hotelType'] as String? ?? '',
+  );
   late final _price = TextEditingController(
-      text: widget.details.hotel?['priceRange'] as String? ?? '');
+    text: widget.details.hotel?['priceRange'] as String? ?? '',
+  );
   late final _checkIn = TextEditingController(
-      text: (widget.details.hotel?['checkIn'] ?? '').toString() == 'null'
-          ? ''
-          : (widget.details.hotel?['checkIn'] ?? '').toString());
+    text: (widget.details.hotel?['checkIn'] ?? '').toString() == 'null'
+        ? ''
+        : (widget.details.hotel?['checkIn'] ?? '').toString(),
+  );
   late final _checkOut = TextEditingController(
-      text: (widget.details.hotel?['checkOut'] ?? '').toString() == 'null'
-          ? ''
-          : (widget.details.hotel?['checkOut'] ?? '').toString());
+    text: (widget.details.hotel?['checkOut'] ?? '').toString() == 'null'
+        ? ''
+        : (widget.details.hotel?['checkOut'] ?? '').toString(),
+  );
   late final Set<String> _amenities = {...widget.details.hotelAmenities};
   bool _saving = false;
 
   static const _amenityOptions = [
-    'Wi-Fi', 'Parking', 'Restaurant', 'Room Service', 'AC Rooms',
-    'Power Backup', 'Banquet Hall', 'Conference Room', 'Airport Pickup',
-    'Laundry', 'Gym', 'Breakfast Included',
+    'Wi-Fi',
+    'Parking',
+    'Restaurant',
+    'Room Service',
+    'AC Rooms',
+    'Power Backup',
+    'Banquet Hall',
+    'Conference Room',
+    'Airport Pickup',
+    'Laundry',
+    'Gym',
+    'Breakfast Included',
   ];
 
   @override
@@ -1246,18 +1397,15 @@ class _HotelDetailsScreenState extends ConsumerState<HotelDetailsScreen> {
   Future<void> _save() async {
     setState(() => _saving = true);
     final repo = ref.read(ownerRepositoryProvider);
-    final ok = await _saveWithFeedback(
-      context,
-      () async {
-        await repo.updateHotel(widget.details.id, {
-          'hotelType': _type.text.trim(),
-          'priceRange': _price.text.trim(),
-          if (_checkIn.text.isNotEmpty) 'checkIn': _checkIn.text,
-          if (_checkOut.text.isNotEmpty) 'checkOut': _checkOut.text,
-        });
-        await repo.updateAmenities(widget.details.id, _amenities.toList());
-      },
-    );
+    final ok = await _saveWithFeedback(context, () async {
+      await repo.updateHotel(widget.details.id, {
+        'hotelType': _type.text.trim(),
+        'priceRange': _price.text.trim(),
+        if (_checkIn.text.isNotEmpty) 'checkIn': _checkIn.text,
+        if (_checkOut.text.isNotEmpty) 'checkOut': _checkOut.text,
+      });
+      await repo.updateAmenities(widget.details.id, _amenities.toList());
+    });
     if (ok) _changed(ref);
     if (mounted) setState(() => _saving = false);
   }
@@ -1274,30 +1422,34 @@ class _HotelDetailsScreenState extends ConsumerState<HotelDetailsScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
                 children: [
                   LabeledField(
-                      label: 'Hotel type',
-                      controller: _type,
-                      hint: 'e.g. 3-Star, Boutique, Budget'),
+                    label: 'Hotel type',
+                    controller: _type,
+                    hint: 'e.g. 3-Star, Boutique, Budget',
+                  ),
                   const SizedBox(height: 12),
                   LabeledField(
-                      label: 'Price range',
-                      controller: _price,
-                      hint: 'e.g. ₹1,400–₹2,800 / night'),
+                    label: 'Price range',
+                    controller: _price,
+                    hint: 'e.g. ₹1,400–₹2,800 / night',
+                  ),
                   const SizedBox(height: 12),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: LabeledField(
-                            label: 'Check-in (HH:MM)',
-                            controller: _checkIn,
-                            hint: '12:00'),
+                          label: 'Check-in (HH:MM)',
+                          controller: _checkIn,
+                          hint: '12:00',
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: LabeledField(
-                            label: 'Check-out (HH:MM)',
-                            controller: _checkOut,
-                            hint: '11:00'),
+                          label: 'Check-out (HH:MM)',
+                          controller: _checkOut,
+                          hint: '11:00',
+                        ),
                       ),
                     ],
                   ),
@@ -1312,9 +1464,11 @@ class _HotelDetailsScreenState extends ConsumerState<HotelDetailsScreen> {
                         FilterChip(
                           label: Text(amenity),
                           selected: _amenities.contains(amenity),
-                          onSelected: (v) => setState(() => v
-                              ? _amenities.add(amenity)
-                              : _amenities.remove(amenity)),
+                          onSelected: (v) => setState(
+                            () => v
+                                ? _amenities.add(amenity)
+                                : _amenities.remove(amenity),
+                          ),
                           selectedColor: AppColors.primarySoft,
                           checkmarkColor: AppColors.primary,
                           labelStyle: TextStyle(
@@ -1355,34 +1509,43 @@ class _BusinessServicesScreenState
     final name = TextEditingController(text: existing?.name ?? '');
     final price = TextEditingController(text: existing?.price ?? '');
     final duration = TextEditingController(
-        text: existing?.durationMinutes?.toString() ?? '');
+      text: existing?.durationMinutes?.toString() ?? '',
+    );
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
       builder: (sheetContext) => Padding(
         padding: EdgeInsets.fromLTRB(
-            20, 0, 20, 20 + MediaQuery.of(sheetContext).viewInsets.bottom),
+          20,
+          0,
+          20,
+          20 + MediaQuery.of(sheetContext).viewInsets.bottom,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(existing == null ? 'Add Service' : 'Edit Service',
-                style: AppTypography.title),
+            Text(
+              existing == null ? 'Add Service' : 'Edit Service',
+              style: AppTypography.title,
+            ),
             const SizedBox(height: 12),
             LabeledField(label: 'Service name', controller: name),
             const SizedBox(height: 12),
-            LabeledField(
-                label: 'Price', controller: price, hint: 'e.g. ₹299'),
+            LabeledField(label: 'Price', controller: price, hint: 'e.g. ₹299'),
             const SizedBox(height: 12),
             LabeledField(
-                label: 'Duration (minutes, optional)',
-                controller: duration,
-                keyboardType: TextInputType.number),
+              label: 'Duration (minutes, optional)',
+              controller: duration,
+              keyboardType: TextInputType.number,
+            ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                ),
                 onPressed: () => Navigator.pop(sheetContext, {
                   'name': name.text.trim(),
                   'price': price.text.trim(),
@@ -1414,7 +1577,8 @@ class _BusinessServicesScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not save. Try again.')));
+          const SnackBar(content: Text('Could not save. Try again.')),
+        );
       }
     }
   }
@@ -1454,7 +1618,10 @@ class _BusinessServicesScreenState
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(service.name, style: AppTypography.bodyStrong),
+                              Text(
+                                service.name,
+                                style: AppTypography.bodyStrong,
+                              ),
                               const SizedBox(height: 2),
                               Text(
                                 [
@@ -1473,24 +1640,34 @@ class _BusinessServicesScreenState
                           activeThumbColor: AppColors.primary,
                           onChanged: (v) async {
                             try {
-                              await ref.read(ownerRepositoryProvider).updateService(
-                                  widget.details.id, service.id, {'active': v});
+                              await ref
+                                  .read(ownerRepositoryProvider)
+                                  .updateService(
+                                    widget.details.id,
+                                    service.id,
+                                    {'active': v},
+                                  );
                               _changed(ref);
                               ref.invalidate(
-                                  ownerBusinessDetailsProvider(widget.details.id));
+                                ownerBusinessDetailsProvider(widget.details.id),
+                              );
                             } catch (e) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                      content: Text('Could not update.')),
+                                    content: Text('Could not update.'),
+                                  ),
                                 );
                               }
                             }
                           },
                         ),
                         IconButton(
-                          icon: const Icon(Icons.edit_outlined,
-                              size: 19, color: AppColors.primary),
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            size: 19,
+                            color: AppColors.primary,
+                          ),
                           onPressed: () => _addOrEdit(service),
                         ),
                       ],
@@ -1518,7 +1695,9 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
   Future<void> _addOrEditItem([OwnerMenuItem? existing]) async {
     final name = TextEditingController(text: existing?.name ?? '');
     final price = TextEditingController(text: existing?.price ?? '');
-    final description = TextEditingController(text: existing?.description ?? '');
+    final description = TextEditingController(
+      text: existing?.description ?? '',
+    );
     String? categoryId = existing?.categoryId;
     var isVeg = existing?.isVeg ?? true;
     var available = existing?.available ?? true;
@@ -1528,30 +1707,42 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
       builder: (sheetContext) => StatefulBuilder(
         builder: (sheetContext, setSheetState) => Padding(
           padding: EdgeInsets.fromLTRB(
-              20, 0, 20, 20 + MediaQuery.of(sheetContext).viewInsets.bottom),
+            20,
+            0,
+            20,
+            20 + MediaQuery.of(sheetContext).viewInsets.bottom,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(existing == null ? 'Add Menu Item' : 'Edit Menu Item',
-                  style: AppTypography.title),
+              Text(
+                existing == null ? 'Add Menu Item' : 'Edit Menu Item',
+                style: AppTypography.title,
+              ),
               const SizedBox(height: 12),
               LabeledField(label: 'Item name', controller: name),
               const SizedBox(height: 12),
               LabeledField(
-                  label: 'Price', controller: price, hint: 'e.g. ₹249'),
+                label: 'Price',
+                controller: price,
+                hint: 'e.g. ₹249',
+              ),
               const SizedBox(height: 12),
               LabeledField(
-                  label: 'Description (optional)',
-                  controller: description),
+                label: 'Description (optional)',
+                controller: description,
+              ),
               const SizedBox(height: 12),
               if (widget.details.menuCategories.isNotEmpty)
                 DropdownButtonFormField<String>(
                   initialValue: categoryId,
-                  decoration:
-                      const InputDecoration(hintText: 'Category'),
+                  decoration: const InputDecoration(hintText: 'Category'),
                   items: [
-                    const DropdownMenuItem(value: '', child: Text('No category')),
+                    const DropdownMenuItem(
+                      value: '',
+                      child: Text('No category'),
+                    ),
                     for (final cat in widget.details.menuCategories)
                       DropdownMenuItem(value: cat.id, child: Text(cat.name)),
                   ],
@@ -1566,8 +1757,11 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
                     onSelected: (v) => setSheetState(() => isVeg = true),
                     selectedColor: const Color(0xFFE7F6EC),
                     labelStyle: TextStyle(
-                        color: isVeg ? AppColors.verifiedGreen : AppColors.textSecondary,
-                        fontWeight: FontWeight.w600),
+                      color: isVeg
+                          ? AppColors.verifiedGreen
+                          : AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   FilterChip(
@@ -1576,8 +1770,11 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
                     onSelected: (v) => setSheetState(() => isVeg = false),
                     selectedColor: const Color(0xFFFDECEC),
                     labelStyle: TextStyle(
-                        color: !isVeg ? AppColors.brandRed : AppColors.textSecondary,
-                        fontWeight: FontWeight.w600),
+                      color: !isVeg
+                          ? AppColors.brandRed
+                          : AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const Spacer(),
                   Text('Available', style: AppTypography.label),
@@ -1592,7 +1789,9 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                  ),
                   onPressed: () => Navigator.pop(sheetContext, {
                     'name': name.text.trim(),
                     'price': price.text.trim(),
@@ -1631,7 +1830,8 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not save. Try again.')));
+          const SnackBar(content: Text('Could not save. Try again.')),
+        );
       }
     }
   }
@@ -1646,15 +1846,19 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(hintText: 'e.g. Starters, Main Course'),
+          decoration: const InputDecoration(
+            hintText: 'e.g. Starters, Main Course',
+          ),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
-            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
             child: const Text('Add'),
           ),
         ],
@@ -1662,14 +1866,16 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
     );
     if (name == null || name.length < 2) return;
     try {
-      await ref.read(ownerRepositoryProvider).createMenuCategory(
-          widget.details.id, name);
+      await ref
+          .read(ownerRepositoryProvider)
+          .createMenuCategory(widget.details.id, name);
       _changed(ref);
       ref.invalidate(ownerBusinessDetailsProvider(widget.details.id));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not add category.')));
+          const SnackBar(content: Text('Could not add category.')),
+        );
       }
     }
   }
@@ -1698,13 +1904,17 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                          '${menu.menuItems.length} items · ${menu.menuCategories.length} categories',
-                          style: AppTypography.caption),
+                        '${menu.menuItems.length} items · ${menu.menuCategories.length} categories',
+                        style: AppTypography.caption,
+                      ),
                     ),
                     TextButton.icon(
                       onPressed: _addCategory,
-                      icon: const Icon(Icons.folder_outlined,
-                          size: 16, color: AppColors.primary),
+                      icon: const Icon(
+                        Icons.folder_outlined,
+                        size: 16,
+                        color: AppColors.primary,
+                      ),
                       label: const Text('Add Category'),
                     ),
                   ],
@@ -1726,10 +1936,11 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
                           height: 13,
                           decoration: BoxDecoration(
                             border: Border.all(
-                                color: item.isVeg
-                                    ? const Color(0xFF15803D)
-                                    : const Color(0xFFB91C1C),
-                                width: 1.4),
+                              color: item.isVeg
+                                  ? const Color(0xFF15803D)
+                                  : const Color(0xFFB91C1C),
+                              width: 1.4,
+                            ),
                             borderRadius: BorderRadius.circular(3),
                           ),
                           child: Center(
@@ -1753,18 +1964,23 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
                               Row(
                                 children: [
                                   Flexible(
-                                    child: Text(item.name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: AppTypography.bodyStrong),
+                                    child: Text(
+                                      item.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: AppTypography.bodyStrong,
+                                    ),
                                   ),
                                   if (!item.available) ...[
                                     const SizedBox(width: 6),
-                                    const Text('· Unavailable',
-                                        style: TextStyle(
-                                            fontSize: 10.5,
-                                            color: AppColors.brandRed,
-                                            fontWeight: FontWeight.w600)),
+                                    const Text(
+                                      '· Unavailable',
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        color: AppColors.brandRed,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                                   ],
                                 ],
                               ),
@@ -1783,25 +1999,34 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.edit_outlined,
-                              size: 19, color: AppColors.primary),
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            size: 19,
+                            color: AppColors.primary,
+                          ),
                           onPressed: () => _addOrEditItem(item),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded,
-                              size: 19, color: AppColors.brandRed),
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            size: 19,
+                            color: AppColors.brandRed,
+                          ),
                           onPressed: () async {
                             try {
-                              await ref.read(ownerRepositoryProvider).deleteMenuItem(
-                                  widget.details.id, item.id);
+                              await ref
+                                  .read(ownerRepositoryProvider)
+                                  .deleteMenuItem(widget.details.id, item.id);
                               _changed(ref);
                               ref.invalidate(
-                                  ownerBusinessDetailsProvider(widget.details.id));
+                                ownerBusinessDetailsProvider(widget.details.id),
+                              );
                             } catch (e) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                      content: Text('Could not delete.')),
+                                    content: Text('Could not delete.'),
+                                  ),
                                 );
                               }
                             }
@@ -1831,9 +2056,11 @@ class RestaurantDetailsScreen extends ConsumerStatefulWidget {
 class _RestaurantDetailsScreenState
     extends ConsumerState<RestaurantDetailsScreen> {
   late final _cuisine = TextEditingController(
-      text: widget.details.restaurant?['cuisine'] as String? ?? '');
+    text: widget.details.restaurant?['cuisine'] as String? ?? '',
+  );
   late final _price = TextEditingController(
-      text: widget.details.restaurant?['priceRange'] as String? ?? '');
+    text: widget.details.restaurant?['priceRange'] as String? ?? '',
+  );
   late String _vegType =
       widget.details.restaurant?['vegType'] as String? ?? 'mixed';
   bool _saving = false;
@@ -1872,14 +2099,16 @@ class _RestaurantDetailsScreenState
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
                 children: [
                   LabeledField(
-                      label: 'Cuisines',
-                      controller: _cuisine,
-                      hint: 'e.g. Mughlai · Awadhi · North Indian'),
+                    label: 'Cuisines',
+                    controller: _cuisine,
+                    hint: 'e.g. Mughlai · Awadhi · North Indian',
+                  ),
                   const SizedBox(height: 12),
                   LabeledField(
-                      label: 'Price range',
-                      controller: _price,
-                      hint: 'e.g. ₹200–₹600 for two'),
+                    label: 'Price range',
+                    controller: _price,
+                    hint: 'e.g. ₹200–₹600 for two',
+                  ),
                   const SizedBox(height: 16),
                   Text('Kitchen type', style: AppTypography.titleSm),
                   const SizedBox(height: 8),

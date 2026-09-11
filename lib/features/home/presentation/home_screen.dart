@@ -53,7 +53,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const LocationAppBar(),
           // ── Fixed search bar (header stays, content scrolls) ────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
             child: AppSearchBar(
               hint: 'Search anything in ${location.displayName}…',
               readOnly: true,

@@ -50,18 +50,19 @@ class _ListBusinessScreenState extends ConsumerState<ListBusinessScreen> {
   Future<void> _loadForEdit(String id) async {
     setState(() => _loadingEdit = true);
     try {
-      final detail =
-          await ref.read(listingRepositoryProvider).submissionDetail(id);
+      final detail = await ref
+          .read(listingRepositoryProvider)
+          .submissionDetail(id);
       _draft.applyDetail(detail);
-      _draft.imageUrls =
-          ((detail['imageUrls'] as List?) ?? const [])
-              .map((e) => e.toString())
-              .toList();
+      _draft.imageUrls = ((detail['imageUrls'] as List?) ?? const [])
+          .map((e) => e.toString())
+          .toList();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Could not load the submission for editing.')),
+            content: Text('Could not load the submission for editing.'),
+          ),
         );
       }
     } finally {
@@ -168,10 +169,11 @@ class _ListBusinessScreenState extends ConsumerState<ListBusinessScreen> {
           },
         ),
         title: Text(
-            widget.editSubmissionId != null
-                ? 'Edit Your Listing'
-                : 'List Your Business',
-            style: AppTypography.title),
+          widget.editSubmissionId != null
+              ? 'Edit Your Listing'
+              : 'List Your Business',
+          style: AppTypography.title,
+        ),
       ),
       body: SafeArea(
         child: Column(
@@ -222,7 +224,9 @@ class _ListBusinessScreenState extends ConsumerState<ListBusinessScreen> {
     0 => _draft.categorySlug != null,
     1 =>
       _draft.businessName.trim().length >= 2 &&
-          _draft.phone.replaceAll(RegExp(r'[^0-9]'), '').length >= 10,
+          _draft.phone.replaceAll(RegExp(r'[^0-9]'), '').length >= 10 &&
+          _draft.whatsapp.replaceAll(RegExp(r'[^0-9]'), '').length >= 10 &&
+          _emailRe.hasMatch(_draft.email.trim()),
     2 =>
       _draft.address.trim().length >= 6 &&
           _draft.cityName.trim().isNotEmpty &&
@@ -232,6 +236,8 @@ class _ListBusinessScreenState extends ConsumerState<ListBusinessScreen> {
     4 => true, // photos optional
     _ => true,
   };
+
+  static final _emailRe = RegExp(r'^[\w.\-+]+@([\w\-]+\.)+[a-zA-Z]{2,}$');
 
   void _next() {
     FocusManager.instance.primaryFocus?.unfocus();
@@ -355,68 +361,75 @@ class _CategoryStep extends ConsumerWidget {
     final categories = ref.watch(categoriesProvider);
 
     return categories.when(
-      data: (list) => ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-        children: [
-          Text(
-            'Tell us what type of business you want to list.',
-            style: AppTypography.caption,
-          ),
-          const SizedBox(height: 14),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: 1.0,
+      data: (all) {
+        // Hide consumer-only categories (cinemas, heritage, malls, parks,
+        // places, markets) — customers cannot list these themselves.
+        final list = all.where((c) => !_isHiddenWizardCategory(c)).toList();
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+          children: [
+            Text(
+              'Tell us what type of business you want to list.',
+              style: AppTypography.caption,
             ),
-            itemCount: list.length,
-            itemBuilder: (context, index) {
-              final category = list[index];
-              final selected = draft.categorySlug == category.id;
-              final visual = CategoryVisual.of(category.id);
-              return GestureDetector(
-                onTap: () {
-                  draft.categorySlug = category.id;
-                  onChanged();
-                },
-                child: AnimatedContainer(
-                  duration: AppAnimation.fast,
-                  decoration: BoxDecoration(
-                    color: selected ? AppColors.primarySoft : AppColors.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: AppShadows.card,
-                    border: selected
-                        ? Border.all(color: AppColors.primary, width: 1.6)
-                        : null,
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CategoryIcon(visual: visual, size: 40),
-                      const SizedBox(height: 6),
-                      Text(
-                        category.name,
-                        maxLines: 2,
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.label.copyWith(
-                          fontSize: 11,
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
+            const SizedBox(height: 14),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 1.0,
+              ),
+              itemCount: list.length,
+              itemBuilder: (context, index) {
+                final category = list[index];
+                final selected = draft.categorySlug == category.id;
+                final visual = CategoryVisual.of(category.id);
+                return GestureDetector(
+                  onTap: () {
+                    draft.categorySlug = category.id;
+                    onChanged();
+                  },
+                  child: AnimatedContainer(
+                    duration: AppAnimation.fast,
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? AppColors.primarySoft
+                          : AppColors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: AppShadows.card,
+                      border: selected
+                          ? Border.all(color: AppColors.primary, width: 1.6)
+                          : null,
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CategoryIcon(visual: visual, size: 40),
+                        const SizedBox(height: 6),
+                        Text(
+                          category.name,
+                          maxLines: 2,
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.label.copyWith(
+                            fontSize: 11,
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+                );
+              },
+            ),
+          ],
+        );
+      },
       loading: () => StatesView.loading(message: 'Loading categories…'),
       error: (e, _) => StatesView.error(
         message: 'Could not load categories.',
@@ -428,14 +441,200 @@ class _CategoryStep extends ConsumerWidget {
 
 // ── Step 2: common details ───────────────────────────────────────────────
 
-class _DetailsStep extends StatelessWidget {
+/// Categories hidden from the wizard (consumer/curated only — the admin
+/// can still list them via the panel).
+const _hiddenWizardCategories = {
+  'cinemas',
+  'cinema',
+  'heritages',
+  'heritage',
+  'malls',
+  'mall',
+  'parks',
+  'park',
+  'places',
+  'place',
+  'markets',
+  'market',
+};
+
+bool _isHiddenWizardCategory(dynamic category) {
+  final id = category.id.toString().trim().toLowerCase();
+  final name = category.name.toString().trim().toLowerCase();
+  return _hiddenWizardCategories.contains(id) ||
+      _hiddenWizardCategories.contains(name) ||
+      _hiddenWizardCategories.contains(name.replaceAll(' ', '-')) ||
+      _hiddenWizardCategories.contains(name.replaceAll(' ', ''));
+}
+
+class _DetailsStep extends StatefulWidget {
   const _DetailsStep({required this.draft, required this.onChanged});
 
   final ListingDraft draft;
   final VoidCallback onChanged;
 
   @override
+  State<_DetailsStep> createState() => _DetailsStepState();
+}
+
+class _DetailsStepState extends State<_DetailsStep> {
+  String _phoneDialCode = '+91';
+  String _whatsappDialCode = '+91';
+  bool _whatsappSameAsPhone = true;
+
+  static const _dialCodes = [
+    '+91',
+    '+971',
+    '+966',
+    '+974',
+    '+973',
+    '+968',
+    '+1',
+    '+44',
+    '+61',
+    '+62',
+    '+63',
+    '+60',
+    '+65',
+    '+94',
+    '+880',
+    '+977',
+    '+7',
+    '+48',
+    '+49',
+    '+33',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _phoneDialCode = _dialCodeFor(widget.draft.phone);
+    _whatsappDialCode = _dialCodeFor(widget.draft.whatsapp);
+    _whatsappSameAsPhone =
+        widget.draft.whatsapp.isEmpty ||
+        widget.draft.whatsapp == widget.draft.phone;
+  }
+
+  String _dialCodeFor(String raw) {
+    final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+    return _dialCodes
+        .where((code) => digits.startsWith(code.substring(1)))
+        .fold('+91', (best, code) => code.length > best.length ? code : best);
+  }
+
+  String _digitsOnly(String raw, String dialCode) {
+    var digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+    final prefix = dialCode.substring(1);
+    if (digits.startsWith(prefix) && digits.length > prefix.length) {
+      digits = digits.substring(prefix.length);
+    }
+    return digits;
+  }
+
+  Future<void> _pickDialCode({
+    required String current,
+    required ValueChanged<String> onPicked,
+  }) async {
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          children: [
+            for (final code in _dialCodes)
+              ListTile(
+                dense: true,
+                title: Text(code),
+                trailing: Text(switch (code) {
+                  '+91' => 'India',
+                  '+971' => 'UAE',
+                  '+966' => 'Saudi',
+                  '+974' => 'Qatar',
+                  '+973' => 'Bahrain',
+                  '+968' => 'Oman',
+                  '+1' => 'US/Canada',
+                  '+44' => 'UK',
+                  '+61' => 'Australia',
+                  '+62' => 'Indonesia',
+                  '+63' => 'Philippines',
+                  '+60' => 'Malaysia',
+                  '+65' => 'Singapore',
+                  '+94' => 'Sri Lanka',
+                  '+880' => 'Bangladesh',
+                  '+977' => 'Nepal',
+                  '+7' => 'Russia',
+                  '+48' => 'Poland',
+                  '+49' => 'Germany',
+                  _ => '',
+                }, style: AppTypography.label),
+                onTap: () => Navigator.pop(sheetContext, code),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked != null && picked != current) onPicked(picked);
+  }
+
+  String _flagFor(String code) => switch (code) {
+    '+91' => '🇮🇳',
+    '+971' => '🇦🇪',
+    '+966' => '🇸🇦',
+    '+974' => '🇶🇦',
+    '+973' => '🇧🇭',
+    '+968' => '🇴🇲',
+    '+1' => '🇺🇸',
+    '+44' => '🇬🇧',
+    '+61' => '🇦🇺',
+    '+62' => '🇮🇩',
+    '+63' => '🇵🇭',
+    '+60' => '🇲🇾',
+    '+65' => '🇸🇬',
+    '+94' => '🇱🇰',
+    '+880' => '🇧🇩',
+    '+977' => '🇳🇵',
+    '+7' => '🇷🇺',
+    '+48' => '🇵🇱',
+    '+49' => '🇩🇪',
+    '+33' => '🇫🇷',
+    _ => '🌐',
+  };
+
+  Future<void> _pickTime(bool isOpen) async {
+    final current = widget.draft.openingHours;
+    TimeOfDay initial = TimeOfDay(hour: isOpen ? 9 : 21, minute: 0);
+    // Parse the existing "H:MM AM – H:MM PM" if present.
+    final match = RegExp(
+      r'(\d{1,2}):(\d{2})\s*(AM|PM)?\s*–\s*(\d{1,2}):(\d{2})\s*(AM|PM)?',
+    ).firstMatch(current);
+    if (match != null) {
+      final h = int.parse(isOpen ? match.group(1)! : match.group(4)!);
+      final m = int.parse(isOpen ? match.group(2)! : match.group(5)!);
+      final pm = (isOpen ? match.group(3) : match.group(6)) == 'PM';
+      var hour = h % 12 + (pm ? 12 : 0);
+      initial = TimeOfDay(hour: hour, minute: m);
+    }
+    final picked = await showTimePicker(context: context, initialTime: initial);
+    if (picked == null) return;
+    setState(() {
+      String fmt(TimeOfDay t) =>
+          '${((t.hour % 12) == 0 ? 12 : t.hour % 12).toString()}:${t.minute.toString().padLeft(2, '0')} ${t.hour >= 12 ? 'PM' : 'AM'}';
+      final open = isOpen ? fmt(picked) : _openLabel ?? fmt(picked);
+      final close = isOpen ? _closeLabel ?? fmt(picked) : fmt(picked);
+      widget.draft.openingHours = '$open – $close';
+    });
+    widget.onChanged();
+  }
+
+  String? get _openLabel => RegExp(
+    r'^(\d{1,2}:\d{2}\s*[AP]M)',
+  ).firstMatch(widget.draft.openingHours)?.group(1);
+  String? get _closeLabel => RegExp(
+    r'–\s*(\d{1,2}:\d{2}\s*[AP]M)',
+  ).firstMatch(widget.draft.openingHours)?.group(1);
+
+  @override
   Widget build(BuildContext context) {
+    final draft = widget.draft;
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
       children: [
@@ -443,12 +642,12 @@ class _DetailsStep extends StatelessWidget {
           label: draft.isDoctor
               ? 'Doctor Name *'
               : draft.isHotel
-                  ? 'Hotel Name *'
-                  : 'Business Name *',
+              ? 'Hotel Name *'
+              : 'Business Name *',
           value: draft.businessName,
           onChanged: (v) {
             draft.businessName = v;
-            onChanged();
+            widget.onChanged();
           },
         ),
         const SizedBox(height: 12),
@@ -465,28 +664,144 @@ class _DetailsStep extends StatelessWidget {
           onChanged: (v) => draft.description = v,
           maxLines: 3,
         ),
+        const SizedBox(height: 16),
+        Text('Contact', style: AppTypography.titleSm),
+        const SizedBox(height: 10),
+        // Phone with dial code
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            GestureDetector(
+              onTap: () => _pickDialCode(
+                current: _phoneDialCode,
+                onPicked: (code) {
+                  setState(() {
+                    final local = _digitsOnly(draft.phone, _phoneDialCode);
+                    _phoneDialCode = code;
+                    draft.phone = '$code$local';
+                    if (_whatsappSameAsPhone) {
+                      _whatsappDialCode = code;
+                      draft.whatsapp = draft.phone;
+                    }
+                  });
+                  widget.onChanged();
+                },
+              ),
+              child: Container(
+                height: 46,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border, width: 1.1),
+                ),
+                child: Row(
+                  children: [
+                    Text(_flagFor(_phoneDialCode)),
+                    const SizedBox(width: 6),
+                    Text(_phoneDialCode, style: AppTypography.bodyStrong),
+                    const Icon(Icons.keyboard_arrow_down_rounded, size: 16),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _Field(
+                label: 'Phone Number *',
+                value: _digitsOnly(draft.phone, _phoneDialCode),
+                onChanged: (v) {
+                  draft.phone =
+                      '$_phoneDialCode${_digitsOnly(v, _phoneDialCode)}';
+                  if (_whatsappSameAsPhone) {
+                    _whatsappDialCode = _phoneDialCode;
+                    draft.whatsapp = draft.phone;
+                  }
+                  widget.onChanged();
+                },
+                keyboardType: TextInputType.phone,
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 12),
-        _Field(
-          label: 'Phone Number *',
-          value: draft.phone,
-          onChanged: (v) {
-            draft.phone = v;
-            onChanged();
+        _SamePhoneTile(
+          value: _whatsappSameAsPhone,
+          onChanged: (value) {
+            setState(() {
+              _whatsappSameAsPhone = value;
+              if (value) {
+                _whatsappDialCode = _phoneDialCode;
+                draft.whatsapp = draft.phone;
+              }
+            });
+            widget.onChanged();
           },
-          keyboardType: TextInputType.phone,
         ),
+        if (!_whatsappSameAsPhone) ...[
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              GestureDetector(
+                onTap: () => _pickDialCode(
+                  current: _whatsappDialCode,
+                  onPicked: (code) {
+                    setState(() {
+                      final local = _digitsOnly(
+                        draft.whatsapp,
+                        _whatsappDialCode,
+                      );
+                      _whatsappDialCode = code;
+                      draft.whatsapp = '$code$local';
+                    });
+                    widget.onChanged();
+                  },
+                ),
+                child: Container(
+                  height: 46,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border, width: 1.1),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(_flagFor(_whatsappDialCode)),
+                      const SizedBox(width: 6),
+                      Text(_whatsappDialCode, style: AppTypography.bodyStrong),
+                      const Icon(Icons.keyboard_arrow_down_rounded, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _Field(
+                  label: 'WhatsApp Number *',
+                  value: _digitsOnly(draft.whatsapp, _whatsappDialCode),
+                  onChanged: (v) {
+                    draft.whatsapp =
+                        '$_whatsappDialCode${_digitsOnly(v, _whatsappDialCode)}';
+                    widget.onChanged();
+                  },
+                  keyboardType: TextInputType.phone,
+                ),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 12),
         _Field(
-          label: 'WhatsApp Number',
-          value: draft.whatsapp,
-          onChanged: (v) => draft.whatsapp = v,
-          keyboardType: TextInputType.phone,
-        ),
-        const SizedBox(height: 12),
-        _Field(
-          label: 'Email',
+          label: 'Email *',
           value: draft.email,
-          onChanged: (v) => draft.email = v,
+          onChanged: (v) {
+            draft.email = v;
+            widget.onChanged();
+          },
           keyboardType: TextInputType.emailAddress,
         ),
         const SizedBox(height: 12),
@@ -497,14 +812,124 @@ class _DetailsStep extends StatelessWidget {
           keyboardType: TextInputType.url,
           hint: 'https://…',
         ),
-        const SizedBox(height: 12),
-        _Field(
-          label: 'Opening Hours',
-          value: draft.openingHours,
-          onChanged: (v) => draft.openingHours = v,
-          hint: 'e.g. 9:00 AM – 9:00 PM',
+        const SizedBox(height: 16),
+        Text('Opening Hours', style: AppTypography.titleSm),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _TimeField(
+                label: 'Opens',
+                value: _openLabel,
+                onTap: () => _pickTime(true),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Icon(
+                Icons.arrow_forward_rounded,
+                size: 14,
+                color: AppColors.textMuted,
+              ),
+            ),
+            Expanded(
+              child: _TimeField(
+                label: 'Closes',
+                value: _closeLabel,
+                onTap: () => _pickTime(false),
+              ),
+            ),
+          ],
         ),
       ],
+    );
+  }
+}
+
+/// Clock-picker chip (Opens / Closes).
+class _TimeField extends StatelessWidget {
+  const _TimeField({
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
+
+  final String label;
+  final String? value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border, width: 1),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.schedule_rounded,
+              size: 15,
+              color: AppColors.primary,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: AppTypography.label),
+                  Text(value ?? 'Select time', style: AppTypography.bodyStrong),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SamePhoneTile extends StatelessWidget {
+  const _SamePhoneTile({required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.primarySoft,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.24)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.chat_outlined, size: 18, color: AppColors.primary),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Text(
+                'WhatsApp is the same as Phone Number',
+                style: AppTypography.label.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            Checkbox(
+              value: value,
+              activeColor: AppColors.primary,
+              onChanged: (v) => onChanged(v ?? false),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

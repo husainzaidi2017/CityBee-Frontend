@@ -6,9 +6,9 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/app_launcher.dart';
+import '../../../../core/widgets/app_icons.dart';
 import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/badges.dart';
-import '../../../../core/widgets/buttons.dart';
 import '../../../../core/widgets/pressable.dart';
 import '../../../../domain/models/business.dart';
 
@@ -88,26 +88,22 @@ class PopularBusinessCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      CardActionButton(
-                        label: 'Call',
-                        icon: Icons.call_outlined,
+                      _IconAction(
+                        icon: AppIcons.callAsset,
                         onTap: () => AppLauncher.call(business.phone),
                       ),
-                      const SizedBox(width: 6),
-                      CardActionButton(
-                        label: 'Route',
-                        icon: Icons.near_me_outlined,
+                      const SizedBox(width: 8),
+                      _IconAction(
+                        icon: AppIcons.directionsAsset,
                         onTap: () => AppLauncher.directions(
                           business.latitude,
                           business.longitude,
                           label: business.name,
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      CardActionButton(
-                        label: 'WhatsApp',
-                        icon: Icons.chat_bubble_outline_rounded,
-                        filled: true,
+                      const SizedBox(width: 8),
+                      _IconAction(
+                        icon: AppIcons.whatsappAsset,
                         onTap: () => AppLauncher.whatsapp(business.whatsapp),
                       ),
                     ],
@@ -117,6 +113,33 @@ class PopularBusinessCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Circular icon-only quick action (Call / Route / WhatsApp) — no label,
+/// 40px tap target with the custom SVG brand icons.
+class _IconAction extends StatelessWidget {
+  const _IconAction({required this.icon, required this.onTap});
+
+  final String icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      pressedScale: 0.92,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.border, width: 1),
+        ),
+        child: Center(child: AppIcons.action(icon, size: 18)),
       ),
     );
   }

@@ -24,6 +24,7 @@ class CategoryVisual {
         'gym' || 'gyms' => 'gym',
         'bar' || 'bars' => 'bar',
         'cafe' || 'cafes' => 'cafe',
+        'hospital' || 'hospitals' => 'hospital',
         _ => 'shop',
       });
 }

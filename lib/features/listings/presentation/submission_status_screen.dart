@@ -25,7 +25,16 @@ class SubmissionStatusScreen extends ConsumerWidget {
         title: Text('Submission Status', style: AppTypography.title),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-          onPressed: () => Navigator.of(context).maybePop(),
+          // When there is no page to pop (opened via go()), fall back to
+          // the More tab so the button always works.
+          onPressed: () {
+            final navigator = Navigator.of(context);
+            if (navigator.canPop()) {
+              navigator.maybePop();
+            } else {
+              context.go('/more');
+            }
+          },
         ),
       ),
       body: SafeArea(

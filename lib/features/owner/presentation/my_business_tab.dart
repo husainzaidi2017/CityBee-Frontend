@@ -36,17 +36,24 @@ class MyBusinessTab extends ConsumerWidget {
             Expanded(
               child: businesses.when(
                 data: (list) {
-                  final approved =
-                      list.where((b) => b.isApproved).toList();
+                  final approved = list.where((b) => b.isApproved).toList();
                   if (approved.length == 1) {
-                    // Single approved business → dashboard directly.
-                    return OwnerBusinessDashboardPage(businessId: approved.first.id);
+                    // Single approved business → dashboard directly,
+                    // WITHOUT its own app bar (the tab already has one).
+                    return OwnerBusinessDashboardBody(
+                      businessId: approved.first.id,
+                      details: ref.watch(
+                        ownerBusinessDetailsProvider(approved.first.id),
+                      ),
+                    );
                   }
                   return _BusinessSelector(businesses: list);
                 },
-                loading: () => StatesView.loading(message: 'Loading your businesses…'),
+                loading: () =>
+                    StatesView.loading(message: 'Loading your businesses…'),
                 error: (e, _) => StatesView.error(
-                  message: 'Could not load your businesses. Check your connection.',
+                  message:
+                      'Could not load your businesses. Check your connection.',
                   onRetry: () => ref.invalidate(myBusinessesProvider),
                 ),
               ),
@@ -81,20 +88,13 @@ class _BusinessSelector extends ConsumerWidget {
           ),
         const SizedBox(height: 8),
         // Multiple businesses → also offer adding another.
-        _AddAnotherCard(
-          onTap: () => _openListingFlow(context),
-        ),
+        _AddAnotherCard(onTap: () => _openListingFlow(context)),
       ],
     );
   }
 
   void _openListingFlow(BuildContext context) {
-    // The business listing flow opens the registration portal (same as the
-    // More screen's "List Your Business" CTA).
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-          content: Text('Business registration portal opens in your browser.')),
-    );
+    context.push('/list-business');
   }
 }
 
@@ -148,14 +148,16 @@ class _BusinessRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(business.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.titleSm),
+                  Text(
+                    business.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.titleSm,
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     [
-                      if (business.categories.isNotEmpty) business.categories.first,
+                      if (business.kind.isNotEmpty) _kindLabel(business.kind),
                       if (business.area.isNotEmpty) business.area,
                       if (business.cityName.isNotEmpty) business.cityName,
                     ].join(' · '),
@@ -168,7 +170,9 @@ class _BusinessRow extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: statusColor.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(7),
@@ -185,15 +189,23 @@ class _BusinessRow extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       if (business.isApproved) ...[
-                        const Icon(Icons.star_rounded,
-                            size: 13, color: AppColors.starAmber),
+                        const Icon(
+                          Icons.star_rounded,
+                          size: 13,
+                          color: AppColors.starAmber,
+                        ),
                         const SizedBox(width: 2),
-                        Text('${business.rating}',
-                            style: AppTypography.label
-                                .copyWith(color: AppColors.textPrimary)),
+                        Text(
+                          '${business.rating}',
+                          style: AppTypography.label.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
                         const SizedBox(width: 6),
-                        Text('${business.activeOffers} offers',
-                            style: AppTypography.label),
+                        Text(
+                          '${business.activeOffers} offers',
+                          style: AppTypography.label,
+                        ),
                       ],
                     ],
                   ),
@@ -201,12 +213,20 @@ class _BusinessRow extends StatelessWidget {
               ),
             ),
             if (business.isApproved)
-              const Icon(Icons.chevron_right_rounded,
-                  color: AppColors.textMuted),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textMuted,
+              ),
           ],
         ),
       ),
     );
+  }
+
+  String _kindLabel(String kind) {
+    final text = kind.replaceAll('_', ' ').trim();
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1);
   }
 }
 
@@ -228,7 +248,11 @@ class _AddAnotherCard extends StatelessWidget {
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_business_rounded, size: 18, color: AppColors.primary),
+            Icon(
+              Icons.add_business_rounded,
+              size: 18,
+              color: AppColors.primary,
+            ),
             SizedBox(width: 8),
             Text(
               'Add Another Business',
@@ -255,8 +279,6 @@ class OwnerBusinessDashboardPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final details = ref.watch(ownerBusinessDetailsProvider(businessId));
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -267,7 +289,29 @@ class OwnerBusinessDashboardPage extends ConsumerWidget {
           onPressed: () => Navigator.of(context).maybePop(),
         ),
       ),
-      body: details.when(
+      body: OwnerBusinessDashboardBody(
+        businessId: businessId,
+        details: ref.watch(ownerBusinessDetailsProvider(businessId)),
+      ),
+    );
+  }
+}
+
+/// Dashboard content without its own Scaffold — embedded in the tab for
+/// single-business owners (no double header) and inside the Page above.
+class OwnerBusinessDashboardBody extends ConsumerWidget {
+  const OwnerBusinessDashboardBody({
+    super.key,
+    required this.businessId,
+    required this.details,
+  });
+
+  final String businessId;
+  final AsyncValue<OwnerBusinessDetails?> details;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return details.when(
       data: (business) {
         if (business == null) {
           return StatesView.empty(
@@ -280,9 +324,7 @@ class OwnerBusinessDashboardPage extends ConsumerWidget {
       loading: () => StatesView.loading(message: 'Loading dashboard…'),
       error: (e, _) => StatesView.error(
         message: 'Could not load this business. Please try again.',
-        onRetry: () =>
-            ref.invalidate(ownerBusinessDetailsProvider(businessId)),
-      ),
+        onRetry: () => ref.invalidate(ownerBusinessDetailsProvider(businessId)),
       ),
     );
   }
@@ -298,12 +340,10 @@ class _Dashboard extends StatelessWidget {
     final isRestaurant = details.kind == 'restaurant';
     final isDoctor = details.kind == 'doctor';
     final isHotel = details.kind == 'hotel';
-    final isSalon = details.kind == 'salon' ||
-        details.kind == 'service';
-    final activeOffers =
-        details.offers.where((o) => o.phase == 'active').length;
-    final scheduledOffers =
-        details.offers.where((o) => o.phase == 'scheduled').length;
+    final isSalon = details.kind == 'salon' || details.kind == 'service';
+    final activeOffers = details.offers
+        .where((o) => o.phase == 'active')
+        .length;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
@@ -328,7 +368,8 @@ class _Dashboard extends StatelessWidget {
                       width: 68,
                       height: 68,
                       child: AppImage(
-                        url: details.images
+                        url:
+                            details.images
                                 .where((i) => i.isPrimary)
                                 .firstOrNull
                                 ?.url ??
@@ -344,17 +385,23 @@ class _Dashboard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(details.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTypography.titleSm),
+                        Text(
+                          details.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.titleSm,
+                        ),
                         const SizedBox(height: 2),
                         Text(
                           [
-                            if (details.categories.isNotEmpty)
-                              details.categories.first,
+                            // Business KIND (e.g. Salon, Hotel, Doctor) —
+                            // what the owner set, not the category slug.
+                            details.kind.isNotEmpty
+                                ? details.kind[0].toUpperCase() +
+                                      details.kind.substring(1)
+                                : null,
                             if (details.cityName.isNotEmpty) details.cityName,
-                          ].join(' · '),
+                          ].whereType<String>().join(' · '),
                           style: AppTypography.caption,
                         ),
                         const SizedBox(height: 6),
@@ -363,8 +410,11 @@ class _Dashboard extends StatelessWidget {
                             _StatusChip(status: details.status),
                             if (details.isVerified) ...[
                               const SizedBox(width: 6),
-                              const Icon(Icons.verified,
-                                  size: 15, color: AppColors.verifiedGreen),
+                              const Icon(
+                                Icons.verified,
+                                size: 15,
+                                color: AppColors.verifiedGreen,
+                              ),
                             ],
                           ],
                         ),
@@ -419,56 +469,62 @@ class _Dashboard extends StatelessWidget {
         ),
         const SizedBox(height: 18),
 
-        // ── Manage ───────────────────────────────────────────────────
+        // ── Manage (one merged section: business + category + offers) ──
         _ManageSection(
           title: 'Manage',
           tiles: [
-            _ManageTile(Icons.info_outline_rounded, 'Business Information',
-                _openEditProfile),
+            _ManageTile(
+              Icons.info_outline_rounded,
+              'Business Information',
+              _openEditProfile,
+            ),
             _ManageTile(Icons.schedule_rounded, 'Business Hours', _openHours),
-            _ManageTile(Icons.photo_library_outlined, 'Photos (${details.images.length})',
-                _openPhotos),
-            _ManageTile(Icons.rate_review_outlined, 'Reviews (${details.reviewCount})',
-                _openReviews),
-          ],
-        ),
-        if (isRestaurant || isDoctor || isHotel || isSalon) ...[
-          const SizedBox(height: 16),
-          _ManageSection(
-            title: 'Category',
-            tiles: [
-              if (isRestaurant)
-                _ManageTile(Icons.restaurant_menu_rounded, 'Menu', _openMenu),
-              if (isRestaurant)
-                _ManageTile(Icons.dinner_dining_outlined, 'Restaurant Details',
-                    _openRestaurantDetails),
-              if (isDoctor)
-                _ManageTile(Icons.medical_services_outlined,
-                    'Professional Details', _openDoctorDetails),
-              if (isHotel)
-                _ManageTile(Icons.hotel_outlined, 'Hotel Details', _openHotelDetails),
-              if (isSalon)
-                _ManageTile(Icons.design_services_outlined, 'Services',
-                    _openServices),
-            ],
-          ),
-        ],
-        const SizedBox(height: 16),
-
-        // ── Offers ───────────────────────────────────────────────────
-        _ManageSection(
-          title: 'Offers',
-          tiles: [
-            _ManageTile(Icons.local_offer_outlined, 'Active Offers ($activeOffers)',
-                _openOffers),
-            if (scheduledOffers > 0)
-              _ManageTile(Icons.schedule_rounded, 'Scheduled ($scheduledOffers)',
-                  _openOffers),
-            _ManageTile(Icons.history_rounded,
-                'Expired (${details.offers.where((o) => o.phase == 'expired').length})',
-                _openOffers),
-            _ManageTile(Icons.add_circle_outline_rounded, 'Create New Offer',
-                _openOffers),
+            _ManageTile(
+              Icons.photo_library_outlined,
+              'Photos (${details.images.length})',
+              _openPhotos,
+            ),
+            if (isRestaurant)
+              _ManageTile(Icons.restaurant_menu_rounded, 'Menu', _openMenu),
+            if (isRestaurant)
+              _ManageTile(
+                Icons.dinner_dining_outlined,
+                'Restaurant Details',
+                _openRestaurantDetails,
+              ),
+            if (isDoctor)
+              _ManageTile(
+                Icons.medical_services_outlined,
+                'Professional Details',
+                _openDoctorDetails,
+              ),
+            if (isHotel)
+              _ManageTile(
+                Icons.hotel_outlined,
+                'Hotel Details',
+                _openHotelDetails,
+              ),
+            if (isSalon)
+              _ManageTile(
+                Icons.design_services_outlined,
+                'Services',
+                _openServices,
+              ),
+            _ManageTile(
+              Icons.rate_review_outlined,
+              'Reviews (${details.reviewCount})',
+              _openReviews,
+            ),
+            _ManageTile(
+              Icons.local_offer_outlined,
+              'Offers ($activeOffers)',
+              _openOffers,
+            ),
+            _ManageTile(
+              Icons.add_circle_outline_rounded,
+              'Create New Offer',
+              _openOffers,
+            ),
           ],
         ),
       ],
@@ -552,19 +608,19 @@ class _StatusNotice extends StatelessWidget {
   Widget build(BuildContext context) {
     final (title, body) = switch (details.status) {
       'pending' => (
-          'Under review',
-          'Your listing is being reviewed. It will go live once approved.'
-        ),
+        'Under review',
+        'Your listing is being reviewed. It will go live once approved.',
+      ),
       'rejected' => (
-          'Your listing needs changes',
-          details.rejectionReason.isNotEmpty
-              ? details.rejectionReason
-              : 'Please review your business details and resubmit.'
-        ),
+        'Your listing needs changes',
+        details.rejectionReason.isNotEmpty
+            ? details.rejectionReason
+            : 'Please review your business details and resubmit.',
+      ),
       'suspended' => (
-          'Listing not visible',
-          'Your public listing is currently not visible to customers.'
-        ),
+        'Listing not visible',
+        'Your public listing is currently not visible to customers.',
+      ),
       _ => ('', ''),
     };
     return Container(
@@ -617,7 +673,9 @@ class _QuickAction extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTypography.label.copyWith(
-                  color: AppColors.textPrimary, fontSize: 10.5),
+                color: AppColors.textPrimary,
+                fontSize: 10.5,
+              ),
             ),
           ],
         ),
@@ -656,17 +714,26 @@ class _ManageSection extends StatelessWidget {
             children: [
               for (var i = 0; i < tiles.length; i++) ...[
                 if (i > 0)
-                  const Divider(height: 1, indent: 56, color: AppColors.divider),
+                  const Divider(
+                    height: 1,
+                    indent: 56,
+                    color: AppColors.divider,
+                  ),
                 ListTile(
                   dense: true,
                   visualDensity: VisualDensity.compact,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 14),
-                  leading: Icon(tiles[i].icon,
-                      size: 20, color: AppColors.primary),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+                  leading: Icon(
+                    tiles[i].icon,
+                    size: 20,
+                    color: AppColors.primary,
+                  ),
                   title: Text(tiles[i].label, style: AppTypography.bodyStrong),
-                  trailing: const Icon(Icons.chevron_right_rounded,
-                      size: 19, color: AppColors.textMuted),
+                  trailing: const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 19,
+                    color: AppColors.textMuted,
+                  ),
                   onTap: () => tiles[i].onTap(context),
                 ),
               ],

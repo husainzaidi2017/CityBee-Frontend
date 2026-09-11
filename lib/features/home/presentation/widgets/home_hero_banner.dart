@@ -6,14 +6,32 @@ import '../../../../core/theme/app_colors.dart';
 
 /// Orange gradient promotional banner at the top of the Home screen —
 /// compact single-CTA strip that leaves room for content below.
-class HomeHeroBanner extends StatelessWidget {
+class HomeHeroBanner extends StatefulWidget {
   const HomeHeroBanner({super.key, this.offersCount = 0});
 
   /// Live offers count in the selected city (drives the subtitle).
   final int offersCount;
 
   @override
+  State<HomeHeroBanner> createState() => _HomeHeroBannerState();
+}
+
+class _HomeHeroBannerState extends State<HomeHeroBanner>
+    with SingleTickerProviderStateMixin {
+  late final _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final offersCount = widget.offersCount;
     final storeText = offersCount > 0 ? '$offersCount verified stores' : 'verified stores';
     return GestureDetector(
       onTap: () => context.go('/offers'),
@@ -41,20 +59,25 @@ class HomeHeroBanner extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.16),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: const Text(
-                          'LIMITED-TIME DEALS',
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            letterSpacing: 1,
+                      // Pulsing badge — a gentle living highlight.
+                      ScaleTransition(
+                        scale: Tween(begin: 0.97, end: 1.05)
+                            .animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut)),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.16),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: const Text(
+                            'LIMITED-TIME DEALS',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              letterSpacing: 1,
+                            ),
                           ),
                         ),
                       ),

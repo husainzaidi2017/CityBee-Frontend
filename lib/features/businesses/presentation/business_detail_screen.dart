@@ -12,7 +12,6 @@ import '../../../core/widgets/badges.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/collapsing_detail_header.dart';
 import '../../../core/widgets/photo_viewer.dart';
-import '../../../core/widgets/map_preview.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/business.dart';
 import '../../../domain/models/menu_item.dart';
@@ -86,10 +85,8 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
   void _openPhotoViewer(int index) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PhotoViewerScreen(
-          imageUrls: business.images,
-          initialIndex: index,
-        ),
+        builder: (_) =>
+            PhotoViewerScreen(imageUrls: business.images, initialIndex: index),
       ),
     );
   }
@@ -100,9 +97,11 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
         .toggle(business.id, uuid: business.uuid);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(ref.read(favoritesProvider).contains(business.id)
-            ? 'Added to favorites'
-            : 'Removed from favorites'),
+        content: Text(
+          ref.read(favoritesProvider).contains(business.id)
+              ? 'Added to favorites'
+              : 'Removed from favorites',
+        ),
       ),
     );
   }
@@ -154,7 +153,9 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                             Expanded(
                               child: Text(
                                 business.name,
-                                style: AppTypography.headline.copyWith(fontSize: 20),
+                                style: AppTypography.headline.copyWith(
+                                  fontSize: 20,
+                                ),
                               ),
                             ),
                           ],
@@ -165,8 +166,9 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                             if (business.isVerified) const VerifiedBadge(),
                             const SizedBox(width: 7),
                             OpenStatusPill(
-                                isOpen: business.isOpen,
-                                closedText: 'Opens at 11:00 AM'),
+                              isOpen: business.isOpen,
+                              closedText: 'Opens at 11:00 AM',
+                            ),
                           ],
                         ),
                         const SizedBox(height: 7),
@@ -179,8 +181,11 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                               style: AppTypography.label,
                             ),
                             const SizedBox(width: 10),
-                            const Icon(Icons.location_on_outlined,
-                                size: 12, color: AppColors.textSecondary),
+                            const Icon(
+                              Icons.location_on_outlined,
+                              size: 12,
+                              color: AppColors.textSecondary,
+                            ),
                             const SizedBox(width: 2),
                             Expanded(
                               child: Text(
@@ -238,7 +243,7 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                       ),
                     ),
 
-                    // ── Contact details (same card on every record) ──
+                    // ── Location & policies / contact summary ────────
                     Padding(
                       padding: const EdgeInsets.only(top: 14),
                       child: _InfoCard(business: business),
@@ -257,17 +262,13 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                         padding: EdgeInsets.only(top: 18, bottom: 10),
                         child: _MenuHeader(),
                       ),
-                      ...business.menu.map((item) => Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: _MenuItemRow(item: item),
-                          )),
+                      ...business.menu.map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _MenuItemRow(item: item),
+                        ),
+                      ),
                     ],
-
-                    // ── Map ──────────────────────────────────────────
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 10),
-                      child: _LocationSection(business: business),
-                    ),
 
                     // ── Reviews ──────────────────────────────────────
                     if (business.reviews.isNotEmpty) ...[
@@ -284,16 +285,19 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                             const Spacer(),
                             Text(
                               'View All (${business.reviews.length})',
-                              style: AppTypography.label
-                                  .copyWith(color: AppColors.primary),
+                              style: AppTypography.label.copyWith(
+                                color: AppColors.primary,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      ...business.reviews.map((review) => Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: _ReviewCard(review: review),
-                          )),
+                      ...business.reviews.map(
+                        (review) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _ReviewCard(review: review),
+                        ),
+                      ),
                     ],
                     const SizedBox(height: 8),
                   ],
@@ -324,20 +328,19 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                   children: [
                     Text(
                       switch (business.kind) {
-                        BusinessKind.hotel => business.priceText ?? 'Best rates',
-                        BusinessKind.doctor => 'Consultation ${business.consultationFee ?? ''}',
+                        BusinessKind.hotel =>
+                          business.priceText ?? 'Best rates',
+                        BusinessKind.doctor =>
+                          'Consultation ${business.consultationFee ?? ''}',
                         _ => 'Table for 2 · Free',
                       },
                       style: AppTypography.bodyStrong.copyWith(fontSize: 12.5),
                     ),
-                    Text(
-                      switch (business.kind) {
-                        BusinessKind.hotel => 'incl. taxes & breakfast',
-                        BusinessKind.doctor => business.timings ?? '',
-                        _ => 'No booking fee · Instant confirm',
-                      },
-                      style: AppTypography.label.copyWith(fontSize: 10),
-                    ),
+                    Text(switch (business.kind) {
+                      BusinessKind.hotel => 'incl. taxes & breakfast',
+                      BusinessKind.doctor => business.timings ?? '',
+                      _ => 'No booking fee · Instant confirm',
+                    }, style: AppTypography.label.copyWith(fontSize: 10)),
                   ],
                 ),
               ),
@@ -352,7 +355,10 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                   ),
                 ),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(999),
@@ -388,11 +394,14 @@ class _ActionRow extends StatelessWidget {
   Future<void> _whatsapp(BuildContext context) async {
     final ok = await AppLauncher.whatsapp(
       business.whatsapp,
-      message: 'Hi ${business.name}, I found you on CityBee and have a question.',
+      message:
+          'Hi ${business.name}, I found you on CityBee and have a question.',
     );
     if (!ok && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('WhatsApp is not available on this device.')),
+        const SnackBar(
+          content: Text('WhatsApp is not available on this device.'),
+        ),
       );
     }
   }
@@ -400,13 +409,27 @@ class _ActionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = <_ActionData>[
-      _ActionData(AppIcons.callAsset, 'Call', () => AppLauncher.call(business.phone)),
+      _ActionData(
+        AppIcons.callAsset,
+        'Call',
+        () => AppLauncher.call(business.phone),
+      ),
       _ActionData(AppIcons.whatsappAsset, 'WhatsApp', () => _whatsapp(context)),
-      _ActionData(AppIcons.directionsAsset, 'Directions',
-          () => AppLauncher.directions(business.latitude, business.longitude, label: business.name)),
+      _ActionData(
+        AppIcons.directionsAsset,
+        'Directions',
+        () => AppLauncher.directions(
+          business.latitude,
+          business.longitude,
+          label: business.name,
+        ),
+      ),
       if (business.website != null)
-        _ActionData(Icons.language_rounded, 'Website',
-            () => AppLauncher.openWebsite(business.website!)),
+        _ActionData(
+          Icons.language_rounded,
+          'Website',
+          () => AppLauncher.openWebsite(business.website!),
+        ),
     ];
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 11),
@@ -462,8 +485,11 @@ class _ActionButton extends StatelessWidget {
               child: Center(
                 child: action.icon is String
                     ? AppIcons.action(action.icon as String, size: 20)
-                    : Icon(action.icon as IconData,
-                        size: 19, color: AppColors.primary),
+                    : Icon(
+                        action.icon as IconData,
+                        size: 19,
+                        color: AppColors.primary,
+                      ),
               ),
             ),
             const SizedBox(height: 6),
@@ -482,7 +508,6 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-
 /// ── Highlights chips row ───────────────────────────────────────────────
 class _HighlightsRow extends StatelessWidget {
   const _HighlightsRow({required this.chips});
@@ -500,26 +525,34 @@ class _HighlightsRow extends StatelessWidget {
           spacing: 7,
           runSpacing: 7,
           children: chips
-              .map((chip) => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(999),
-                      boxShadow: AppShadows.card,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.check_circle_outline,
-                            size: 13, color: AppColors.primary),
-                        const SizedBox(width: 5),
-                        Text(
-                          chip,
-                          style: AppTypography.body.copyWith(fontSize: 11.5),
-                        ),
-                      ],
-                    ),
-                  ))
+              .map(
+                (chip) => Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 11,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(999),
+                    boxShadow: AppShadows.card,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.check_circle_outline,
+                        size: 13,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        chip,
+                        style: AppTypography.body.copyWith(fontSize: 11.5),
+                      ),
+                    ],
+                  ),
+                ),
+              )
               .toList(),
         ),
       ],
@@ -597,14 +630,23 @@ class _AmenitiesCard extends StatelessWidget {
             spacing: 8,
             runSpacing: 9,
             children: amenities
-                .map((amenity) => Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.check_circle, size: 14, color: AppColors.primary),
-                        const SizedBox(width: 5),
-                        Text(amenity, style: AppTypography.body.copyWith(fontSize: 12)),
-                      ],
-                    ))
+                .map(
+                  (amenity) => Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.check_circle,
+                        size: 14,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        amenity,
+                        style: AppTypography.body.copyWith(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                )
                 .toList(),
           ),
         ),
@@ -621,89 +663,80 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rows = <_ContactEntry>[
-      _ContactEntry(
-        label: 'Address',
-        value: business.address,
-        actionText: 'View Map',
-        onTap: () => AppLauncher.directions(
-            business.latitude, business.longitude),
-      ),
-      if (business.phone.isNotEmpty)
-        _ContactEntry(
-          label: 'Phone',
-          value: business.phone,
-          actionText: 'Call',
-          onTap: () => AppLauncher.call(business.phone),
-        ),
-      if (business.whatsapp.isNotEmpty)
-        _ContactEntry(
-          label: 'WhatsApp',
-          value: business.whatsapp,
-          actionText: 'Chat',
-          onTap: () => AppLauncher.whatsapp(business.whatsapp),
-        ),
-      if (business.website != null && business.website!.isNotEmpty)
-        _ContactEntry(
-          label: 'Website',
-          value: business.website!,
-          actionText: 'Open',
-          onTap: () => AppLauncher.openWebsite(business.website!),
-        ),
-      if (business.openingHours.isNotEmpty)
-        _ContactEntry(label: 'Hours', value: business.openingHours),
-    ];
-    return _ContactDetailsTable(rows: rows);
-  }
-}
-
-/// One labelled entry of the Contact Details table.
-class _ContactEntry {
-  const _ContactEntry({
-    required this.label,
-    required this.value,
-    this.actionText,
-    this.onTap,
-  });
-
-  final String label;
-  final String value;
-
-  /// Small orange action link on the right (Call / Chat / View Map / Open).
-  final String? actionText;
-  final VoidCallback? onTap;
-}
-
-/// The Contact Details card used on EVERY record page: a bordered white
-/// table with a grey uppercase label column (ADDRESS, PHONE, …) and the
-/// value on the right — matching the admin panel's record table design.
-class _ContactDetailsTable extends StatelessWidget {
-  const _ContactDetailsTable({required this.rows});
-
-  final List<_ContactEntry> rows;
-
-  @override
-  Widget build(BuildContext context) {
+    final hours = business.openingHours.isNotEmpty
+        ? business.openingHours
+        : business.timings ?? 'Hours not available';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 4),
-        Text('Contact Details', style: AppTypography.titleSm),
-        const SizedBox(height: 9),
+        Text('Location & Policies', style: AppTypography.titleSm),
+        const SizedBox(height: 10),
         Container(
-          clipBehavior: Clip.antiAlias,
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 13),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: AppColors.border, width: 1),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: AppShadows.card,
           ),
           child: Column(
             children: [
-              for (var i = 0; i < rows.length; i++) ...[
-                if (i > 0)
-                  const Divider(height: 1, color: AppColors.divider),
-                _ContactTableRow(row: rows[i]),
-              ],
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _RoundInfoIcon(icon: Icons.location_on_rounded),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'ADDRESS',
+                          style: AppTypography.label.copyWith(
+                            fontSize: 10,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          business.address,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.bodyStrong.copyWith(
+                            fontSize: 13.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  _MapPill(
+                    onTap: () => AppLauncher.directions(
+                      business.latitude,
+                      business.longitude,
+                      label: business.name,
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(height: 24, color: AppColors.divider),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.schedule_rounded,
+                    size: 19,
+                    color: AppColors.openGreen,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      hours,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.body.copyWith(fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -712,66 +745,51 @@ class _ContactDetailsTable extends StatelessWidget {
   }
 }
 
-class _ContactTableRow extends StatelessWidget {
-  const _ContactTableRow({required this.row});
+class _RoundInfoIcon extends StatelessWidget {
+  const _RoundInfoIcon({required this.icon});
 
-  final _ContactEntry row;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: row.onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 11),
+    return Container(
+      width: 42,
+      height: 42,
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, size: 20, color: AppColors.primary),
+    );
+  }
+}
+
+class _MapPill extends StatelessWidget {
+  const _MapPill({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: AppShadows.card,
+        ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Grey label column — uppercase, like the admin record table.
-            Container(
-              width: 96,
-              color: AppColors.background,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-              margin: const EdgeInsets.only(top: 0),
-              child: Text(
-                row.label.toUpperCase(),
-                style: TextStyle(
-                  fontFamily: AppTypography.bodyFamily,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
-                  color: AppColors.textSecondary,
-                ),
-              ),
+            const Icon(
+              Icons.directions_rounded,
+              size: 17,
+              color: AppColors.primary,
             ),
-            // Value column.
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  row.value,
-                  style: AppTypography.body.copyWith(
-                    fontSize: 13,
-                    color: AppColors.textPrimary,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            ),
-            // Orange action link (Call / Chat / View Map).
-            if (row.actionText != null)
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Text(
-                  row.actionText!,
-                  style: TextStyle(
-                    fontFamily: AppTypography.bodyFamily,
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
+            const SizedBox(width: 6),
+            Text('Map', style: AppTypography.bodyStrong.copyWith(fontSize: 13)),
           ],
         ),
       ),
@@ -782,7 +800,11 @@ class _ContactTableRow extends StatelessWidget {
 /// One row inside the Contact Details card: icon chip + text + optional
 /// trailing action. Tappable when [onTap] is set.
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.icon, required this.label, required this.value});
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   final IconData icon;
   final String label;
@@ -795,12 +817,12 @@ class _InfoRow extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: AppColors.primary),
         const SizedBox(width: 9),
-        SizedBox(
-          width: 84,
-          child: Text(label, style: AppTypography.caption),
-        ),
+        SizedBox(width: 84, child: Text(label, style: AppTypography.caption)),
         Expanded(
-          child: Text(value, style: AppTypography.bodyStrong.copyWith(fontSize: 12.5)),
+          child: Text(
+            value,
+            style: AppTypography.bodyStrong.copyWith(fontSize: 12.5),
+          ),
         ),
       ],
     );
@@ -838,7 +860,11 @@ class _MenuHeader extends StatelessWidget {
           style: AppTypography.label.copyWith(color: AppColors.primary),
         ),
         const SizedBox(width: 2),
-        const Icon(Icons.chevron_right_rounded, size: 15, color: AppColors.primary),
+        const Icon(
+          Icons.chevron_right_rounded,
+          size: 15,
+          color: AppColors.primary,
+        ),
       ],
     );
   }
@@ -898,14 +924,20 @@ class _MenuItemRow extends StatelessWidget {
                     GestureDetector(
                       onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                            content: Text('${item.name} added to your order')),
+                          content: Text('${item.name} added to your order'),
+                        ),
                       ),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 13,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primarySoft,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.4),
+                          ),
                         ),
                         child: const Text(
                           'ADD',
@@ -925,30 +957,6 @@ class _MenuItemRow extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// ── Location + map section ─────────────────────────────────────────────
-class _LocationSection extends StatelessWidget {
-  const _LocationSection({required this.business});
-
-  final Business business;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Location', style: AppTypography.titleSm),
-        const SizedBox(height: 8),
-        MapPreview(
-          latitude: business.latitude,
-          longitude: business.longitude,
-          height: 150,
-          pinLabel: business.name,
-        ),
-      ],
     );
   }
 }
@@ -991,7 +999,10 @@ class _ReviewCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(review.author, style: AppTypography.bodyStrong),
-                    Text(review.authorMeta, style: AppTypography.label.copyWith(fontSize: 10.5)),
+                    Text(
+                      review.authorMeta,
+                      style: AppTypography.label.copyWith(fontSize: 10.5),
+                    ),
                   ],
                 ),
               ),
@@ -999,9 +1010,15 @@ class _ReviewCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 9),
-          Text(review.text, style: AppTypography.caption.copyWith(fontSize: 11.5)),
+          Text(
+            review.text,
+            style: AppTypography.caption.copyWith(fontSize: 11.5),
+          ),
           const SizedBox(height: 7),
-          Text(review.timeAgo, style: AppTypography.label.copyWith(fontSize: 10.5)),
+          Text(
+            review.timeAgo,
+            style: AppTypography.label.copyWith(fontSize: 10.5),
+          ),
         ],
       ),
     );

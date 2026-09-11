@@ -46,7 +46,11 @@ void main() {
       final button = find.widgetWithText(FilledButton, 'Continue');
       expect(tester.widget<FilledButton>(button).onPressed, isNull);
       await tester.enterText(find.byType(TextField).at(0), 'Test Hotel');
+      // Phone, WhatsApp, Email are all required now (dial code is a chip).
+      // Field order: 0 Name, 1 Tagline, 2 Phone, 3 WhatsApp, 4 Email.
+      await tester.enterText(find.byType(TextField).at(2), '9876543210');
       await tester.enterText(find.byType(TextField).at(3), '9876543210');
+      await tester.enterText(find.byType(TextField).at(4), 'owner@test.com');
       tester.view.viewInsets = const FakeViewPadding(bottom: 300);
       await tester.pumpAndSettle();
       expect(tester.widget<FilledButton>(button).onPressed, isNotNull);

@@ -102,8 +102,15 @@ Future<bool> _saveWithFeedback(
     navigator.pop(true);
     return true;
   } catch (e) {
+    final text = e.toString();
     messenger.showSnackBar(
-      SnackBar(content: Text('Could not save. Please check and try again.')),
+      SnackBar(
+        content: Text(
+          text.contains('already pending')
+              ? 'A change request is already pending approval.'
+              : 'Could not save. Please check and try again.',
+        ),
+      ),
     );
     return false;
   }
@@ -136,6 +143,37 @@ class _EditBusinessProfileScreenState
   late final _locality = TextEditingController(text: widget.details.locality);
   late final _postal = TextEditingController(text: widget.details.postalCode);
   bool _saving = false;
+
+  bool get _isDirty =>
+      _name.text.trim() != widget.details.name ||
+      _tagline.text.trim() != widget.details.tagline ||
+      _description.text.trim() != widget.details.description ||
+      _phone.text.trim() != widget.details.phone ||
+      _whatsapp.text.trim() != widget.details.whatsapp ||
+      _email.text.trim() != widget.details.email ||
+      _website.text.trim() != widget.details.website ||
+      _address.text.trim() != widget.details.address ||
+      _locality.text.trim() != widget.details.locality ||
+      _postal.text.trim() != widget.details.postalCode;
+
+  @override
+  void initState() {
+    super.initState();
+    for (final c in [
+      _name,
+      _tagline,
+      _description,
+      _phone,
+      _whatsapp,
+      _email,
+      _website,
+      _address,
+      _locality,
+      _postal,
+    ]) {
+      c.addListener(() => setState(() {}));
+    }
+  }
 
   @override
   void dispose() {
@@ -268,7 +306,7 @@ class _EditBusinessProfileScreenState
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),
-                    onPressed: _saving ? null : _save,
+                    onPressed: _saving || !_isDirty ? null : _save,
                     child: _saving
                         ? const SizedBox(
                             width: 20,

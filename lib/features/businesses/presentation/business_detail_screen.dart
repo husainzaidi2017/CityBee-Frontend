@@ -149,29 +149,25 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
                               child: Text(
                                 business.name,
                                 style: AppTypography.headline.copyWith(
-                                  fontSize: 20,
+                                  fontSize: 28,
+                                  height: 1.05,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-                        Row(
-                          children: [
-                            if (business.isVerified) const VerifiedBadge(),
-                            const SizedBox(width: 7),
+                            const SizedBox(width: 10),
                             OpenStatusPill(
                               isOpen: business.isOpen,
                               closedText: 'Opens at 11:00 AM',
                             ),
                           ],
                         ),
-                        const SizedBox(height: 7),
+                        const SizedBox(height: 10),
                         Row(
                           children: [
                             RatingPill.green(rating: business.ratingLabel),
@@ -207,6 +203,8 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                             color: AppColors.textPrimary,
                           ),
                         ),
+                        const SizedBox(height: 12),
+                        _TypeChips(business: business),
                       ],
                     ),
 
@@ -220,7 +218,10 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                     if (business.featureChips.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 15),
-                        child: _HighlightsRow(chips: business.featureChips),
+                        child: _HighlightsRow(
+                          chips: business.featureChips,
+                          hotelStyle: isHotel,
+                        ),
                       ),
 
                     // ── Doctor specifics ─────────────────────────────
@@ -431,22 +432,42 @@ class _ActionRow extends StatelessWidget {
           () => AppLauncher.openWebsite(business.website!),
         ),
     ];
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 11),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        // Flat border instead of a shadow: shadows bleed upward over the
-        // hero's bottom edge and read as an orange glow behind the carousel.
-        border: Border.all(color: AppColors.border, width: 1),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          for (var i = 0; i < actions.length; i++)
-            _ActionButton(action: actions[i]),
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: actions.first.onTap,
+            child: Container(
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(999),
+                boxShadow: AppShadows.card,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.call_rounded, size: 20, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(
+                    business.kind == BusinessKind.hotel ? 'Call Venue' : 'Call',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        for (final action in actions.skip(1)) ...[
+          _ActionButton(action: action),
+          const SizedBox(width: 10),
         ],
-      ),
+      ],
     );
   }
 }
@@ -470,56 +491,97 @@ class _ActionButton extends StatelessWidget {
     return GestureDetector(
       onTap: action.onTap,
       behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 72,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.primarySoft,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: action.icon is String
-                    ? AppIcons.action(action.icon as String, size: 20)
-                    : Icon(
-                        action.icon as IconData,
-                        size: 19,
-                        color: AppColors.primary,
-                      ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              action.label,
-              style: AppTypography.label.copyWith(
-                fontSize: 10.5,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+      child: Container(
+        width: 54,
+        height: 54,
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: action.icon is String
+              ? AppIcons.action(action.icon as String, size: 23)
+              : Icon(
+                  action.icon as IconData,
+                  size: 23,
+                  color: AppColors.textPrimary,
+                ),
         ),
       ),
     );
   }
 }
 
+class _TypeChips extends StatelessWidget {
+  const _TypeChips({required this.business});
+
+  final Business business;
+
+  @override
+  Widget build(BuildContext context) {
+    final labels = <String>[
+      switch (business.kind) {
+        BusinessKind.hotel => 'Hotel',
+        BusinessKind.restaurant => 'Restaurant',
+        BusinessKind.doctor => 'Doctor',
+        BusinessKind.salon => 'Salon',
+        BusinessKind.mall => 'Mall',
+        BusinessKind.shop => 'Shop',
+        BusinessKind.service => 'Service',
+      },
+      ...business.featureChips.take(3),
+    ];
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final label in labels)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              label,
+              style: AppTypography.body.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 /// ── Highlights chips row ───────────────────────────────────────────────
 class _HighlightsRow extends StatelessWidget {
-  const _HighlightsRow({required this.chips});
+  const _HighlightsRow({required this.chips, this.hotelStyle = false});
 
   final List<String> chips;
+  final bool hotelStyle;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Highlights', style: AppTypography.titleSm),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                hotelStyle ? 'Amenities & Highlights' : 'Highlights',
+                style: AppTypography.titleSm,
+              ),
+            ),
+            if (hotelStyle)
+              Text(
+                'View All (${chips.length})',
+                style: AppTypography.label.copyWith(color: AppColors.primary),
+              ),
+          ],
+        ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 7,

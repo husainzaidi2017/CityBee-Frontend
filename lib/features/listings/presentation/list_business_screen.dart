@@ -1,6 +1,5 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -664,12 +663,12 @@ class _DetailsStepState extends State<_DetailsStep> {
           onChanged: (v) => draft.description = v,
           maxLines: 3,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Text('Contact', style: AppTypography.titleSm),
-        const SizedBox(height: 10),
+        const SizedBox(height: 6),
         // Phone with dial code
         Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             GestureDetector(
               onTap: () => _pickDialCode(
@@ -721,6 +720,17 @@ class _DetailsStepState extends State<_DetailsStep> {
                   widget.onChanged();
                 },
                 keyboardType: TextInputType.phone,
+                hint: 'Phone number',
+                showLabel: false,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                ],
+                errorText:
+                    _digitsOnly(draft.phone, _phoneDialCode).isEmpty ||
+                        _digitsOnly(draft.phone, _phoneDialCode).length == 10
+                    ? null
+                    : 'Enter 10 digits',
               ),
             ),
           ],
@@ -742,7 +752,7 @@ class _DetailsStepState extends State<_DetailsStep> {
         if (!_whatsappSameAsPhone) ...[
           const SizedBox(height: 12),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GestureDetector(
                 onTap: () => _pickDialCode(
@@ -789,6 +799,21 @@ class _DetailsStepState extends State<_DetailsStep> {
                     widget.onChanged();
                   },
                   keyboardType: TextInputType.phone,
+                  hint: 'WhatsApp number',
+                  showLabel: false,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10),
+                  ],
+                  errorText:
+                      _digitsOnly(draft.whatsapp, _whatsappDialCode).isEmpty ||
+                          _digitsOnly(
+                                draft.whatsapp,
+                                _whatsappDialCode,
+                              ).length ==
+                              10
+                      ? null
+                      : 'Enter 10 digits',
                 ),
               ),
             ],
@@ -803,6 +828,13 @@ class _DetailsStepState extends State<_DetailsStep> {
             widget.onChanged();
           },
           keyboardType: TextInputType.emailAddress,
+          hint: 'Email address *',
+          showLabel: false,
+          errorText:
+              draft.email.trim().isEmpty ||
+                  _ListBusinessScreenState._emailRe.hasMatch(draft.email.trim())
+              ? null
+              : 'Enter a valid email',
         ),
         const SizedBox(height: 12),
         _Field(
@@ -1908,6 +1940,9 @@ class _Field extends StatefulWidget {
     this.keyboardType,
     this.maxLines = 1,
     this.hint,
+    this.showLabel = true,
+    this.errorText,
+    this.inputFormatters,
   });
 
   final String label;
@@ -1916,6 +1951,9 @@ class _Field extends StatefulWidget {
   final TextInputType? keyboardType;
   final int maxLines;
   final String? hint;
+  final bool showLabel;
+  final String? errorText;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   State<_Field> createState() => _FieldState();
@@ -1935,17 +1973,23 @@ class _FieldState extends State<_Field> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.label,
-          style: AppTypography.label.copyWith(color: AppColors.textPrimary),
-        ),
-        const SizedBox(height: 5),
+        if (widget.showLabel) ...[
+          Text(
+            widget.label,
+            style: AppTypography.label.copyWith(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 5),
+        ],
         TextField(
           controller: _controller,
           keyboardType: widget.keyboardType,
           maxLines: widget.maxLines,
+          inputFormatters: widget.inputFormatters,
           onChanged: widget.onChanged,
-          decoration: InputDecoration(hintText: widget.hint),
+          decoration: InputDecoration(
+            hintText: widget.hint,
+            errorText: widget.errorText,
+          ),
         ),
       ],
     );

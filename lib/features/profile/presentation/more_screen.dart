@@ -29,10 +29,14 @@ class MoreScreen extends ConsumerWidget {
     final location = ref.watch(selectedLocationProvider);
     final isLoggedIn = ref.watch(authStateProvider);
     final favorites = ref.watch(favoritesProvider);
-    final bookmarkCount =
-        favorites.isEmpty ? profile.bookmarkCount : favorites.length;
-    final submissions = ref.watch(mySubmissionsProvider).valueOrNull ?? const [];
-    final isOwner = ref.watch(ownerSummaryProvider).valueOrNull?.hasApprovedBusiness ?? false;
+    final bookmarkCount = favorites.isEmpty
+        ? profile.bookmarkCount
+        : favorites.length;
+    final submissions =
+        ref.watch(mySubmissionsProvider).valueOrNull ?? const [];
+    final isOwner =
+        ref.watch(ownerSummaryProvider).valueOrNull?.hasApprovedBusiness ??
+        false;
 
     return ColoredBox(
       color: AppColors.background,
@@ -52,15 +56,10 @@ class MoreScreen extends ConsumerWidget {
                   if (isLoggedIn)
                     _SignedInCard(
                       profile: profile,
-                      bookmarkCount: bookmarkCount,
                       onEdit: () => context.push('/profile/edit'),
-                      onFavorites: () => context.push('/favorites'),
-                      onCoupons: () => context.go('/offers'),
                     )
                   else
-                    _GuestCard(
-                      onLogin: () => context.push('/login'),
-                    ),
+                    _GuestCard(onLogin: () => context.push('/login')),
                 ],
               ),
             ),
@@ -70,6 +69,16 @@ class MoreScreen extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
                 children: [
+                  if (isLoggedIn) ...[
+                    _AccountQuickGrid(
+                      profile: profile,
+                      bookmarkCount: bookmarkCount,
+                      onEdit: () => context.push('/profile/edit'),
+                      onFavorites: () => context.push('/favorites'),
+                      onCoupons: () => context.go('/offers'),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
                   // ── Submission status (listing requests) ───────────
                   // One simple tile: shows pending/needs-changes badge when
                   // relevant, opens the full Submission Status screen.
@@ -78,142 +87,148 @@ class MoreScreen extends ConsumerWidget {
 
                   // ── CityBee for Business ──────────────────────────
                   _BusinessPromoCard(
-                      onListBusiness: () => _openBusinessListing(context)),
+                    onListBusiness: () => _openBusinessListing(context),
+                  ),
                   const SizedBox(height: 10),
 
-            // ── Your city tools ───────────────────────────────────
-            _MenuCard(
-              title: 'Your City Tools',
-              children: [
-                _MenuTile(
-                  icon: Icons.location_city_outlined,
-                  iconColor: AppColors.primary,
-                  iconBg: AppColors.primarySoft,
-                  label: 'Change City',
-                  value: '${location.displayName}, ${location.state ?? ""}',
-                  onTap: () => showCityPickerSheet(context),
-                ),
-                _MenuTile(
-                  icon: Icons.favorite_border_rounded,
-                  iconColor: AppColors.brandRed,
-                  iconBg: const Color(0xFFFDECEC),
-                  label: 'My Favorites',
-                  value: '$bookmarkCount saved places',
-                  onTap: () => context.push('/favorites'),
-                ),
-                // Explore lives here for owners (their bottom tab shows
-                // My Business instead of Explore).
-                if (isOwner)
-                  _MenuTile(
-                    icon: Icons.explore_outlined,
-                    iconColor: AppColors.primary,
-                    iconBg: AppColors.primarySoft,
-                    label: 'Explore City',
-                    value: 'Places, food & heritage',
-                    onTap: () => context.push('/explore-city'),
+                  // ── Your city tools ───────────────────────────────────
+                  _MenuCard(
+                    title: 'Your City Tools',
+                    children: [
+                      _MenuTile(
+                        icon: Icons.location_city_outlined,
+                        iconColor: AppColors.primary,
+                        iconBg: AppColors.primarySoft,
+                        label: 'Change City',
+                        value:
+                            '${location.displayName}, ${location.state ?? ""}',
+                        onTap: () => showCityPickerSheet(context),
+                      ),
+                      _MenuTile(
+                        icon: Icons.favorite_border_rounded,
+                        iconColor: AppColors.brandRed,
+                        iconBg: const Color(0xFFFDECEC),
+                        label: 'My Favorites',
+                        value: '$bookmarkCount saved places',
+                        onTap: () => context.push('/favorites'),
+                      ),
+                      // Explore lives here for owners (their bottom tab shows
+                      // My Business instead of Explore).
+                      if (isOwner)
+                        _MenuTile(
+                          icon: Icons.explore_outlined,
+                          iconColor: AppColors.primary,
+                          iconBg: AppColors.primarySoft,
+                          label: 'Explore City',
+                          value: 'Places, food & heritage',
+                          onTap: () => context.push('/explore-city'),
+                        ),
+                      _MenuTile(
+                        icon: Icons.map_outlined,
+                        iconColor: AppColors.primary,
+                        iconBg: AppColors.primarySoft,
+                        label: 'Download City Map',
+                        value: 'Offline map of ${location.displayName}',
+                        onTap: () => _showMapDownloadSheet(
+                          context,
+                          location.displayName,
+                        ),
+                      ),
+                      _MenuTile(
+                        icon: Icons.settings_outlined,
+                        iconColor: AppColors.primary,
+                        iconBg: AppColors.primarySoft,
+                        label: 'Settings',
+                        value: 'Notifications & location',
+                        onTap: () => context.push('/settings'),
+                      ),
+                    ],
                   ),
-                _MenuTile(
-                  icon: Icons.map_outlined,
-                  iconColor: AppColors.primary,
-                  iconBg: AppColors.primarySoft,
-                  label: 'Download City Map',
-                  value: 'Offline map of ${location.displayName}',
-                  onTap: () => _showMapDownloadSheet(context, location.displayName),
-                ),
-                _MenuTile(
-                  icon: Icons.settings_outlined,
-                  iconColor: AppColors.primary,
-                  iconBg: AppColors.primarySoft,
-                  label: 'Settings',
-                  value: 'Notifications & location',
-                  onTap: () => context.push('/settings'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
-            // ── Refer & earn ──────────────────────────────────────
-            _MenuCard(
-              title: 'Refer & Earn',
-              children: [
-                _MenuTile(
-                  icon: Icons.card_giftcard_rounded,
-                  iconColor: AppColors.primary,
-                  iconBg: AppColors.primarySoft,
-                  label: 'Invite Friends',
-                  value: 'Get ₹100 per verified friend',
-                  onTap: () => ShareService.shareApp(
-                    note: 'Join me on ${AppConfig.appName} — we both get ₹100 '
-                        'in city savings when you sign up!',
+                  // ── Refer & earn ──────────────────────────────────────
+                  _MenuCard(
+                    title: 'Refer & Earn',
+                    children: [
+                      _MenuTile(
+                        icon: Icons.card_giftcard_rounded,
+                        iconColor: AppColors.primary,
+                        iconBg: AppColors.primarySoft,
+                        label: 'Invite Friends',
+                        value: 'Get ₹100 per verified friend',
+                        onTap: () => ShareService.shareApp(
+                          note:
+                              'Join me on ${AppConfig.appName} — we both get ₹100 '
+                              'in city savings when you sign up!',
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
-            // ── Support & about ───────────────────────────────────
-            _MenuCard(
-              title: 'Support & About',
-              children: [
-                _MenuTile(
-                  icon: Icons.help_outline_rounded,
-                  iconColor: AppColors.primary,
-                  iconBg: AppColors.primarySoft,
-                  label: 'Help & FAQ',
-                  onTap: () => context.push('/faq'),
-                ),
-                _MenuTile(
-                  icon: Icons.chat_bubble_outline_rounded,
-                  iconColor: AppColors.primary,
-                  iconBg: AppColors.primarySoft,
-                  label: 'Contact Support',
-                  value: 'WhatsApp us anytime',
-                  onTap: () => context.push('/support'),
-                ),
-                _MenuTile(
-                  icon: Icons.info_outline_rounded,
-                  iconColor: AppColors.primary,
-                  iconBg: AppColors.primarySoft,
-                  label: 'About CityBee',
-                  onTap: () => context.push('/about'),
-                ),
-                _MenuTile(
-                  icon: Icons.shield_outlined,
-                  iconColor: AppColors.primary,
-                  iconBg: AppColors.primarySoft,
-                  label: 'Privacy Policy',
-                  onTap: () => context.push('/privacy'),
-                ),
-                _MenuTile(
-                  icon: Icons.description_outlined,
-                  iconColor: AppColors.primary,
-                  iconBg: AppColors.primarySoft,
-                  label: 'Terms & Conditions',
-                  onTap: () => context.push('/terms'),
-                ),
-                _MenuTile(
-                  icon: Icons.star_border_rounded,
-                  iconColor: AppColors.primary,
-                  iconBg: AppColors.primarySoft,
-                  label: 'Rate CityBee',
-                  onTap: () => _openPlayStore(context),
-                ),
-              ],
-            ),
+                  // ── Support & about ───────────────────────────────────
+                  _MenuCard(
+                    title: 'Support & About',
+                    children: [
+                      _MenuTile(
+                        icon: Icons.help_outline_rounded,
+                        iconColor: AppColors.primary,
+                        iconBg: AppColors.primarySoft,
+                        label: 'Help & FAQ',
+                        onTap: () => context.push('/faq'),
+                      ),
+                      _MenuTile(
+                        icon: Icons.chat_bubble_outline_rounded,
+                        iconColor: AppColors.primary,
+                        iconBg: AppColors.primarySoft,
+                        label: 'Contact Support',
+                        value: 'WhatsApp us anytime',
+                        onTap: () => context.push('/support'),
+                      ),
+                      _MenuTile(
+                        icon: Icons.info_outline_rounded,
+                        iconColor: AppColors.primary,
+                        iconBg: AppColors.primarySoft,
+                        label: 'About CityBee',
+                        onTap: () => context.push('/about'),
+                      ),
+                      _MenuTile(
+                        icon: Icons.shield_outlined,
+                        iconColor: AppColors.primary,
+                        iconBg: AppColors.primarySoft,
+                        label: 'Privacy Policy',
+                        onTap: () => context.push('/privacy'),
+                      ),
+                      _MenuTile(
+                        icon: Icons.description_outlined,
+                        iconColor: AppColors.primary,
+                        iconBg: AppColors.primarySoft,
+                        label: 'Terms & Conditions',
+                        onTap: () => context.push('/terms'),
+                      ),
+                      _MenuTile(
+                        icon: Icons.star_border_rounded,
+                        iconColor: AppColors.primary,
+                        iconBg: AppColors.primarySoft,
+                        label: 'Rate CityBee',
+                        onTap: () => _openPlayStore(context),
+                      ),
+                    ],
+                  ),
 
-            // ── Logout / Login ────────────────────────────────────
-            const SizedBox(height: 10),
-            if (isLoggedIn)
-              _LogoutTile(onTap: () => _logout(context, ref))
-            else
-              _LoginTile(onTap: () => context.push('/login')),
-            const SizedBox(height: 8),
-            Center(
-              child: Text(
-                'CityBee v1.0.0 · Made in ${location.state ?? location.displayName}',
-                style: AppTypography.label.copyWith(fontSize: 10.5),
-              ),
-            ),
+                  // ── Logout / Login ────────────────────────────────────
+                  const SizedBox(height: 10),
+                  if (isLoggedIn)
+                    _LogoutTile(onTap: () => _logout(context, ref))
+                  else
+                    _LoginTile(onTap: () => context.push('/login')),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Text(
+                      'CityBee v1.0.0 · Made in ${location.state ?? location.displayName}',
+                      style: AppTypography.label.copyWith(fontSize: 10.5),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -285,8 +300,10 @@ class MoreScreen extends ConsumerWidget {
             children: [
               Text('Offline City Map', style: AppTypography.title),
               const SizedBox(height: 4),
-              Text('Explore $cityName without internet — places, bazaars & streets.',
-                  style: AppTypography.caption),
+              Text(
+                'Explore $cityName without internet — places, bazaars & streets.',
+                style: AppTypography.caption,
+              ),
               const SizedBox(height: 8),
               MapPreview(
                 latitude: 28.8386,
@@ -303,7 +320,8 @@ class MoreScreen extends ConsumerWidget {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(999)),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
                   ),
                   onPressed: () {
                     Navigator.of(sheetContext).pop();
@@ -315,9 +333,10 @@ class MoreScreen extends ConsumerWidget {
                       ),
                     );
                   },
-                  child: const Text('Download Map',
-                      style:
-                          TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                  child: const Text(
+                    'Download Map',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  ),
                 ),
               ),
             ],
@@ -330,19 +349,10 @@ class MoreScreen extends ConsumerWidget {
 
 /// ── Signed-in account card: identity, stats and quick links ────────────
 class _SignedInCard extends StatelessWidget {
-  const _SignedInCard({
-    required this.profile,
-    required this.bookmarkCount,
-    required this.onEdit,
-    required this.onFavorites,
-    required this.onCoupons,
-  });
+  const _SignedInCard({required this.profile, required this.onEdit});
 
   final UserProfile profile;
-  final int bookmarkCount;
   final VoidCallback onEdit;
-  final VoidCallback onFavorites;
-  final VoidCallback onCoupons;
 
   @override
   Widget build(BuildContext context) {
@@ -389,17 +399,26 @@ class _SignedInCard extends StatelessWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 9, vertical: 4),
+                              horizontal: 9,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                  colors: [AppColors.primary, AppColors.primaryDark]),
+                                colors: [
+                                  AppColors.primary,
+                                  AppColors.primaryDark,
+                                ],
+                              ),
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.military_tech_rounded,
-                                    size: 12, color: Colors.white),
+                                const Icon(
+                                  Icons.military_tech_rounded,
+                                  size: 12,
+                                  color: Colors.white,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   profile.levelTitle,
@@ -416,7 +435,9 @@ class _SignedInCard extends StatelessWidget {
                           Flexible(
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 9, vertical: 4),
+                                horizontal: 9,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.accentSoft,
                                 borderRadius: BorderRadius.circular(999),
@@ -437,71 +458,116 @@ class _SignedInCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right_rounded,
-                    color: AppColors.textMuted),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.textMuted,
+                ),
               ],
             ),
           ),
         ),
         const SizedBox(height: 10),
-
-        // Stats + account quick links.
-        Row(
-          children: [
-            Expanded(
-              child: _StatTile(
-                value: profile.savedAmount,
-                label: 'Saved',
-                icon: Icons.savings_outlined,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _StatTile(
-                value: '$bookmarkCount',
-                label: 'Bookmarks',
-                icon: Icons.bookmark_border_rounded,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _StatTile(
-                value: '${profile.reviewsGiven}',
-                label: 'Reviews',
-                icon: Icons.rate_review_outlined,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _QuickLinkButton(
-                icon: Icons.edit_rounded,
-                label: 'Edit Profile',
-                onTap: onEdit,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _QuickLinkButton(
-                icon: Icons.favorite_border_rounded,
-                label: 'Favorites',
-                onTap: onFavorites,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _QuickLinkButton(
-                icon: Icons.local_offer_outlined,
-                label: 'My Offers',
-                onTap: onCoupons,
-              ),
-            ),
-          ],
-        ),
       ],
+    );
+  }
+}
+
+class _AccountQuickGrid extends StatelessWidget {
+  const _AccountQuickGrid({
+    required this.profile,
+    required this.bookmarkCount,
+    required this.onEdit,
+    required this.onFavorites,
+    required this.onCoupons,
+  });
+
+  final UserProfile profile;
+  final int bookmarkCount;
+  final VoidCallback onEdit;
+  final VoidCallback onFavorites;
+  final VoidCallback onCoupons;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: AppShadows.card,
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _StatTile(
+                  value: profile.savedAmount,
+                  label: 'Saved',
+                  icon: Icons.account_balance_wallet_outlined,
+                  background: const Color(0xFFFFFCF7),
+                  accent: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _StatTile(
+                  value: '$bookmarkCount',
+                  label: 'Bookmarks',
+                  icon: Icons.bookmark_border_rounded,
+                  background: const Color(0xFFF6FDFF),
+                  accent: const Color(0xFF168AAD),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _StatTile(
+                  value: '${profile.reviewsGiven}',
+                  label: 'Reviews',
+                  icon: Icons.star_border_rounded,
+                  background: const Color(0xFFFFFCF4),
+                  accent: AppColors.starAmber,
+                ),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1, color: AppColors.border),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: _QuickLinkButton(
+                  icon: Icons.edit_square,
+                  label: 'Edit Profile',
+                  iconBg: const Color(0xFFF4F6FB),
+                  iconColor: AppColors.textPrimary,
+                  onTap: onEdit,
+                ),
+              ),
+              Expanded(
+                child: _QuickLinkButton(
+                  icon: Icons.favorite_border_rounded,
+                  label: 'Favorites',
+                  iconBg: const Color(0xFFFFF1F6),
+                  iconColor: AppColors.brandRed,
+                  onTap: onFavorites,
+                ),
+              ),
+              Expanded(
+                child: _QuickLinkButton(
+                  icon: Icons.sell_outlined,
+                  label: 'My Offers',
+                  iconBg: const Color(0xFFEFFFF8),
+                  iconColor: const Color(0xFF0F9F75),
+                  onTap: onCoupons,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -530,16 +596,18 @@ class _GuestCard extends StatelessWidget {
               color: AppColors.primarySoft,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.person_rounded,
-                size: 26, color: AppColors.primary),
+            child: const Icon(
+              Icons.person_rounded,
+              size: 26,
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Sign in or Register',
-                    style: AppTypography.titleSm),
+                Text('Sign in or Register', style: AppTypography.titleSm),
                 const SizedBox(height: 2),
                 Text(
                   'Save favorites, claim coupons & sync across devices.',
@@ -559,8 +627,10 @@ class _GuestCard extends StatelessWidget {
               ),
               child: Text(
                 'Login',
-                style: AppTypography.bodyStrong
-                    .copyWith(color: Colors.white, fontSize: 12.5),
+                style: AppTypography.bodyStrong.copyWith(
+                  color: Colors.white,
+                  fontSize: 12.5,
+                ),
               ),
             ),
           ),
@@ -571,27 +641,42 @@ class _GuestCard extends StatelessWidget {
 }
 
 class _StatTile extends StatelessWidget {
-  const _StatTile({required this.value, required this.label, required this.icon});
+  const _StatTile({
+    required this.value,
+    required this.label,
+    required this.icon,
+    this.background = AppColors.surface,
+    this.accent = AppColors.primary,
+  });
 
   final String value;
   final String label;
   final IconData icon;
+  final Color background;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 7),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: background,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: AppShadows.card,
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.65)),
       ),
       child: Column(
         children: [
-          Icon(icon, size: 18, color: AppColors.primary),
-          const SizedBox(height: 3),
-          Text(value, style: AppTypography.titleSm.copyWith(fontSize: 14)),
-          const SizedBox(height: 2),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 15, color: accent),
+          ),
+          const SizedBox(height: 5),
+          Text(value, style: AppTypography.titleSm.copyWith(fontSize: 13)),
           Text(
             label,
             textAlign: TextAlign.center,
@@ -608,11 +693,15 @@ class _QuickLinkButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.iconBg = AppColors.primarySoft,
+    this.iconColor = AppColors.primary,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final Color iconBg;
+  final Color iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -620,17 +709,20 @@ class _QuickLinkButton extends StatelessWidget {
       onTap: onTap,
       ripple: true,
       borderRadius: BorderRadius.circular(13),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 9),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(13),
-          boxShadow: AppShadows.card,
-        ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
         child: Column(
           children: [
-            Icon(icon, size: 18, color: AppColors.primary),
-            const SizedBox(height: 3),
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 16, color: iconColor),
+            ),
+            const SizedBox(height: 6),
             Text(
               label,
               maxLines: 1,
@@ -679,18 +771,26 @@ class _SubmissionStatusTile extends StatelessWidget {
         dense: true,
         visualDensity: VisualDensity.compact,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14),
-        leading: const Icon(Icons.assignment_outlined,
-            size: 20, color: AppColors.primary),
+        leading: const Icon(
+          Icons.assignment_outlined,
+          size: 20,
+          color: AppColors.primary,
+        ),
         title: Text('Submission Status', style: AppTypography.bodyStrong),
         subtitle: badge == null
             ? Text('Track your listing requests', style: AppTypography.label)
-            : Text(badge,
+            : Text(
+                badge,
                 style: AppTypography.label.copyWith(
                   color: badgeColor,
                   fontWeight: FontWeight.w600,
-                )),
-        trailing: const Icon(Icons.chevron_right_rounded,
-            size: 19, color: AppColors.textMuted),
+                ),
+              ),
+        trailing: const Icon(
+          Icons.chevron_right_rounded,
+          size: 19,
+          color: AppColors.textMuted,
+        ),
         onTap: () => context.push('/submission-status'),
       ),
     );
@@ -726,14 +826,21 @@ class _BusinessPromoCard extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(11),
                 ),
-                child: const Icon(Icons.storefront, color: Colors.white, size: 20),
+                child: const Icon(
+                  Icons.storefront,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 11),
               const Expanded(
                 child: Text(
                   'CityBee for Business',
                   style: TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
                 ),
               ),
               Container(
@@ -784,7 +891,11 @@ class _BusinessPromoCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 4),
-                  Icon(Icons.open_in_new, size: 13, color: AppColors.primaryDark),
+                  Icon(
+                    Icons.open_in_new,
+                    size: 13,
+                    color: AppColors.primaryDark,
+                  ),
                 ],
               ),
             ),
@@ -861,8 +972,11 @@ class _MenuTile extends StatelessWidget {
       subtitle: value == null
           ? null
           : Text(value!, style: AppTypography.label.copyWith(fontSize: 10)),
-      trailing: const Icon(Icons.chevron_right_rounded,
-          size: 19, color: AppColors.textMuted),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        size: 19,
+        color: AppColors.textMuted,
+      ),
     );
   }
 }

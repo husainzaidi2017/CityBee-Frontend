@@ -41,7 +41,11 @@ class PopularBusinessCard extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: AppImage(url: business.images.firstOrNull ?? '', width: 92, height: 92),
+                    child: AppImage(
+                      url: business.images.firstOrNull ?? '',
+                      width: 92,
+                      height: 92,
+                    ),
                   ),
                   Positioned(
                     bottom: 4,
@@ -54,61 +58,77 @@ class PopularBusinessCard extends StatelessWidget {
             const SizedBox(width: 11),
             // ── content ──────────────────────────────────────────────
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    business.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.titleSm,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    business.tagline,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.caption,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on_outlined, size: 12, color: AppColors.textSecondary),
-                      const SizedBox(width: 2),
-                      Expanded(
-                        child: Text(
-                          '${business.area.isEmpty ? business.cityName : business.area} · ${business.distanceLabel} km',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.label,
+              child: SizedBox(
+                height: 92,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      business.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.titleSm,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      business.tagline,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.caption,
+                    ),
+                    const Spacer(),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.location_on_outlined,
+                                size: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                              const SizedBox(width: 2),
+                              Expanded(
+                                child: Text(
+                                  '${business.area.isEmpty ? business.cityName : business.area} · ${business.distanceLabel} km',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.label,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _IconAction(
-                        icon: AppIcons.callAsset,
-                        onTap: () => AppLauncher.call(business.phone),
-                      ),
-                      const SizedBox(width: 8),
-                      _IconAction(
-                        icon: AppIcons.directionsAsset,
-                        onTap: () => AppLauncher.directions(
-                          business.latitude,
-                          business.longitude,
-                          label: business.name,
+                        const SizedBox(width: 8),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _IconAction(
+                              icon: AppIcons.callAsset,
+                              onTap: () => AppLauncher.call(business.phone),
+                            ),
+                            const SizedBox(width: 6),
+                            _IconAction(
+                              icon: AppIcons.whatsappAsset,
+                              onTap: () =>
+                                  AppLauncher.whatsapp(business.whatsapp),
+                            ),
+                            const SizedBox(width: 6),
+                            _IconAction(
+                              icon: AppIcons.directionsAsset,
+                              onTap: () => AppLauncher.directions(
+                                business.latitude,
+                                business.longitude,
+                                label: business.name,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      _IconAction(
-                        icon: AppIcons.whatsappAsset,
-                        onTap: () => AppLauncher.whatsapp(business.whatsapp),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -132,14 +152,14 @@ class _IconAction extends StatelessWidget {
       onTap: onTap,
       pressedScale: 0.92,
       child: Container(
-        width: 40,
-        height: 40,
+        width: 30,
+        height: 30,
         decoration: BoxDecoration(
           color: AppColors.background,
           shape: BoxShape.circle,
           border: Border.all(color: AppColors.border, width: 1),
         ),
-        child: Center(child: AppIcons.action(icon, size: 18)),
+        child: Center(child: AppIcons.action(icon, size: 15)),
       ),
     );
   }

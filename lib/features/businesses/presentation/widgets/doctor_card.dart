@@ -22,8 +22,8 @@ class DoctorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final speciality = business.specialization ??
-        business.tagline.split('·').first.trim();
+    final speciality =
+        business.specialization ?? business.tagline.split('·').first.trim();
 
     return Pressable(
       onTap: () => context.push('/business/${business.id}'),
@@ -106,8 +106,11 @@ class DoctorCard extends StatelessWidget {
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_outlined,
-                          size: 12, color: AppColors.textSecondary),
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 12,
+                        color: AppColors.textSecondary,
+                      ),
                       const SizedBox(width: 2),
                       Expanded(
                         child: Text(
@@ -135,9 +138,10 @@ class DoctorCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.label.copyWith(
-                        color: business.isOpen
-                            ? AppColors.textSecondary
-                            : AppColors.brandRed),
+                      color: business.isOpen
+                          ? AppColors.textSecondary
+                          : AppColors.brandRed,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -159,8 +163,8 @@ class DoctorCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       CardActionButton(
-                        label: 'Book Visit',
-                        icon: Icons.event_available_outlined,
+                        label: 'Details',
+                        icon: Icons.info_outline_rounded,
                         filled: true,
                         onTap: () => context.push('/business/${business.id}'),
                       ),

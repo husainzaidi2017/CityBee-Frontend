@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
-    // Built-in Kotlin: Flutter 3.47 ships Kotlin — the kotlin-android
-    // plugin and manual jvmTarget are no longer needed.
+    id("kotlin-android")
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
@@ -11,10 +11,12 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        // Built-in Kotlin targets JVM 17 — Java must match (11 vs 17
-        // mismatch fails compileDebugKotlin).
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
 

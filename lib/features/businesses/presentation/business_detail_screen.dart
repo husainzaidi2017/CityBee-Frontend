@@ -469,8 +469,9 @@ class _ActionRow extends StatelessWidget {
 class _ActionData {
   const _ActionData(this.icon, this.label, this.onTap);
 
-  /// SVG asset path (Call/WhatsApp/Directions) or IconData (Website).
-  final Object icon;
+  /// Iconify data (Call/WhatsApp/Directions/Website) — every action icon
+  /// renders through the same MingCute path.
+  final String icon;
   final String label;
   final VoidCallback onTap;
 }
@@ -493,13 +494,7 @@ class _ActionButton extends StatelessWidget {
           shape: BoxShape.circle,
         ),
         child: Center(
-          child: action.icon is String
-              ? AppIcons.action(action.icon as String, size: 23)
-              : Icon(
-                  action.icon as IconData,
-                  size: 23,
-                  color: AppColors.textPrimary,
-                ),
+          child: AppIcons.action(action.icon, size: 23),
         ),
       ),
     );

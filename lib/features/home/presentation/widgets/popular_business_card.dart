@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -83,8 +84,8 @@ class PopularBusinessCard extends StatelessWidget {
                         Expanded(
                           child: Row(
                             children: [
-                              const Icon(
-                                Icons.location_on_outlined,
+                              Iconify(
+                                AppUiIcons.map_marker_outline,
                                 size: 12,
                                 color: AppColors.textSecondary,
                               ),

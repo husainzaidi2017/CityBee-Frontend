@@ -25,13 +25,20 @@ class MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<MainShell> {
   DateTime? _lastBackAt;
 
-  /// Double-back-to-exit: the first back at the shell root shows a
-  /// prompt; a second back within 2s exits (with the system exit
-  /// animation). Detail/tab routes still pop normally.
+  /// Back behaves like the nav buttons: detail routes pop, any other
+  /// tab returns Home, and only Home itself runs double-back-to-exit
+  /// (first back prompts; a second back within 2s exits with the system
+  /// exit animation).
   void _handleBack(BuildContext context) {
     final router = GoRouter.of(context);
     if (router.canPop()) {
       router.pop();
+      return;
+    }
+    // On any tab other than Home, back switches to Home (like tapping
+    // the Home nav button).
+    if (widget.navigationShell.currentIndex != 0) {
+      _goBranch(0);
       return;
     }
     final now = DateTime.now();

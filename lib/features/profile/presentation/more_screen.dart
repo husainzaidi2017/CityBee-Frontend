@@ -475,7 +475,6 @@ class _AccountQuickGrid extends StatelessWidget {
                   label: 'Saved',
                   icon: AppUiIcons.wallet_outline,
                   background: const Color(0xFFFFFCF7),
-                  accent: AppColors.primary,
                 ),
               ),
               const SizedBox(width: 8),
@@ -485,7 +484,6 @@ class _AccountQuickGrid extends StatelessWidget {
                   label: 'Bookmarks',
                   icon: AppUiIcons.bookmark_outline,
                   background: const Color(0xFFF6FDFF),
-                  accent: const Color(0xFF168AAD),
                 ),
               ),
               const SizedBox(width: 8),
@@ -495,7 +493,6 @@ class _AccountQuickGrid extends StatelessWidget {
                   label: 'Reviews',
                   icon: AppUiIcons.star_outline,
                   background: const Color(0xFFFFFCF4),
-                  accent: AppColors.starAmber,
                 ),
               ),
             ],
@@ -609,14 +606,12 @@ class _StatTile extends StatelessWidget {
     required this.label,
     required this.icon,
     this.background = AppColors.surface,
-    this.accent = AppColors.primary,
   });
 
   final String value;
   final String label;
   final String icon;
   final Color background;
-  final Color accent;
 
   @override
   Widget build(BuildContext context) {
@@ -629,7 +624,7 @@ class _StatTile extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Iconify(icon, size: 18, color: accent),
+          Iconify(icon, size: 20, color: AppColors.primary),
           const SizedBox(height: 5),
           Text(value, style: AppTypography.titleSm.copyWith(fontSize: 13)),
           Text(

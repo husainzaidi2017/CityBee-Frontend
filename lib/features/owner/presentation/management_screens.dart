@@ -601,11 +601,13 @@ class _BusinessPhotosScreenState extends ConsumerState<BusinessPhotosScreen> {
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!image.isPrimary)
-              ListTile(
+        child: Material(
+          color: Colors.transparent,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!image.isPrimary)
+                ListTile(
                 leading: Iconify(
                   AppUiIcons.star,
                   color: AppColors.primary, size: 15),
@@ -623,9 +625,10 @@ class _BusinessPhotosScreenState extends ConsumerState<BusinessPhotosScreen> {
             ListTile(
               leading: Iconify(AppUiIcons.close),
               title: const Text('Cancel'),
-              onTap: () => Navigator.pop(sheetContext),
-            ),
-          ],
+                onTap: () => Navigator.pop(sheetContext),
+              ),
+            ],
+          ),
         ),
       ),
     );

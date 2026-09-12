@@ -102,7 +102,10 @@ class _SettingsGroup extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: AppShadows.card,
           ),
-          child: Column(children: children),
+          child: Material(
+            color: Colors.transparent,
+            child: Column(children: children),
+          ),
         ),
       ],
     );

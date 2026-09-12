@@ -183,7 +183,10 @@ class _ChannelTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    // Material keeps the ListTile ink ripple visible over the parent card.
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 13),
       leading: Iconify(icon, color: AppColors.primary, size: 20),
@@ -191,6 +194,7 @@ class _ChannelTile extends StatelessWidget {
       subtitle: Text(subtitle, style: AppTypography.label.copyWith(fontSize: 10)),
       trailing:
           Iconify(AppUiIcons.chevron_right, size: 16, color: AppColors.textMuted),
+      ),
     );
   }
 }

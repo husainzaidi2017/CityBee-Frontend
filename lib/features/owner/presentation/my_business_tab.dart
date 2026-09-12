@@ -711,9 +711,11 @@ class _ManageSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: AppShadows.card,
           ),
-          child: Column(
-            children: [
-              for (var i = 0; i < tiles.length; i++) ...[
+          child: Material(
+            color: Colors.transparent,
+            child: Column(
+              children: [
+                for (var i = 0; i < tiles.length; i++) ...[
                 if (i > 0)
                   const Divider(
                     height: 1,
@@ -739,6 +741,7 @@ class _ManageSection extends StatelessWidget {
                 ),
               ],
             ],
+          ),
           ),
         ),
       ],

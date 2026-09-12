@@ -705,7 +705,9 @@ class _SubmissionStatusTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: AppShadows.card,
       ),
-      child: ListTile(
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
         dense: true,
         visualDensity: VisualDensity.compact,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14),
@@ -731,6 +733,7 @@ class _SubmissionStatusTile extends StatelessWidget {
         ),
         onTap: () => context.push('/submission-status'),
       ),
+    ),
     );
   }
 }
@@ -887,7 +890,10 @@ class _MenuTile extends StatelessWidget {
   Widget build(BuildContext context) {
     // Compact tile: dense vertical padding keeps rows comfortable (>48dp
     // with leading icon) while showing more content per screen.
-    return ListTile(
+    // Material wrapper keeps ink splashes visible over the parent card.
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
       onTap: onTap,
       dense: true,
       visualDensity: VisualDensity.compact,
@@ -902,6 +908,7 @@ class _MenuTile extends StatelessWidget {
         AppUiIcons.chevron_right,
         size: 16,
         color: AppColors.textMuted,
+      ),
       ),
     );
   }

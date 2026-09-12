@@ -251,18 +251,11 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                       child: _InfoCard(business: business),
                     ),
 
-                    // ── Hotel amenities ─────────────────────────────
-                    if (isHotel)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16),
-                        child: _AmenitiesCard(amenities: business.amenities),
-                      ),
-
                     // ── Menu specialties ─────────────────────────────
                     if (business.menu.isNotEmpty) ...[
-                      const Padding(
-                        padding: EdgeInsets.only(top: 18, bottom: 10),
-                        child: _MenuHeader(),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 18, bottom: 10),
+                        child: _MenuHeader(kind: business.kind.name),
                       ),
                       ...business.menu.map(
                         (item) => Padding(
@@ -530,7 +523,9 @@ class _TypeChips extends StatelessWidget {
         BusinessKind.shop => 'Shop',
         BusinessKind.service => 'Service',
       },
-      ...business.featureChips.take(3),
+      // Hotels: amenities already show in the dedicated Highlights row
+      // below the call buttons — no duplicate chips here.
+      if (business.kind != BusinessKind.hotel) ...business.featureChips.take(3),
     ];
     return Wrap(
       spacing: 8,
@@ -669,56 +664,6 @@ class _DoctorInfoCard extends StatelessWidget {
   }
 }
 
-/// ── Hotel amenities ────────────────────────────────────────────────────
-class _AmenitiesCard extends StatelessWidget {
-  const _AmenitiesCard({required this.amenities});
-
-  final List<String> amenities;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Amenities', style: AppTypography.titleSm),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(13),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: AppShadows.card,
-          ),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 9,
-            children: amenities
-                .map(
-                  (amenity) => Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Iconify(
-                        AppUiIcons.check_circle,
-                        size: 12,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        amenity,
-                        style: AppTypography.body.copyWith(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                )
-                .toList(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// ── Address / hours info card ──────────────────────────────────────────
 class _InfoCard extends StatelessWidget {
   const _InfoCard({required this.business});
 
@@ -894,40 +839,60 @@ class _InfoRow extends StatelessWidget {
 
 /// ── Menu ───────────────────────────────────────────────────────────────
 class _MenuHeader extends StatelessWidget {
-  const _MenuHeader();
+  const _MenuHeader({required this.kind});
+
+  final String kind;
+
+  /// Section title per kind — every detail page carries the same items
+  /// section (dishes / rooms / plans / treatments), just named for the
+  /// business type.
+  String get _title => switch (kind) {
+        'hotel' => 'Rooms & Suites',
+        'gym' => 'Membership Plans',
+        'salon' => 'Services & Treatments',
+        'bar' => 'Drinks & Menu',
+        'cafe' => 'Café Menu',
+        'mall' => 'Stores & Highlights',
+        _ => 'Menu Specialties',
+      };
 
   @override
   Widget build(BuildContext context) {
+    final isRestaurant = kind == 'restaurant' || kind == 'dining';
     return Row(
       children: [
-        Text('Menu Specialties', style: AppTypography.titleSm),
-        const SizedBox(width: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: AppColors.verifiedGreenSoft,
-            borderRadius: BorderRadius.circular(7),
-          ),
-          child: const Text(
-            'Updated Daily',
-            style: TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w800,
-              color: AppColors.verifiedGreen,
+        Text(_title, style: AppTypography.titleSm),
+        if (isRestaurant) ...[
+          const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.verifiedGreenSoft,
+              borderRadius: BorderRadius.circular(7),
+            ),
+            child: const Text(
+              'Updated Daily',
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w800,
+                color: AppColors.verifiedGreen,
+              ),
             ),
           ),
-        ),
+        ],
         const Spacer(),
-        Text(
-          'Full Menu',
-          style: AppTypography.label.copyWith(color: AppColors.primary),
-        ),
-        const SizedBox(width: 2),
-        Iconify(
-          AppUiIcons.chevron_right,
-          size: 13,
-          color: AppColors.primary,
-        ),
+        if (isRestaurant) ...[
+          Text(
+            'Full Menu',
+            style: AppTypography.label.copyWith(color: AppColors.primary),
+          ),
+          const SizedBox(width: 2),
+          Iconify(
+            AppUiIcons.chevron_right,
+            size: 13,
+            color: AppColors.primary,
+          ),
+        ],
       ],
     );
   }
@@ -949,18 +914,20 @@ class _MenuItemRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: AppImage(url: item.image, width: 56, height: 56),
-          ),
-          const SizedBox(width: 11),
+          if (item.image != null) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: AppImage(url: item.image!, width: 56, height: 56),
+            ),
+            const SizedBox(width: 11),
+          ],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    VegDot(isVeg: item.isVeg),
+                    if (item.isVeg != null) VegDot(isVeg: item.isVeg!),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(

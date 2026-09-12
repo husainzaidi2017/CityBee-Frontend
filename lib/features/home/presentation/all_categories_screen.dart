@@ -117,7 +117,7 @@ class _CategoryTile extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CategoryIcon(visual: visual, size: 52, color: AppColors.primary),
+            CategoryIcon(visual: visual, size: 52),
             const SizedBox(height: 9),
             Text(
               category.name,

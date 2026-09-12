@@ -1,9 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 
 import '../theme/app_animation.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import '../widgets/app_icons.dart';
 import '../widgets/app_image.dart';
 import '../widgets/pressable.dart';
 
@@ -24,7 +26,7 @@ class CollapsingDetailHeader extends StatelessWidget {
     required this.title,
     required this.image,
     this.imageList = const [],
-    this.fallbackIcon = Icons.image_outlined,
+    this.fallbackIcon = AppUiIcons.image_outline,
     this.isFavorite = false,
     this.onFavoriteTap,
     this.onShareTap,
@@ -43,7 +45,7 @@ class CollapsingDetailHeader extends StatelessWidget {
   /// Multiple images → swipeable hero carousel with page dots.
   final List<String> imageList;
 
-  final IconData fallbackIcon;
+  final String fallbackIcon;
 
   /// Whether the favorite heart is currently active.
   final bool isFavorite;
@@ -233,7 +235,7 @@ class CollapsingDetailHeader extends StatelessWidget {
                 child: Row(
                   children: [
                     _HeaderIcon(
-                      icon: Icons.arrow_back_ios_new_rounded,
+                      iconData: AppUiIcons.back,
                       onTap: () => Navigator.of(context).maybePop(),
                       // Over the image: frosted chip; collapsed: soft chip.
                       expanded: isExpanded,
@@ -243,16 +245,15 @@ class CollapsingDetailHeader extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: _HeaderIcon(
-                          icon: isFavorite
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_border_rounded,
+                          iconData:
+                              isFavorite ? AppUiIcons.heart : AppUiIcons.heartOutline,
                           onTap: onFavoriteTap,
                           expanded: isExpanded,
                           tint: isFavorite ? AppColors.primary : null,
                         ),
                       ),
                     _HeaderIcon(
-                      icon: Icons.ios_share_rounded,
+                      iconData: AppUiIcons.share,
                       onTap: onShareTap,
                       expanded: isExpanded,
                     ),
@@ -272,13 +273,13 @@ class CollapsingDetailHeader extends StatelessWidget {
 /// chip on the collapsed bar.
 class _HeaderIcon extends StatelessWidget {
   const _HeaderIcon({
-    required this.icon,
+    required this.iconData,
     required this.onTap,
     required this.expanded,
     this.tint,
   });
 
-  final IconData icon;
+  final String iconData;
   final VoidCallback? onTap;
   final bool expanded;
   final Color? tint;
@@ -300,7 +301,9 @@ class _HeaderIcon extends StatelessWidget {
               : AppColors.background,
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, size: 18, color: fg),
+        child: Center(
+          child: Iconify(iconData, size: 15, color: fg),
+        ),
       ),
     );
   }

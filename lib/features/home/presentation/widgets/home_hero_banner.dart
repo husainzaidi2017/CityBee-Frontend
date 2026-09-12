@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../../core/widgets/app_icons.dart';
 
 
 /// Orange gradient promotional banner at the top of the Home screen —
@@ -124,8 +126,8 @@ class _HomeHeroBannerState extends State<HomeHeroBanner>
                         ),
                       ),
                       SizedBox(width: 3),
-                      Icon(Icons.arrow_forward_rounded,
-                          size: 15, color: AppColors.primaryDark),
+                      Iconify(AppUiIcons.arrow_right,
+                          size: 13, color: AppColors.primaryDark),
                     ],
                   ),
                 ),

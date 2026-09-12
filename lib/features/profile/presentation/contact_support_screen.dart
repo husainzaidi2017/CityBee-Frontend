@@ -7,6 +7,8 @@ import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_launcher.dart';
 import '../../../core/widgets/sub_page_scaffold.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../core/widgets/app_icons.dart';
 
 /// Contact Support: WhatsApp, email and call channels plus response-time
 /// expectations.
@@ -46,8 +48,8 @@ class ContactSupportScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.support_agent_rounded,
-                    color: Colors.white, size: 34),
+                Iconify(AppUiIcons.face_agent,
+                    color: Colors.white, size: 29),
                 const SizedBox(height: 10),
                 const Text(
                   'We usually reply within a few hours',
@@ -70,9 +72,7 @@ class ContactSupportScreen extends ConsumerWidget {
           _SupportChannelCard(
             children: [
               _ChannelTile(
-                icon: Icons.chat_bubble_outline_rounded,
-                iconColor: const Color(0xFF16A34A),
-                iconBg: const Color(0xFFE3F6E9),
+                icon: AppUiIcons.message_outline,
                 title: 'WhatsApp Us',
                 subtitle: AppConfig.supportWhatsApp,
                 onTap: () => _launch(
@@ -86,9 +86,7 @@ class ContactSupportScreen extends ConsumerWidget {
                 ),
               ),
               _ChannelTile(
-                icon: Icons.mail_outline_rounded,
-                iconColor: AppColors.catDoctor,
-                iconBg: AppColors.catDoctorSoft,
+                icon: AppUiIcons.email_outline,
                 title: 'Email Support',
                 subtitle: AppConfig.supportEmail,
                 onTap: () => _launch(
@@ -101,9 +99,7 @@ class ContactSupportScreen extends ConsumerWidget {
                 ),
               ),
               _ChannelTile(
-                icon: Icons.call_outlined,
-                iconColor: AppColors.primary,
-                iconBg: AppColors.primarySoft,
+                icon: AppUiIcons.phone_outline,
                 title: 'Call Support',
                 subtitle: '+91 98765 43210',
                 onTap: () => _launch(
@@ -137,8 +133,8 @@ class ContactSupportScreen extends ConsumerWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.check_circle_outline,
-                            size: 15, color: AppColors.primary),
+                        Iconify(AppUiIcons.check_circle_outline,
+                            size: 13, color: AppColors.primary),
                         const SizedBox(width: 8),
                         Expanded(child: Text(tip, style: AppTypography.caption)),
                       ],
@@ -175,16 +171,12 @@ class _SupportChannelCard extends StatelessWidget {
 class _ChannelTile extends StatelessWidget {
   const _ChannelTile({
     required this.icon,
-    required this.iconColor,
-    required this.iconBg,
     required this.title,
     required this.subtitle,
     required this.onTap,
   });
 
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBg;
+  final String icon;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
@@ -194,19 +186,11 @@ class _ChannelTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 13),
-      leading: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: iconBg,
-          borderRadius: BorderRadius.circular(11),
-        ),
-        child: Icon(icon, color: iconColor, size: 19),
-      ),
+      leading: Iconify(icon, color: AppColors.primary, size: 20),
       title: Text(title, style: AppTypography.bodyStrong),
       subtitle: Text(subtitle, style: AppTypography.label.copyWith(fontSize: 10)),
       trailing:
-          const Icon(Icons.chevron_right_rounded, size: 19, color: AppColors.textMuted),
+          Iconify(AppUiIcons.chevron_right, size: 16, color: AppColors.textMuted),
     );
   }
 }

@@ -10,6 +10,8 @@ import '../../../core/utils/app_launcher.dart';
 import '../../../core/widgets/brand_mark.dart';
 import '../../../core/widgets/sub_page_scaffold.dart';
 import '../../../providers/app_providers.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../core/widgets/app_icons.dart';
 
 /// About CityBee: brand story, stats, version info and quick links.
 class AboutScreen extends ConsumerWidget {
@@ -102,30 +104,46 @@ class AboutScreen extends ConsumerWidget {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.shield_outlined,
-                      size: 19, color: AppColors.primary),
+                  leading: Iconify(AppUiIcons.information_outline,
+                      size: 16, color: AppColors.primary),
+                  title: Text('App Version', style: AppTypography.bodyStrong),
+                  trailing: Text('1.0.0', style: AppTypography.label),
+                ),
+                const Divider(height: 1, indent: 56),
+                ListTile(
+                  leading: Iconify(AppUiIcons.link_variant,
+                      size: 16, color: AppColors.primary),
+                  title: Text('Website', style: AppTypography.bodyStrong),
+                  trailing: Iconify(AppUiIcons.open_in_new,
+                      size: 14, color: AppColors.textMuted),
+                  onTap: () => AppLauncher.openWebsite(AppConfig.appUrl),
+                ),
+                const Divider(height: 1, indent: 56),
+                ListTile(
+                  leading: Iconify(AppUiIcons.shield_outline,
+                      size: 16, color: AppColors.primary),
                   title: Text('Privacy Policy', style: AppTypography.bodyStrong),
-                  trailing: const Icon(Icons.chevron_right_rounded,
-                      size: 19, color: AppColors.textMuted),
+                  trailing: Iconify(AppUiIcons.chevron_right,
+                      size: 16, color: AppColors.textMuted),
                   onTap: () => context.push('/privacy'),
                 ),
                 const Divider(height: 1, indent: 56),
                 ListTile(
-                  leading: const Icon(Icons.description_outlined,
-                      size: 19, color: AppColors.primary),
+                  leading: Iconify(AppUiIcons.file_document_outline,
+                      size: 16, color: AppColors.primary),
                   title:
                       Text('Terms & Conditions', style: AppTypography.bodyStrong),
-                  trailing: const Icon(Icons.chevron_right_rounded,
-                      size: 19, color: AppColors.textMuted),
+                  trailing: Iconify(AppUiIcons.chevron_right,
+                      size: 16, color: AppColors.textMuted),
                   onTap: () => context.push('/terms'),
                 ),
                 const Divider(height: 1, indent: 56),
                 ListTile(
-                  leading: const Icon(Icons.star_border_rounded,
-                      size: 19, color: AppColors.starAmber),
+                  leading: Iconify(AppUiIcons.star_outline,
+                      size: 16, color: AppColors.starAmber),
                   title: Text('Rate CityBee', style: AppTypography.bodyStrong),
-                  trailing: const Icon(Icons.open_in_new,
-                      size: 16, color: AppColors.textMuted),
+                  trailing: Iconify(AppUiIcons.open_in_new,
+                      size: 14, color: AppColors.textMuted),
                   onTap: () => AppLauncher.openWebsite(AppConfig.playStoreUrl),
                 ),
               ],

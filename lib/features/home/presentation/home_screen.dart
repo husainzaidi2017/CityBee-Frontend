@@ -14,6 +14,9 @@ import 'package:localgo/core/widgets/skeleton.dart';
 import 'package:localgo/core/widgets/states_view.dart';
 import 'package:localgo/data/mock/mock_data.dart';
 import 'package:localgo/data/repositories/business_repository.dart';
+import 'package:localgo/core/widgets/badges.dart';
+import 'package:localgo/core/widgets/pressable.dart';
+import 'package:localgo/domain/models/business.dart';
 import 'package:localgo/domain/models/place.dart';
 import 'package:localgo/providers/app_providers.dart';
 
@@ -21,7 +24,8 @@ import 'widgets/explore_nearby_grid.dart';
 import 'widgets/home_hero_banner.dart';
 import 'widgets/offers_rail.dart';
 import 'widgets/owner_cta_card.dart';
-import 'widgets/popular_business_card.dart';
+import '../../../core/widgets/app_icons.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 
 /// Home tab: search, quick chips, hero banner, category grid, offers rail,
 /// popular businesses, city places and the owner CTA.
@@ -108,7 +112,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: categories.when(
                       data: (list) => list.isEmpty
                           ? StatesView.empty(
-                              icon: Icons.grid_view_outlined,
+                              icon: AppUiIcons.view_grid_outline,
                               message: 'No categories available yet.',
                             )
                           : ExploreNearbyGrid(categories: list),
@@ -136,7 +140,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ? const Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 16),
                                   child: _InlineEmpty(
-                                    icon: Icons.local_offer_outlined,
+                                    icon: AppUiIcons.tag_outline,
                                     message: 'No offers live right now — check back soon.',
                                   ),
                                 )
@@ -180,15 +184,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         popular.when(
                           data: (list) => list.isEmpty
                               ? const _InlineEmpty(
-                                  icon: Icons.storefront_outlined,
+                                  icon: AppUiIcons.storefront_outline,
                                   message: 'No popular spots nearby yet.',
                                 )
-                              : Column(
-                                  children: list
-                                      .take(4)
-                                      .map((b) => PopularBusinessCard(business: b))
-                                      .toList(),
-                                ),
+                              : _PopularRail(businesses: list.take(6).toList()),
                           loading: () => const SkeletonList(itemCount: 3, itemHeight: 116),
                           error: (e, _) => _InlineError(
                             onRetry: () => ref.invalidate(
@@ -217,7 +216,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ? const Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 16),
                                 child: _InlineEmpty(
-                                  icon: Icons.explore_outlined,
+                                  icon: AppUiIcons.compass_outline,
                                   message: 'No places to explore here yet.',
                                 ),
                               )
@@ -272,7 +271,7 @@ class _Section extends StatelessWidget {
 class _InlineEmpty extends StatelessWidget {
   const _InlineEmpty({required this.icon, required this.message});
 
-  final IconData icon;
+  final String icon;
   final String message;
 
   @override
@@ -287,7 +286,7 @@ class _InlineEmpty extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(icon, size: 26, color: AppColors.textMuted),
+          Iconify(icon, size: 22, color: AppColors.textMuted),
           const SizedBox(height: 8),
           Text(
             message,
@@ -295,6 +294,96 @@ class _InlineEmpty extends StatelessWidget {
             style: AppTypography.caption,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Horizontal "Popular Near You" cards — same 216px width as the offers
+/// and city rails so every card section on Home feels identical.
+class _PopularRail extends StatelessWidget {
+  const _PopularRail({required this.businesses});
+
+  final List<Business> businesses;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 188,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: businesses.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final b = businesses[index];
+          return Pressable(
+            onTap: () => context.push('/business/${b.id}'),
+            child: Container(
+              width: 216,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: AppShadows.card,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        AppImage(
+                          url: b.images.firstOrNull ?? '',
+                          fallbackIcon: AppUiIcons.storefront,
+                        ),
+                        Positioned(
+                          bottom: 6,
+                          left: 6,
+                          child: RatingPill.soft(rating: b.ratingLabel),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          b.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.titleSm,
+                        ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            Iconify(
+                              AppUiIcons.map_marker_outline,
+                              size: 10,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 2),
+                            Expanded(
+                              child: Text(
+                                '${b.area.isEmpty ? b.cityName : b.area} · ${b.distanceLabel} km',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.caption,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -309,7 +398,7 @@ class _CityPlacesRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 168,
+      height: 188,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -320,7 +409,7 @@ class _CityPlacesRail extends StatelessWidget {
           return GestureDetector(
             onTap: () => context.push('/place/${place.id}'),
             child: Container(
-              width: 190,
+              width: 216,
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 color: AppColors.surface,
@@ -334,7 +423,7 @@ class _CityPlacesRail extends StatelessWidget {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        AppImage(url: place.image, fallbackIcon: Icons.photo_camera_outlined),
+                        AppImage(url: place.image, fallbackIcon: AppUiIcons.camera_outline),
                         Positioned(
                           left: 8,
                           bottom: 8,
@@ -391,17 +480,44 @@ class _InlineError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Compact single-row error card — sized to fit inside section slots
+    // (the big centered StatesView.error needs ~180px and overflows here).
     return Container(
       height: 90,
       margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
         boxShadow: AppShadows.card,
       ),
-      child: StatesView.error(
-        message: 'Could not load this section.',
-        onRetry: onRetry,
+      child: Row(
+        children: [
+          Iconify(
+            AppUiIcons.wifi_strength_off_outline,
+            color: AppColors.textMuted,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Could not load this section.',
+              style: AppTypography.body
+                  .copyWith(color: AppColors.textSecondary),
+            ),
+          ),
+          const SizedBox(width: 10),
+          FilledButton(
+            onPressed: onRetry,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+            ),
+            child: const Text('Retry'),
+          ),
+        ],
       ),
     );
   }

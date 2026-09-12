@@ -16,6 +16,8 @@ import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/offer.dart';
 import '../../../providers/app_providers.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../core/widgets/app_icons.dart';
 
 const _tags = ['All', 'Dining', 'Beauty & Salon', 'Fashion', 'Wellness & Health'];
 
@@ -162,7 +164,7 @@ class _OffersPageState extends ConsumerState<_OffersPage>
                 .toList();
         if (filtered.isEmpty) {
           return StatesView.empty(
-            icon: Icons.local_offer_outlined,
+            icon: AppUiIcons.tag_outline,
             message: widget.query.trim().isEmpty
                 ? 'No ${widget.tag == 'All' ? '' : widget.tag} deals live right now.'
                 : 'No deals match "${widget.query}".',
@@ -237,7 +239,7 @@ class FeaturedOfferCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  AppImage(url: offer.image, fallbackIcon: Icons.local_offer_rounded),
+                  AppImage(url: offer.image, fallbackIcon: AppUiIcons.tag),
                   const DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -420,8 +422,8 @@ class DealCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_outlined,
-                          size: 11, color: AppColors.textSecondary),
+                      Iconify(AppUiIcons.map_marker_outline,
+                          size: 9, color: AppColors.textSecondary),
                       const SizedBox(width: 2),
                       Expanded(
                         child: Text(
@@ -504,8 +506,8 @@ class SavingsBanner extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              const Icon(Icons.savings_outlined,
-                  size: 22, color: AppColors.creamBannerText),
+              Iconify(AppUiIcons.piggy_bank,
+                  size: 19, color: AppColors.creamBannerText),
               const SizedBox(width: 7),
               Text(
                 'Join ${location.displayName} Savers',

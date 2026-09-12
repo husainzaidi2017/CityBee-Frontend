@@ -14,6 +14,8 @@ import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/place.dart';
 import '../../../providers/app_providers.dart';
+import '../../../core/widgets/app_icons.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 
 /// Explore tab: city guide hero, curated spots, food rail and tips —
 /// the "Explore City" discovery screen. All copy is driven by the
@@ -68,7 +70,7 @@ class ExploreScreen extends ConsumerWidget {
                     const SizedBox(height: 10),
                     if (placeList.isEmpty)
                       const _InlineEmpty(
-                        icon: Icons.explore_outlined,
+                        icon: AppUiIcons.compass_outline,
                         message: 'No places to explore here yet — check back soon.',
                       )
                     else
@@ -87,7 +89,7 @@ class ExploreScreen extends ConsumerWidget {
                     foods.maybeWhen(
                       data: (foodList) => foodList.isEmpty
                           ? const _InlineEmpty(
-                              icon: Icons.restaurant_outlined,
+                              icon: AppUiIcons.silverware_fork_knife,
                               message: 'No local food picks here yet.',
                             )
                           : _FoodRail(foods: foodList),
@@ -134,7 +136,7 @@ class ExploreScreen extends ConsumerWidget {
 class _InlineEmpty extends StatelessWidget {
   const _InlineEmpty({required this.icon, required this.message});
 
-  final IconData icon;
+  final String icon;
   final String message;
 
   @override
@@ -149,7 +151,7 @@ class _InlineEmpty extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(icon, size: 26, color: AppColors.textMuted),
+          Iconify(icon, size: 22, color: AppColors.textMuted),
           const SizedBox(height: 8),
           Text(message, textAlign: TextAlign.center, style: AppTypography.caption),
         ],
@@ -193,7 +195,7 @@ class _GuideCard extends StatelessWidget {
                   onPressed: () => ShareService.shareApp(
                     note: '${guide.title} — ${guide.subtitle}',
                   ),
-                  icon: const Icon(Icons.share_outlined, size: 16),
+                  icon: AppUiIcons.show(AppUiIcons.share, size: 14),
                   label: const Text('Share This Guide',
                       style:
                           TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
@@ -221,7 +223,7 @@ class _GuideCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            AppImage(url: guide.image, fallbackIcon: Icons.auto_awesome),
+            AppImage(url: guide.image, fallbackIcon: AppUiIcons.auto_fix),
             const DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -318,7 +320,7 @@ class _PlaceSpotlightCard extends StatelessWidget {
               height: 104,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: AppImage(url: place.image, fallbackIcon: Icons.photo_camera_outlined),
+                child: AppImage(url: place.image, fallbackIcon: AppUiIcons.camera_outline),
               ),
             ),
             const SizedBox(width: 11),
@@ -409,7 +411,7 @@ class _FoodRail extends StatelessWidget {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(14),
-                        child: AppImage(url: food.image, fallbackIcon: Icons.restaurant_menu),
+                        child: AppImage(url: food.image, fallbackIcon: AppUiIcons.silverware_fork_knife),
                       ),
                       Positioned(
                         top: 7,
@@ -423,7 +425,7 @@ class _FoodRail extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.star_rounded, size: 11, color: AppColors.starAmber),
+                              Iconify(AppUiIcons.star, size: 9, color: AppColors.starAmber),
                               const SizedBox(width: 2),
                               Text(
                                 food.rating,
@@ -485,22 +487,14 @@ class _TipsCard extends ConsumerWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: AppColors.primarySoft,
-                      borderRadius: BorderRadius.circular(9),
-                    ),
-                    child: Icon(
-                      switch (i) {
-                        0 => Icons.schedule_rounded,
-                        1 => Icons.handshake_outlined,
-                        _ => Icons.record_voice_over_outlined,
-                      },
-                      size: 16,
-                      color: AppColors.primary,
-                    ),
+                  Iconify(
+                    switch (i) {
+                      0 => AppUiIcons.clock_outline,
+                      1 => AppUiIcons.handshake_outline,
+                      _ => AppUiIcons.account_voice,
+                    },
+                    size: 20,
+                    color: AppColors.primary,
                   ),
                   const SizedBox(width: 11),
                   Expanded(

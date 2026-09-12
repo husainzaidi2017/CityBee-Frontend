@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 
 /// Where a notification should take the user when tapped.
 enum NotificationTarget { offer, business, place, offersTab, exploreTab, moreTab }
@@ -51,7 +50,7 @@ class AppNotification {
   });
 
   final String id;
-  final IconData icon;
+  final String icon;
   final int colorValue;
   final String title;
   final String body;

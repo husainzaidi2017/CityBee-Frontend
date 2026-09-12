@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'app_icons.dart';
 
 /// Rating pills used on cards and detail headers — one consistent brand
 /// orange treatment everywhere (solid = on light bg, soft = on imagery).
@@ -31,7 +33,7 @@ class RatingPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.star_rounded, size: 13, color: soft ? AppColors.rating : Colors.white),
+          Iconify(AppUiIcons.star, size: 11, color: soft ? AppColors.rating : Colors.white),
           const SizedBox(width: 3),
           Text(
             count == null ? rating : '$rating ($count)',
@@ -64,7 +66,7 @@ class VerifiedBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.verified, size: 13, color: AppColors.verifiedGreen),
+          Iconify(AppUiIcons.check_decagram, size: 11, color: AppColors.verifiedGreen),
           const SizedBox(width: 4),
           Text(
             label,
@@ -98,7 +100,7 @@ class OpenStatusPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.circle, size: 6, color: isOpen ? AppColors.openGreen : AppColors.brandRed),
+          Iconify(AppUiIcons.circle, size: 5, color: isOpen ? AppColors.openGreen : AppColors.brandRed),
           const SizedBox(width: 5),
           Text(
             isOpen ? 'Open Now' : closedText,
@@ -177,7 +179,7 @@ class LocationPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.location_on_outlined, size: 11, color: AppColors.textPrimary),
+          Iconify(AppUiIcons.map_marker_outline, size: 9, color: AppColors.textPrimary),
           const SizedBox(width: 3),
           Text(
             label,

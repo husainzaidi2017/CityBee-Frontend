@@ -10,6 +10,8 @@ import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/map_preview.dart';
 import '../../../../core/widgets/pressable.dart';
 import '../../../../domain/models/business.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../../core/widgets/app_icons.dart';
 
 /// Compact horizontal business card used by ALL category listing screens:
 /// square thumbnail left, name/rating/meta right (matches the Doctors
@@ -61,8 +63,8 @@ class ListingBusinessCard extends StatelessWidget {
                           color: Colors.white,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.verified,
-                            size: 12, color: AppColors.verifiedGreen),
+                        child: Iconify(AppUiIcons.check_decagram,
+                            size: 10, color: AppColors.verifiedGreen),
                       ),
                     ),
                   Positioned(
@@ -74,9 +76,9 @@ class ListingBusinessCard extends StatelessWidget {
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        Icons.circle,
-                        size: 7,
+                      child: Iconify(
+                        AppUiIcons.circle,
+                        size: 6,
                         color: business.isOpen
                             ? AppColors.openGreen
                             : AppColors.textMuted,
@@ -113,8 +115,8 @@ class ListingBusinessCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_outlined,
-                          size: 12, color: AppColors.textSecondary),
+                      Iconify(AppUiIcons.map_marker_outline,
+                          size: 10, color: AppColors.textSecondary),
                       const SizedBox(width: 2),
                       Expanded(
                         child: Text(
@@ -149,13 +151,13 @@ class ListingBusinessCard extends StatelessWidget {
                     children: [
                       _QuickAction(
                         label: 'Call',
-                        icon: Icons.call_outlined,
+                        icon: AppUiIcons.phone_outline,
                         onTap: () => AppLauncher.call(business.phone),
                       ),
                       const SizedBox(width: 6),
                       _QuickAction(
                         label: 'Route',
-                        icon: Icons.near_me_outlined,
+                        icon: AppUiIcons.near_me,
                         onTap: () => AppLauncher.directions(
                           business.latitude,
                           business.longitude,
@@ -164,7 +166,7 @@ class ListingBusinessCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       _QuickAction(
                         label: 'Details',
-                        icon: Icons.chevron_right_rounded,
+                        icon: AppUiIcons.chevron_right,
                         onTap: () => context.push('/business/${business.id}'),
                       ),
                     ],
@@ -194,7 +196,7 @@ class _QuickAction extends StatelessWidget {
   });
 
   final String label;
-  final IconData icon;
+  final String icon;
   final VoidCallback onTap;
 
   @override
@@ -213,7 +215,7 @@ class _QuickAction extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 14, color: AppColors.primary),
+              Iconify(icon, size: 12, color: AppColors.primary),
               const SizedBox(width: 5),
               Flexible(
                 child: Text(
@@ -298,8 +300,8 @@ class BusinessesMapPage extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.location_on,
-                                  size: 14, color: AppColors.brandRed),
+                              Iconify(AppUiIcons.map_marker,
+                                  size: 12, color: AppColors.brandRed),
                               const SizedBox(width: 4),
                               ConstrainedBox(
                                 constraints: const BoxConstraints(maxWidth: 90),

@@ -9,6 +9,8 @@ import '../../../../core/widgets/app_image.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/pressable.dart';
 import '../../../../domain/models/offer.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../../core/widgets/app_icons.dart';
 
 /// Horizontal rail of "Offers Near You" cards on the Home screen.
 class OffersRail extends StatelessWidget {
@@ -84,7 +86,7 @@ class _HomeOfferCard extends StatelessWidget {
     return Pressable(
       onTap: () => context.push('/offer/${offer.id}'),
       child: Container(
-        width: 232,
+        width: 216,
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -103,7 +105,7 @@ class _HomeOfferCard extends StatelessWidget {
                 children: [
                   AppImage(
                     url: offer.image,
-                    fallbackIcon: Icons.local_offer_rounded,
+                    fallbackIcon: AppUiIcons.tag,
                   ),
                   const DecoratedBox(
                     decoration: BoxDecoration(
@@ -186,9 +188,9 @@ class _HomeOfferCard extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(
-                              Icons.location_on_outlined,
-                              size: 12,
+                            Iconify(
+                              AppUiIcons.map_marker_outline,
+                              size: 10,
                               color: AppColors.textSecondary,
                             ),
                             const SizedBox(width: 2),

@@ -9,6 +9,8 @@ import '../../../core/widgets/brand_mark.dart';
 import '../../../core/widgets/pressable.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../providers/app_providers.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../core/widgets/app_icons.dart';
 
 /// CityBee login — Google first, email OTP second, guest browsing always
 /// available. Login is never mandatory: guests can browse everything.
@@ -210,8 +212,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         decoration: const InputDecoration(
                           hintText: 'Your full name',
                           isDense: true,
-                          prefixIcon: Icon(Icons.person_outline_rounded,
-                              size: 18, color: AppColors.textSecondary),
+                          prefixIcon: Iconify(AppUiIcons.account_outline,
+                              size: 15, color: AppColors.textSecondary),
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -225,8 +227,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         hintText: 'you@example.com',
                         errorText: _emailError,
                         isDense: true,
-                        prefixIcon: const Icon(Icons.alternate_email_rounded,
-                            size: 18, color: AppColors.textSecondary),
+                        prefixIcon: Iconify(AppUiIcons.at,
+                            size: 15, color: AppColors.textSecondary),
                       ),
                       onChanged: (_) {
                         if (_emailError != null) {
@@ -243,14 +245,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       decoration: InputDecoration(
                         hintText: _isSignUp ? 'Choose a password (6+ chars)' : 'Password',
                         isDense: true,
-                        prefixIcon: const Icon(Icons.lock_outline_rounded,
-                            size: 18, color: AppColors.textSecondary),
+                        prefixIcon: Iconify(AppUiIcons.lock_outline,
+                            size: 15, color: AppColors.textSecondary),
                         suffixIcon: IconButton(
-                          icon: Icon(
+                          icon: Iconify(
                             _showPassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            size: 18,
+                                ? AppUiIcons.eye_off_outline
+                                : AppUiIcons.eye_outline,
+                            size: 15,
                             color: AppColors.textSecondary,
                           ),
                           onPressed: () =>
@@ -338,7 +340,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         color: Colors.white.withValues(alpha: 0.16),
                         borderRadius: BorderRadius.circular(11),
                       ),
-                      child: const Icon(Icons.storefront, color: Colors.white, size: 20),
+                      child: Iconify(AppUiIcons.storefront, color: Colors.white, size: 17),
                     ),
                     const SizedBox(width: 11),
                     Expanded(

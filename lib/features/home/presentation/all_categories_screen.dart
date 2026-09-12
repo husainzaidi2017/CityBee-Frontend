@@ -12,6 +12,7 @@ import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/app_category.dart';
 import '../../../providers/app_providers.dart';
 import 'widgets/category_visual.dart';
+import '../../../core/widgets/app_icons.dart';
 
 /// "All Categories" — the full destination for Home's
 /// Explore Near You → View All. Renders every configured category with its
@@ -37,10 +38,7 @@ class AllCategoriesScreen extends ConsumerWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      size: 18,
-                    ),
+                    icon: AppUiIcons.show(AppUiIcons.back, size: 15),
                     onPressed: () => context.pop(),
                   ),
                   Text(

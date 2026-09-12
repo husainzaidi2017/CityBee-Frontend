@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../utils/app_launcher.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'app_icons.dart';
 
 /// Stylized map preview rendered with CustomPaint for the mock-data phase.
 ///
@@ -43,7 +45,7 @@ class MapPreview extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.location_on, color: AppColors.brandRed, size: 34),
+              Iconify(AppUiIcons.map_marker, color: AppColors.brandRed, size: 29),
               if (pinLabel != null)
                 Container(
                   margin: const EdgeInsets.only(top: 2),
@@ -85,7 +87,7 @@ class MapPreview extends StatelessWidget {
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.map_outlined, size: 14, color: AppColors.primary),
+                    Iconify(AppUiIcons.map_outline, size: 12, color: AppColors.primary),
                     SizedBox(width: 5),
                     Text(
                       'Open Map',
@@ -96,7 +98,7 @@ class MapPreview extends StatelessWidget {
                       ),
                     ),
                     SizedBox(width: 3),
-                    Icon(Icons.open_in_new, size: 11, color: AppColors.primary),
+                    Iconify(AppUiIcons.open_in_new, size: 9, color: AppColors.primary),
                   ],
                 ),
               ),

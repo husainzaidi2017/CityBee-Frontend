@@ -18,13 +18,13 @@ void main() {
       'bars',
       'cafes',
     ];
-    final assets = ids.map((id) => CategoryVisual.of(id).assetName).toSet();
+    final assets = ids.map((id) => CategoryVisual.of(id).icon).toSet();
     expect(assets.length, ids.length);
     // Legacy slug forms resolve to the same assets as their live versions.
-    expect(CategoryVisual.of('barber').assetName, 'salons');
-    expect(CategoryVisual.of('gym').assetName, CategoryVisual.of('gyms').assetName);
-    expect(CategoryVisual.of('hotels').assetName, CategoryVisual.of('hotel').assetName);
-    expect(CategoryVisual.of('dining').assetName, 'restaurants');
+    expect(CategoryVisual.of('barber').icon, CategoryVisual.of('salons').icon);
+    expect(CategoryVisual.of('gym').icon, CategoryVisual.of('gyms').icon);
+    expect(CategoryVisual.of('hotels').icon, CategoryVisual.of('hotel').icon);
+    expect(CategoryVisual.of('dining').icon, CategoryVisual.of('restaurants').icon);
   });
 
   testWidgets('All category SVG assets load and render', (tester) async {

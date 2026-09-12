@@ -9,6 +9,8 @@ import '../../data/repositories/city_repository.dart';
 import '../../providers/app_providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'app_icons.dart';
 
 /// Bottom sheet for choosing the discovery location.
 ///
@@ -111,7 +113,7 @@ class _CityPickerSheetState extends ConsumerState<_CityPickerSheet> {
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: 'Search city, area or locality…',
-                prefixIcon: const Icon(Icons.search, size: 20),
+                prefixIcon: Iconify(AppUiIcons.magnify, size: 17),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -144,8 +146,8 @@ class _CityPickerSheetState extends ConsumerState<_CityPickerSheet> {
                                   return ListTile(
                                     contentPadding: EdgeInsets.zero,
                                     dense: true,
-                                    leading: const Icon(Icons.location_on_outlined,
-                                        size: 20, color: AppColors.primary),
+                                    leading: Iconify(AppUiIcons.map_marker_outline,
+                                        size: 17, color: AppColors.primary),
                                     title: Text(s.mainText, style: AppTypography.bodyStrong),
                                     subtitle:
                                         Text(s.secondaryText, style: AppTypography.label),
@@ -155,8 +157,8 @@ class _CityPickerSheetState extends ConsumerState<_CityPickerSheet> {
                                             height: 18,
                                             child: CircularProgressIndicator(strokeWidth: 2),
                                           )
-                                        : const Icon(Icons.chevron_right,
-                                            size: 20, color: AppColors.textMuted),
+                                        : Iconify(AppUiIcons.chevron_right,
+                                            size: 17, color: AppColors.textMuted),
                                     onTap: busy ? null : () => _selectSuggestion(s),
                                   );
                                 },
@@ -175,15 +177,7 @@ class _CityPickerSheetState extends ConsumerState<_CityPickerSheet> {
             else ...[
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.primarySoft,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.my_location, color: AppColors.primary, size: 20),
-                ),
+                leading: Iconify(AppUiIcons.crosshairs_gps, color: AppColors.primary, size: 20),
                 title: Text('Use my current location', style: AppTypography.bodyStrong),
                 subtitle:
                     Text('Detects your area via GPS', style: AppTypography.label),
@@ -254,18 +248,18 @@ class _PopularCityTiles extends ConsumerWidget {
                         color: selected ? AppColors.primary : AppColors.background,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.location_city_outlined,
+                      child: Iconify(AppUiIcons.city_variant_outline,
                           color: selected ? Colors.white : AppColors.textSecondary,
-                          size: 20),
+                          size: 17),
                     ),
                     title: Text('${city.name}, ${city.state}',
                         style: AppTypography.bodyStrong),
                     subtitle: Text(city.nickname, style: AppTypography.label),
                     trailing: selected
-                        ? const Icon(Icons.check_circle,
-                            color: AppColors.primary, size: 20)
-                        : const Icon(Icons.chevron_right,
-                            color: AppColors.textMuted, size: 20),
+                        ? Iconify(AppUiIcons.check_circle,
+                            color: AppColors.primary, size: 17)
+                        : Iconify(AppUiIcons.chevron_right,
+                            color: AppColors.textMuted, size: 17),
                     onTap: () => onSelect(city),
                   );
                 },

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 
 /// Filled pill button (primary green or white on green banners).
 class PrimaryPillButton extends StatelessWidget {
@@ -19,7 +20,7 @@ class PrimaryPillButton extends StatelessWidget {
 
   final String label;
   final VoidCallback? onTap;
-  final IconData? icon;
+  final String? icon;
   final Color backgroundColor;
   final Color foregroundColor;
   final Color? borderColor;
@@ -45,7 +46,7 @@ class PrimaryPillButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (icon != null) ...[Icon(icon, size: 15, color: foregroundColor), const SizedBox(width: 6)],
+              if (icon != null) ...[Iconify(icon!, size: 13, color: foregroundColor), const SizedBox(width: 6)],
               Text(
                 label,
                 style: TextStyle(
@@ -77,7 +78,7 @@ class CardActionButton extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
   final bool filled;
-  final IconData? icon;
+  final String? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +102,7 @@ class CardActionButton extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (icon != null) ...[
-                  Icon(icon, size: 15, color: filled ? foreground : AppColors.primary),
+                  Iconify(icon!, size: 13, color: filled ? foreground : AppColors.primary),
                   const SizedBox(width: 6),
                 ],
                 Flexible(
@@ -137,7 +138,7 @@ class CircleIconButton extends StatelessWidget {
     this.shadow = true,
   });
 
-  final IconData icon;
+  final String icon;
   final VoidCallback? onTap;
   final double size;
   final Color background;
@@ -156,7 +157,7 @@ class CircleIconButton extends StatelessWidget {
       ),
       child: IconButton(
         onPressed: onTap,
-        icon: Icon(icon, size: size * 0.5, color: iconColor),
+        icon: Iconify(icon, size: size * 0.5, color: iconColor),
         padding: EdgeInsets.zero,
         constraints: BoxConstraints.tightFor(width: size, height: size),
         splashRadius: size * 0.6,

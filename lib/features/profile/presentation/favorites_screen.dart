@@ -11,6 +11,7 @@ import '../../../data/repositories/business_repository.dart';
 import '../../../domain/models/business.dart';
 import '../../../domain/models/place.dart';
 import '../../../providers/app_providers.dart';
+import '../../../core/widgets/app_icons.dart';
 
 /// Bookmarked businesses and saved places for the current user.
 class FavoritesScreen extends ConsumerWidget {
@@ -34,7 +35,7 @@ class FavoritesScreen extends ConsumerWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+                    icon: AppUiIcons.show(AppUiIcons.back, size: 15),
                     onPressed: () => context.pop(),
                   ),
                   Text('My Favorites', style: AppTypography.title),
@@ -44,7 +45,7 @@ class FavoritesScreen extends ConsumerWidget {
             Expanded(
               child: favorites.isEmpty
                   ? StatesView.empty(
-                      icon: Icons.favorite_border_rounded,
+                      icon: AppUiIcons.heart_outline,
                       message:
                           'No favorites yet — tap the heart on any business or place to save it here.',
                     )
@@ -139,7 +140,7 @@ class _FavoriteBusinessTile extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.favorite_rounded, size: 18, color: AppColors.brandRed),
+            AppUiIcons.show(AppUiIcons.heart, size: 15, color: AppColors.brandRed),
           ],
         ),
       ),
@@ -189,7 +190,7 @@ class _FavoritePlaceTile extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.favorite_rounded, size: 18, color: AppColors.brandRed),
+            AppUiIcons.show(AppUiIcons.heart, size: 15, color: AppColors.brandRed),
           ],
         ),
       ),

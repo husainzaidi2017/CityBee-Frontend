@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import 'skeleton.dart';
+import 'app_icons.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 
 /// Network image with graceful placeholder and offline fallback so lists
 /// never show broken image icons.
@@ -17,7 +19,7 @@ class AppImage extends StatelessWidget {
     this.width,
     this.height,
     this.fit = BoxFit.cover,
-    this.fallbackIcon = Icons.storefront_outlined,
+    this.fallbackIcon = AppUiIcons.storefront_outline,
     this.memCacheWidth = 1080,
   });
 
@@ -25,7 +27,7 @@ class AppImage extends StatelessWidget {
   final double? width;
   final double? height;
   final BoxFit fit;
-  final IconData fallbackIcon;
+  final String fallbackIcon;
 
   /// Decodes the image at most this wide (px) — big uploads render as
   /// small KB in memory and load fast on phones.
@@ -56,7 +58,7 @@ class AppImage extends StatelessWidget {
 class _Fallback extends StatelessWidget {
   const _Fallback({required this.icon});
 
-  final IconData icon;
+  final String icon;
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +72,7 @@ class _Fallback extends StatelessWidget {
             color: AppColors.surface.withValues(alpha: 0.85),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: AppColors.primary, size: 20),
+          child: Iconify(icon, color: AppColors.primary, size: 17),
         ),
       ),
     );

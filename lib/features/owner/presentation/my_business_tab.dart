@@ -11,6 +11,8 @@ import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/owner_business.dart';
 import '../../../providers/app_providers.dart';
 import 'management_screens.dart';
+import '../../../core/widgets/app_icons.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 
 /// My Business tab body: 1 approved business → dashboard directly;
 /// multiple → selector list first. Backend-driven, never hardcoded.
@@ -139,7 +141,7 @@ class _BusinessRow extends StatelessWidget {
                 height: 60,
                 child: AppImage(
                   url: business.primaryImage,
-                  fallbackIcon: Icons.storefront_outlined,
+                  fallbackIcon: AppUiIcons.storefront_outline,
                 ),
               ),
             ),
@@ -189,9 +191,9 @@ class _BusinessRow extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       if (business.isApproved) ...[
-                        const Icon(
-                          Icons.star_rounded,
-                          size: 13,
+                        Iconify(
+                          AppUiIcons.star,
+                          size: 11,
                           color: AppColors.starAmber,
                         ),
                         const SizedBox(width: 2),
@@ -213,10 +215,9 @@ class _BusinessRow extends StatelessWidget {
               ),
             ),
             if (business.isApproved)
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textMuted,
-              ),
+              Iconify(
+                AppUiIcons.chevron_right,
+                color: AppColors.textMuted, size: 14),
           ],
         ),
       ),
@@ -248,9 +249,9 @@ class _AddAnotherCard extends StatelessWidget {
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.add_business_rounded,
-              size: 18,
+            Iconify(
+              AppUiIcons.store_plus,
+              size: 15,
               color: AppColors.primary,
             ),
             SizedBox(width: 8),
@@ -285,7 +286,7 @@ class OwnerBusinessDashboardPage extends ConsumerWidget {
         backgroundColor: AppColors.surface,
         title: Text('My Business', style: AppTypography.title),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+          icon: AppUiIcons.show(AppUiIcons.back, size: 15),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
       ),
@@ -315,7 +316,7 @@ class OwnerBusinessDashboardBody extends ConsumerWidget {
       data: (business) {
         if (business == null) {
           return StatesView.empty(
-            icon: Icons.storefront_outlined,
+            icon: AppUiIcons.storefront_outline,
             message: 'This business is no longer available.',
           );
         }
@@ -376,7 +377,7 @@ class _Dashboard extends StatelessWidget {
                             (details.images.isNotEmpty
                                 ? details.images.first.url
                                 : ''),
-                        fallbackIcon: Icons.storefront_outlined,
+                        fallbackIcon: AppUiIcons.storefront_outline,
                       ),
                     ),
                   ),
@@ -410,8 +411,8 @@ class _Dashboard extends StatelessWidget {
                             _StatusChip(status: details.status),
                             if (details.isVerified) ...[
                               const SizedBox(width: 6),
-                              const Icon(
-                                Icons.verified,
+                              Iconify(
+                                AppUiIcons.check_decagram,
                                 size: 15,
                                 color: AppColors.verifiedGreen,
                               ),
@@ -433,7 +434,7 @@ class _Dashboard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _QuickAction(
-                      icon: Icons.add_circle_outline_rounded,
+                      icon: AppUiIcons.plus_circle_outline,
                       label: 'Add Offer',
                       onTap: () => _openOffers(context),
                     ),
@@ -441,7 +442,7 @@ class _Dashboard extends StatelessWidget {
                   const SizedBox(width: 9),
                   Expanded(
                     child: _QuickAction(
-                      icon: Icons.edit_outlined,
+                      icon: AppUiIcons.pencil_outline,
                       label: 'Edit Profile',
                       onTap: () => _openEditProfile(context),
                     ),
@@ -449,7 +450,7 @@ class _Dashboard extends StatelessWidget {
                   const SizedBox(width: 9),
                   Expanded(
                     child: _QuickAction(
-                      icon: Icons.photo_camera_outlined,
+                      icon: AppUiIcons.camera_outline,
                       label: 'Photos',
                       onTap: () => _openPhotos(context),
                     ),
@@ -457,7 +458,7 @@ class _Dashboard extends StatelessWidget {
                   const SizedBox(width: 9),
                   Expanded(
                     child: _QuickAction(
-                      icon: Icons.visibility_outlined,
+                      icon: AppUiIcons.eye_outline,
                       label: 'View Profile',
                       onTap: () => _openPublicProfile(context),
                     ),
@@ -474,54 +475,54 @@ class _Dashboard extends StatelessWidget {
           title: 'Manage',
           tiles: [
             _ManageTile(
-              Icons.info_outline_rounded,
+              AppUiIcons.information_outline,
               'Business Information',
               _openEditProfile,
             ),
-            _ManageTile(Icons.schedule_rounded, 'Business Hours', _openHours),
+            _ManageTile(AppUiIcons.clock_outline, 'Business Hours', _openHours),
             _ManageTile(
-              Icons.photo_library_outlined,
+              AppUiIcons.image_multiple_outline,
               'Photos (${details.images.length})',
               _openPhotos,
             ),
             if (isRestaurant)
-              _ManageTile(Icons.restaurant_menu_rounded, 'Menu', _openMenu),
+              _ManageTile(AppUiIcons.silverware_fork_knife, 'Menu', _openMenu),
             if (isRestaurant)
               _ManageTile(
-                Icons.dinner_dining_outlined,
+                AppUiIcons.food,
                 'Restaurant Details',
                 _openRestaurantDetails,
               ),
             if (isDoctor)
               _ManageTile(
-                Icons.medical_services_outlined,
+                AppUiIcons.medical_bag,
                 'Professional Details',
                 _openDoctorDetails,
               ),
             if (isHotel)
               _ManageTile(
-                Icons.hotel_outlined,
+                AppUiIcons.bed_outline,
                 'Hotel Details',
                 _openHotelDetails,
               ),
             if (isSalon)
               _ManageTile(
-                Icons.design_services_outlined,
+                AppUiIcons.palette_outline,
                 'Services',
                 _openServices,
               ),
             _ManageTile(
-              Icons.rate_review_outlined,
+              AppUiIcons.comment_edit_outline,
               'Reviews (${details.reviewCount})',
               _openReviews,
             ),
             _ManageTile(
-              Icons.local_offer_outlined,
+              AppUiIcons.tag_outline,
               'Offers ($activeOffers)',
               _openOffers,
             ),
             _ManageTile(
-              Icons.add_circle_outline_rounded,
+              AppUiIcons.plus_circle_outline,
               'Create New Offer',
               _openOffers,
             ),
@@ -649,7 +650,7 @@ class _QuickAction extends StatelessWidget {
     required this.onTap,
   });
 
-  final IconData icon;
+  final String icon;
   final String label;
   final VoidCallback onTap;
 
@@ -666,7 +667,7 @@ class _QuickAction extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(icon, size: 20, color: AppColors.primary),
+            Iconify(icon, size: 17, color: AppColors.primary),
             const SizedBox(height: 4),
             Text(
               label,
@@ -686,7 +687,7 @@ class _QuickAction extends StatelessWidget {
 
 class _ManageTile {
   const _ManageTile(this.icon, this.label, this.onTap);
-  final IconData icon;
+  final String icon;
   final String label;
   final void Function(BuildContext context) onTap;
 }
@@ -723,14 +724,14 @@ class _ManageSection extends StatelessWidget {
                   dense: true,
                   visualDensity: VisualDensity.compact,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14),
-                  leading: Icon(
+                  leading: Iconify(
                     tiles[i].icon,
                     size: 20,
                     color: AppColors.primary,
                   ),
                   title: Text(tiles[i].label, style: AppTypography.bodyStrong),
-                  trailing: const Icon(
-                    Icons.chevron_right_rounded,
+                  trailing: Iconify(
+                    AppUiIcons.chevron_right,
                     size: 19,
                     color: AppColors.textMuted,
                   ),

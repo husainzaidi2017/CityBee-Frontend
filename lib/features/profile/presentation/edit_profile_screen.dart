@@ -9,6 +9,8 @@ import '../../../core/widgets/sub_page_scaffold.dart';
 import '../../../data/mock/mock_data.dart';
 import '../../../domain/models/user_profile.dart';
 import '../../../providers/app_providers.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../core/widgets/app_icons.dart';
 
 /// Edit Profile: avatar picker, name, phone. EMAIL IS READ-ONLY — it is the
 /// account identity from Supabase Auth and cannot be changed here (changing
@@ -154,8 +156,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2),
                         ),
-                        child: const Icon(Icons.edit_rounded,
-                            size: 12, color: Colors.white),
+                        child: Iconify(AppUiIcons.pencil,
+                            size: 10, color: Colors.white),
                       ),
                     ),
                   ],
@@ -180,13 +182,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     _ProfileField(
                       controller: _name,
                       label: 'Full Name',
-                      icon: Icons.person_outline_rounded,
+                      icon: AppUiIcons.account_outline,
                     ),
                     const SizedBox(height: 14),
                     _ProfileField(
                       controller: _phone,
                       label: 'Phone Number (optional)',
-                      icon: Icons.phone_iphone_rounded,
+                      icon: AppUiIcons.cellphone,
                       keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: 14),
@@ -204,12 +206,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           style: AppTypography.body
                               .copyWith(color: AppColors.textSecondary),
                           decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.lock_outline_rounded,
-                                size: 18, color: AppColors.textMuted),
+                            prefixIcon: Iconify(AppUiIcons.lock_outline,
+                                size: 15, color: AppColors.textMuted),
                             suffixIcon: const Tooltip(
                               message: 'Email is your account identity and cannot be changed',
-                              child: Icon(Icons.info_outline_rounded,
-                                  size: 18, color: AppColors.textMuted),
+                              child: Iconify(AppUiIcons.information_outline,
+                                  size: 15, color: AppColors.textMuted),
                             ),
                             filled: true,
                             fillColor: AppColors.background,
@@ -281,7 +283,7 @@ class _ProfileField extends StatelessWidget {
 
   final TextEditingController controller;
   final String label;
-  final IconData icon;
+  final String icon;
   final TextInputType? keyboardType;
 
   @override
@@ -296,7 +298,7 @@ class _ProfileField extends StatelessWidget {
           keyboardType: keyboardType,
           style: AppTypography.body,
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, size: 18, color: AppColors.textSecondary),
+            prefixIcon: Iconify(icon, size: 15, color: AppColors.textSecondary),
             filled: true,
             fillColor: AppColors.background,
             contentPadding:

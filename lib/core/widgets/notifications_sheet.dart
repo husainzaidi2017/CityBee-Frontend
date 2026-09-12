@@ -6,6 +6,8 @@ import '../../providers/app_providers.dart';
 import '../services/notification_navigator.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'app_icons.dart';
 
 /// Notification inbox sheet behind the bell icon. Every row carries a
 /// deep-link payload and navigates to its own destination on tap.
@@ -49,8 +51,8 @@ class _NotificationsSheet extends ConsumerWidget {
                         color: AppColors.primarySoft,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.notifications_none_rounded,
-                          size: 26, color: AppColors.primary),
+                      child: Iconify(AppUiIcons.bell_outline,
+                          size: 22, color: AppColors.primary),
                     ),
                     const SizedBox(height: 10),
                     Text(
@@ -102,7 +104,7 @@ class _NotificationRow extends StatelessWidget {
                 color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(11),
               ),
-              child: Icon(notification.icon, color: color, size: 19),
+              child: Iconify(notification.icon, color: color, size: 16),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -123,7 +125,7 @@ class _NotificationRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textMuted),
+            Iconify(AppUiIcons.chevron_right, size: 15, color: AppColors.textMuted),
           ],
         ),
       ),

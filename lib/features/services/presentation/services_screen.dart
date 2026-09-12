@@ -10,22 +10,23 @@ import '../../../core/widgets/app_image.dart';
 import '../../../core/widgets/search_bar.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton.dart';
-import '../../../core/widgets/states_view.dart';
 import '../../../data/mock/mock_services.dart';
 import '../../../domain/models/service_item.dart';
 import '../../../providers/app_providers.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../core/widgets/app_icons.dart';
 
 /// Icon for each trade category tile.
-IconData _categoryIcon(String id) => switch (id) {
-      'electrician' => Icons.bolt_rounded,
-      'plumber' => Icons.plumbing_rounded,
-      'carpenter' => Icons.carpenter_rounded,
-      'ac-fridge' => Icons.ac_unit_rounded,
-      'mechanic' => Icons.handyman_rounded,
-      'painter' => Icons.format_paint_rounded,
-      'cleaning' => Icons.cleaning_services_rounded,
-      'pest' => Icons.pest_control_rounded,
-      _ => Icons.home_repair_service_rounded,
+String _categoryIcon(String id) => switch (id) {
+      'electrician' => AppUiIcons.flash,
+      'plumber' => AppUiIcons.pipe,
+      'carpenter' => AppUiIcons.hammer,
+      'ac-fridge' => AppUiIcons.snowflake,
+      'mechanic' => AppUiIcons.tools,
+      'painter' => AppUiIcons.format_paint,
+      'cleaning' => AppUiIcons.spray_bottle,
+      'pest' => AppUiIcons.bug_outline,
+      _ => AppUiIcons.toolbox_outline,
     };
 
 /// Services tab — the simple Indian-market home-services hub:
@@ -102,8 +103,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                 onChanged: (value) => setState(() => _query = value),
                 trailing: searching
                     ? IconButton(
-                        icon: const Icon(Icons.close_rounded,
-                            size: 18, color: AppColors.textSecondary),
+                        icon: Iconify(AppUiIcons.close,
+                            size: 15, color: AppColors.textSecondary),
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _query = '');
@@ -145,7 +146,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                             const SizedBox(height: 10),
                             if (results.isEmpty)
                               _InlineEmpty(
-                                icon: Icons.search_rounded,
+                                icon: AppUiIcons.magnify,
                                 message:
                                     'No experts match "$_query". Try "electrician", "plumber", "AC"…',
                               )
@@ -206,8 +207,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const Icon(Icons.close_rounded,
-                                            size: 14,
+                                        Iconify(AppUiIcons.close,
+                                            size: 12,
                                             color: AppColors.primary),
                                         const SizedBox(width: 3),
                                         Text(
@@ -224,7 +225,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                             const SizedBox(height: 10),
                             if (experts.isEmpty)
                               _InlineEmpty(
-                                icon: Icons.search_rounded,
+                                icon: AppUiIcons.magnify,
                                 message:
                                     'No $selectedLabel experts listed here yet — check back soon.',
                               )
@@ -318,9 +319,9 @@ class _CategoryGrid extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
+                Iconify(
                   _categoryIcon(cat.id),
-                  size: 24,
+                  size: 20,
                   color: isSelected ? Colors.white : AppColors.primary,
                 ),
                 const SizedBox(height: 6),
@@ -352,7 +353,7 @@ class _CategoryGrid extends StatelessWidget {
 class _InlineEmpty extends StatelessWidget {
   const _InlineEmpty({required this.icon, required this.message});
 
-  final IconData icon;
+  final String icon;
   final String message;
 
   @override
@@ -367,7 +368,7 @@ class _InlineEmpty extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(icon, size: 26, color: AppColors.textMuted),
+          Iconify(icon, size: 22, color: AppColors.textMuted),
           const SizedBox(height: 8),
           Text(message, textAlign: TextAlign.center, style: AppTypography.caption),
         ],
@@ -435,7 +436,7 @@ class _SpecialistCard extends StatelessWidget {
                         style: AppTypography.titleSm,
                       ),
                     ),
-                    const Icon(Icons.star_rounded, size: 14, color: AppColors.starAmber),
+                    Iconify(AppUiIcons.star, size: 12, color: AppColors.starAmber),
                     const SizedBox(width: 2),
                     Text(service.rating, style: AppTypography.bodyStrong.copyWith(fontSize: 12)),
                   ],
@@ -517,7 +518,7 @@ class _EventCard extends StatelessWidget {
           SizedBox(
             height: 76,
             width: double.infinity,
-            child: AppImage(url: service.image, fallbackIcon: Icons.celebration_outlined),
+            child: AppImage(url: service.image, fallbackIcon: AppUiIcons.party_popper),
           ),
           Padding(
             padding: const EdgeInsets.all(9),
@@ -581,15 +582,7 @@ class _LegalAidCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE7EEFD),
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: const Icon(Icons.gavel_outlined, color: AppColors.catDoctor, size: 22),
-          ),
+          Iconify(AppUiIcons.gavel, color: AppColors.primary, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -671,15 +664,44 @@ class _InlineError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Compact single-row error card — the big centered StatesView.error
+    // needs ~180px and overflows this 90px section slot.
     return Container(
       height: 90,
       margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
         boxShadow: AppShadows.card,
       ),
-      child: StatesView.error(message: 'Could not load this section.', onRetry: onRetry),
+      child: Row(
+        children: [
+          Iconify(
+            AppUiIcons.wifi_strength_off_outline,
+            color: AppColors.textMuted,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Could not load this section.',
+              style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+            ),
+          ),
+          const SizedBox(width: 10),
+          FilledButton(
+            onPressed: onRetry,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+            ),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -7,6 +7,8 @@ import '../theme/app_typography.dart';
 import '../widgets/city_picker_sheet.dart';
 import '../widgets/notifications_sheet.dart';
 import 'brand_mark.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'app_icons.dart';
 
 /// Shared header of the main tabs:
 ///
@@ -46,7 +48,7 @@ class LocationAppBar extends ConsumerWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.location_on, size: 13, color: AppColors.brandOrange),
+                          Iconify(AppUiIcons.map_marker, size: 11, color: AppColors.brandOrange),
                           const SizedBox(width: 2),
                           Flexible(
                             child: ConstrainedBox(
@@ -59,8 +61,8 @@ class LocationAppBar extends ConsumerWidget {
                               ),
                             ),
                           ),
-                          const Icon(Icons.keyboard_arrow_down_rounded,
-                              size: 15, color: AppColors.textSecondary),
+                          Iconify(AppUiIcons.chevron_down,
+                              size: 13, color: AppColors.textSecondary),
                         ],
                       ),
                       ConstrainedBox(
@@ -90,8 +92,8 @@ class LocationAppBar extends ConsumerWidget {
                   child: Stack(
                     children: [
                       const Center(
-                        child: Icon(Icons.notifications_none_rounded,
-                            size: 20, color: AppColors.textPrimary),
+                        child: Iconify(AppUiIcons.bell_outline,
+                            size: 17, color: AppColors.textPrimary),
                       ),
                       Positioned(
                         top: 10,

@@ -1,45 +1,44 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../../core/widgets/app_icons.dart';
 
 /// Resolve API slugs and legacy category IDs without changing navigation IDs.
 class CategoryVisual {
-  const CategoryVisual(this.assetName);
-  final String assetName;
-  String get assetPath => 'assets/categories/$assetName.svg';
+  const CategoryVisual(this.icon);
+  final String icon;
 
   static CategoryVisual of(String id) =>
       CategoryVisual(switch (id.trim().toLowerCase()) {
-        'fashion' => 'fashion',
-        'shops' || 'shop' || 'grocery' || 'groceries' => 'shops',
-        'dining' || 'restaurant' || 'restaurants' => 'restaurants',
-        'doctor' || 'doctors' => 'doctors',
-        'hotel' || 'hotels' => 'hotels',
+        'fashion' => AppUiIcons.tShirt,
+        'shops' || 'shop' || 'grocery' || 'groceries' => AppUiIcons.storefront,
+        'dining' || 'restaurant' || 'restaurants' => AppUiIcons.food,
+        'doctor' || 'doctors' || 'hospital' || 'hospitals' => AppUiIcons.medical_bag,
+        'hotel' || 'hotels' => AppUiIcons.building1,
         // Barber merged into Salons (category removed from the database —
         // its businesses were relinked to salons).
-        'barber' || 'barbers' => 'salons',
-        'heritage' || 'heritages' => 'heritage',
-        'salon' || 'salons' || 'spa' => 'salons',
-        'mall' || 'malls' => 'malls',
-        'cinema' || 'cinemas' => 'cinemas',
-        'gym' || 'gyms' => 'gym',
-        'bar' || 'bars' => 'bar',
-        'cafe' || 'cafes' => 'cafe',
-        'hospital' || 'hospitals' => 'hospital',
-        _ => 'shop',
+        'barber' || 'barbers' => AppUiIcons.scissors2,
+        'heritage' || 'heritages' => AppUiIcons.monument,
+        'salon' || 'salons' || 'spa' => AppUiIcons.scissors2,
+        'mall' || 'malls' => AppUiIcons.shoppingBag,
+        'cinema' || 'cinemas' => AppUiIcons.movie,
+        'gym' || 'gyms' => AppUiIcons.dumbbell,
+        'bar' || 'bars' => AppUiIcons.wineglass,
+        'cafe' || 'cafes' => AppUiIcons.teacup,
+        _ => AppUiIcons.storefront,
       });
 }
 
-/// Original multicolor illustrations, shared by Home and All Categories.
+/// Category glyph (MingCute), shared by Home and All Categories.
 class CategoryIcon extends StatelessWidget {
-  const CategoryIcon({super.key, required this.visual, this.size = 44});
+  const CategoryIcon({super.key, required this.visual, this.size = 44, this.color});
   final CategoryVisual visual;
   final double size;
+  final Color? color;
 
   @override
-  Widget build(BuildContext context) => SvgPicture.asset(
-    visual.assetPath,
-    width: size,
-    height: size,
-    excludeFromSemantics: true,
+  Widget build(BuildContext context) => Iconify(
+    visual.icon,
+    size: size,
+    color: color,
   );
 }

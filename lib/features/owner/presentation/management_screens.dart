@@ -12,6 +12,8 @@ import '../../../core/widgets/pressable.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/owner_business.dart';
 import '../../../providers/app_providers.dart';
+import '../../../core/widgets/app_icons.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 
 /// ── shared bits ─────────────────────────────────────────────────────────
 
@@ -35,7 +37,7 @@ class OwnerScaffold extends StatelessWidget {
         backgroundColor: AppColors.surface,
         title: Text(title, style: AppTypography.title),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+          icon: AppUiIcons.show(AppUiIcons.back, size: 15),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
       ),
@@ -456,9 +458,9 @@ class _BusinessHoursScreenState extends ConsumerState<BusinessHoursScreen> {
                               ),
                               const Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 8),
-                                child: Icon(
-                                  Icons.arrow_forward_rounded,
-                                  size: 14,
+                                child: Iconify(
+                                  AppUiIcons.arrow_right,
+                                  size: 12,
                                   color: AppColors.textMuted,
                                 ),
                               ),
@@ -529,9 +531,9 @@ class _TimeChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.schedule_rounded,
-              size: 13,
+            Iconify(
+              AppUiIcons.clock_outline,
+              size: 11,
               color: AppColors.primary,
             ),
             const SizedBox(width: 5),
@@ -604,23 +606,22 @@ class _BusinessPhotosScreenState extends ConsumerState<BusinessPhotosScreen> {
           children: [
             if (!image.isPrimary)
               ListTile(
-                leading: const Icon(
-                  Icons.star_rounded,
-                  color: AppColors.primary,
-                ),
+                leading: Iconify(
+                  AppUiIcons.star,
+                  color: AppColors.primary, size: 15),
                 title: const Text('Set as main photo'),
                 onTap: () => Navigator.pop(sheetContext, 'primary'),
               ),
             ListTile(
-              leading: const Icon(
-                Icons.delete_outline_rounded,
+              leading: Iconify(
+                AppUiIcons.delete_outline,
                 color: AppColors.brandRed,
               ),
               title: const Text('Delete photo'),
               onTap: () => Navigator.pop(sheetContext, 'delete'),
             ),
             ListTile(
-              leading: const Icon(Icons.close_rounded),
+              leading: Iconify(AppUiIcons.close),
               title: const Text('Cancel'),
               onTap: () => Navigator.pop(sheetContext),
             ),
@@ -687,11 +688,11 @@ class _BusinessPhotosScreenState extends ConsumerState<BusinessPhotosScreen> {
                               ),
                             ),
                           )
-                        : Icon(
+                        : Iconify(
                             canAdd
-                                ? Icons.add_photo_alternate_outlined
-                                : Icons.block_rounded,
-                            size: 26,
+                                ? AppUiIcons.image_plus
+                                : AppUiIcons.block_helper,
+                            size: 22,
                             color: AppColors.primary,
                           ),
                   ),
@@ -764,11 +765,11 @@ class ManageOffersScreen extends ConsumerWidget {
           );
           if (created == true) _changed(ref);
         },
-        child: const Icon(Icons.add_rounded),
+        child: Iconify(AppUiIcons.plus),
       ),
       body: offers.isEmpty
           ? StatesView.empty(
-              icon: Icons.local_offer_outlined,
+              icon: AppUiIcons.tag_outline,
               message:
                   'No offers yet — create your first offer to attract nearby customers.',
             )
@@ -777,7 +778,7 @@ class ManageOffersScreen extends ConsumerWidget {
               children: [
                 for (final offer in offers)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.only(bottom: 12),
                     child: _OfferRow(
                       offer: offer,
                       onDelete: () async {
@@ -868,9 +869,9 @@ class _OfferRow extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(
-              Icons.delete_outline_rounded,
-              size: 20,
+            icon: Iconify(
+              AppUiIcons.delete_outline,
+              size: 17,
               color: AppColors.brandRed,
             ),
             onPressed: () => onDelete(),
@@ -1109,9 +1110,9 @@ class _DateField extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.calendar_today_rounded,
-              size: 15,
+            Iconify(
+              AppUiIcons.calendar_outline,
+              size: 13,
               color: AppColors.primary,
             ),
             const SizedBox(width: 8),
@@ -1156,7 +1157,7 @@ class BusinessReviewsScreen extends ConsumerWidget {
           final reviews = snapshot.data ?? const [];
           if (reviews.isEmpty) {
             return StatesView.empty(
-              icon: Icons.rate_review_outlined,
+              icon: AppUiIcons.comment_edit_outline,
               message: 'No reviews yet. Great service brings the first one!',
             );
           }
@@ -1177,9 +1178,9 @@ class BusinessReviewsScreen extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          const Icon(
-                            Icons.star_rounded,
-                            size: 15,
+                          Iconify(
+                            AppUiIcons.star,
+                            size: 13,
                             color: AppColors.starAmber,
                           ),
                           const SizedBox(width: 3),
@@ -1630,11 +1631,11 @@ class _BusinessServicesScreenState
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         onPressed: () => _addOrEdit(),
-        child: const Icon(Icons.add_rounded),
+        child: Iconify(AppUiIcons.plus),
       ),
       body: services.isEmpty
           ? StatesView.empty(
-              icon: Icons.design_services_outlined,
+              icon: AppUiIcons.palette_outline,
               message:
                   'No services yet — add your services so customers know what you offer.',
             )
@@ -1643,7 +1644,7 @@ class _BusinessServicesScreenState
               children: [
                 for (final service in services)
                   Container(
-                    margin: const EdgeInsets.only(bottom: 10),
+                    margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
@@ -1701,9 +1702,9 @@ class _BusinessServicesScreenState
                           },
                         ),
                         IconButton(
-                          icon: const Icon(
-                            Icons.edit_outlined,
-                            size: 19,
+                          icon: Iconify(
+                            AppUiIcons.pencil_outline,
+                            size: 16,
                             color: AppColors.primary,
                           ),
                           onPressed: () => _addOrEdit(service),
@@ -1927,11 +1928,11 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         onPressed: () => _addOrEditItem(),
-        child: const Icon(Icons.add_rounded),
+        child: Iconify(AppUiIcons.plus, size: 22),
       ),
       body: menu.menuItems.isEmpty && menu.menuCategories.isEmpty
           ? StatesView.empty(
-              icon: Icons.restaurant_menu_rounded,
+              icon: AppUiIcons.silverware_fork_knife,
               message:
                   'No menu items yet — add dishes so customers can see what you serve.',
             )
@@ -1948,9 +1949,9 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
                     ),
                     TextButton.icon(
                       onPressed: _addCategory,
-                      icon: const Icon(
-                        Icons.folder_outlined,
-                        size: 16,
+                      icon: Iconify(
+                        AppUiIcons.folder_outline,
+                        size: 14,
                         color: AppColors.primary,
                       ),
                       label: const Text('Add Category'),
@@ -2037,17 +2038,17 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(
-                            Icons.edit_outlined,
-                            size: 19,
+                          icon: Iconify(
+                            AppUiIcons.pencil_outline,
+                            size: 16,
                             color: AppColors.primary,
                           ),
                           onPressed: () => _addOrEditItem(item),
                         ),
                         IconButton(
-                          icon: const Icon(
-                            Icons.delete_outline_rounded,
-                            size: 19,
+                          icon: Iconify(
+                            AppUiIcons.delete_outline,
+                            size: 16,
                             color: AppColors.brandRed,
                           ),
                           onPressed: () async {

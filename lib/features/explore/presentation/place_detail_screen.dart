@@ -14,6 +14,7 @@ import '../../../core/widgets/map_preview.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/place.dart';
 import '../../../providers/app_providers.dart';
+import '../../../core/widgets/app_icons.dart';
 
 /// Place detail: hero, meta strip, description, info rows and map.
 class PlaceDetailScreen extends ConsumerWidget {
@@ -55,7 +56,7 @@ class _MissingPlace extends StatelessWidget {
         const BackButton(),
         Expanded(
           child: StatesView.empty(
-            icon: Icons.photo_camera_outlined,
+            icon: AppUiIcons.camera_outline,
             message: 'This place is no longer available.',
           ),
         ),
@@ -89,7 +90,7 @@ class _PlaceDetailBody extends ConsumerWidget {
               CollapsingDetailHeader(
                 title: place.name,
                 image: place.image,
-                fallbackIcon: Icons.photo_camera_outlined,
+                fallbackIcon: AppUiIcons.camera_outline,
                 isFavorite: isSaved,
                 onImageTap: (index) => _openViewer(context, place.image),
                 onFavoriteTap: () {

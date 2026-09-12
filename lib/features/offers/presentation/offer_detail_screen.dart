@@ -15,6 +15,8 @@ import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/business.dart';
 import '../../../domain/models/offer.dart';
 import '../../../providers/app_providers.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../core/widgets/app_icons.dart';
 
 /// Full offer details: immersive hero, offer summary, business info,
 /// validity, map and call/WhatsApp actions.
@@ -59,7 +61,7 @@ class _MissingOffer extends StatelessWidget {
         const BackButton(),
         Expanded(
           child: StatesView.empty(
-            icon: Icons.local_offer_outlined,
+            icon: AppUiIcons.tag_outline,
             message: 'This offer is no longer available.',
           ),
         ),
@@ -93,7 +95,7 @@ class _OfferDetailBody extends StatelessWidget {
               CollapsingDetailHeader(
                 title: offer.title,
                 image: offer.image,
-                fallbackIcon: Icons.local_offer_rounded,
+                fallbackIcon: AppUiIcons.tag,
                 onShareTap: () => ShareService.shareOffer(offer),
                 onImageTap: (index) => _openViewer(context, offer.image),
                 badge: Container(
@@ -304,7 +306,7 @@ class _BusinessBlock extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 6),
-                        const Icon(Icons.verified, size: 14, color: AppColors.verifiedGreen),
+                        Iconify(AppUiIcons.check_decagram, size: 12, color: AppColors.verifiedGreen),
                       ],
                     ),
                     const SizedBox(height: 2),

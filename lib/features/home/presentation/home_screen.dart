@@ -14,13 +14,11 @@ import 'package:localgo/core/widgets/skeleton.dart';
 import 'package:localgo/core/widgets/states_view.dart';
 import 'package:localgo/data/mock/mock_data.dart';
 import 'package:localgo/data/repositories/business_repository.dart';
-import 'package:localgo/core/widgets/badges.dart';
-import 'package:localgo/core/widgets/pressable.dart';
-import 'package:localgo/domain/models/business.dart';
 import 'package:localgo/domain/models/place.dart';
 import 'package:localgo/providers/app_providers.dart';
 
 import 'widgets/explore_nearby_grid.dart';
+import 'widgets/popular_business_card.dart';
 import 'widgets/home_hero_banner.dart';
 import 'widgets/offers_rail.dart';
 import 'widgets/owner_cta_card.dart';
@@ -187,7 +185,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   icon: AppUiIcons.storefront_outline,
                                   message: 'No popular spots nearby yet.',
                                 )
-                              : _PopularRail(businesses: list.take(6).toList()),
+                              : Column(
+                                  children: list
+                                      .take(4)
+                                      .map((b) => PopularBusinessCard(business: b))
+                                      .toList(),
+                                ),
                           loading: () => const SkeletonList(itemCount: 3, itemHeight: 116),
                           error: (e, _) => _InlineError(
                             onRetry: () => ref.invalidate(
@@ -294,96 +297,6 @@ class _InlineEmpty extends StatelessWidget {
             style: AppTypography.caption,
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Horizontal "Popular Near You" cards — same 216px width as the offers
-/// and city rails so every card section on Home feels identical.
-class _PopularRail extends StatelessWidget {
-  const _PopularRail({required this.businesses});
-
-  final List<Business> businesses;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 188,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: businesses.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final b = businesses[index];
-          return Pressable(
-            onTap: () => context.push('/business/${b.id}'),
-            child: Container(
-              width: 216,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: AppShadows.card,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        AppImage(
-                          url: b.images.firstOrNull ?? '',
-                          fallbackIcon: AppUiIcons.storefront,
-                        ),
-                        Positioned(
-                          bottom: 6,
-                          left: 6,
-                          child: RatingPill.soft(rating: b.ratingLabel),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          b.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.titleSm,
-                        ),
-                        const SizedBox(height: 3),
-                        Row(
-                          children: [
-                            Iconify(
-                              AppUiIcons.map_marker_outline,
-                              size: 10,
-                              color: AppColors.textSecondary,
-                            ),
-                            const SizedBox(width: 2),
-                            Expanded(
-                              child: Text(
-                                '${b.area.isEmpty ? b.cityName : b.area} · ${b.distanceLabel} km',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTypography.caption,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
       ),
     );
   }

@@ -20,7 +20,7 @@ dependencies:
   go_router: ^14.6.2
 
   # Images
-  image_picker: 1.1.2 # pinned: 1.2.x needs Dart 3.10 (local Flutter 3.35 = Dart 3.9)
+  image_picker: ^1.2.3
   cached_network_image: ^3.4.1
 
   # Official CityBee SVG logo

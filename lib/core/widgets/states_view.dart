@@ -4,17 +4,27 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'app_icons.dart';
+import 'skeleton.dart';
 
 /// Loading / empty / error states so screens never render blank.
 abstract final class StatesView {
-  static Widget loading({String? message}) => Center(
+  /// Content loading: a shimmer skeleton shaped like the incoming page
+  /// (header image card + rows), with the message as a subtle caption.
+  static Widget loading({String? message}) => SingleChildScrollView(
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2.4),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: SkeletonCard(height: 180, width: double.infinity, imageHeight: 180, radius: 18),
+            ),
+            const SizedBox(height: 12),
+            const SkeletonList(itemCount: 3, itemHeight: 108),
             if (message != null) ...[
               const SizedBox(height: 12),
-              Text(message, style: AppTypography.caption),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Text(message, style: AppTypography.caption),
+              ),
             ],
           ],
         ),

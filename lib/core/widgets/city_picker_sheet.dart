@@ -11,6 +11,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'app_icons.dart';
+import 'skeleton.dart';
 
 /// Bottom sheet for choosing the discovery location.
 ///
@@ -165,7 +166,15 @@ class _CityPickerSheetState extends ConsumerState<_CityPickerSheet> {
                               ),
                         loading: () => const Padding(
                           padding: EdgeInsets.all(12),
-                          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                          child: Column(
+                            children: [
+                              _SkeletonRow(),
+                              SizedBox(height: 10),
+                              _SkeletonRow(),
+                              SizedBox(height: 10),
+                              _SkeletonRow(),
+                            ],
+                          ),
                         ),
                         error: (_, __) => const Padding(
                           padding: EdgeInsets.all(12),
@@ -270,6 +279,31 @@ class _PopularCityTiles extends ConsumerWidget {
       },
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+/// Search-results loading placeholder: avatar-ish circle + two text lines.
+class _SkeletonRow extends StatelessWidget {
+  const _SkeletonRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        SkeletonBox(width: 36, height: 36, radius: 12),
+        SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SkeletonBox(width: 140, height: 12, radius: 6),
+              SizedBox(height: 6),
+              SkeletonBox(width: 90, height: 9, radius: 5),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

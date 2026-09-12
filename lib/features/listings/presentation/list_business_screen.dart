@@ -18,6 +18,7 @@ import '../../../providers/app_providers.dart';
 import '../../home/presentation/widgets/category_visual.dart';
 import '../../../core/widgets/app_icons.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../core/widgets/skeleton.dart';
 
 /// List Your Business — 6-step wizard:
 /// 1 Category → 2 Details → 3 Address & Location → 4 Category Details
@@ -86,8 +87,21 @@ class _ListBusinessScreenState extends ConsumerState<ListBusinessScreen> {
       return Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(backgroundColor: AppColors.surface),
-        body: const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
+        body: const Shimmer(
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: SkeletonBox(height: 120, width: double.infinity, radius: 16),
+                  ),
+                  SizedBox(height: 14),
+                  SkeletonList(itemCount: 3, itemHeight: 96),
+                ],
+              ),
+            ),
+          ),
         ),
       );
     }

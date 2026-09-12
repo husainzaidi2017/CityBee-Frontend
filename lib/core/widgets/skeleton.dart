@@ -245,6 +245,7 @@ class _RowCard extends StatelessWidget {
     return Container(
       height: height,
       padding: const EdgeInsets.all(10),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -258,20 +259,27 @@ class _RowCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SkeletonBox(width: 150, height: 13, radius: 6),
-                const SizedBox(height: 9),
-                const SkeletonBox(width: 100, height: 10, radius: 5),
-                const SizedBox(height: 9),
-                const SkeletonBox(width: 190, height: 10, radius: 5),
+                // Top text lines flex so short rows (64px) never overflow.
+                const Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonBox(width: 150, height: 11, radius: 6),
+                      SizedBox(height: 8),
+                      SkeletonBox(width: 100, height: 10, radius: 5),
+                    ],
+                  ),
+                ),
                 const Spacer(),
-                Row(
-                  children: const [
-                    SkeletonBox(width: 70, height: 26, radius: 9),
-                    SizedBox(width: 7),
-                    SkeletonBox(width: 70, height: 26, radius: 9),
-                    SizedBox(width: 7),
-                    SkeletonBox(width: 70, height: 26, radius: 9),
-                  ],
+                const Flexible(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      SkeletonBox(width: 70, height: 18, radius: 9),
+                      SizedBox(width: 7),
+                      SkeletonBox(width: 70, height: 18, radius: 9),
+                    ],
+                  ),
                 ),
               ],
             ),

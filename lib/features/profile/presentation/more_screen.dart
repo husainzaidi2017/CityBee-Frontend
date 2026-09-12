@@ -629,15 +629,7 @@ class _StatTile extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Iconify(icon, size: 13, color: accent),
-          ),
+          Iconify(icon, size: 18, color: accent),
           const SizedBox(height: 5),
           Text(value, style: AppTypography.titleSm.copyWith(fontSize: 13)),
           Text(

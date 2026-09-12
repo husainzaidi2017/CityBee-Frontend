@@ -112,10 +112,14 @@ class ListingDraft {
   List<String> serviceNames;
   List<String> imageUrls;
 
+  // Live DB slugs: the hotel category is "hotel" (was "hotels"), barber was
+  // merged into salons, and gyms/bars/cafes exist too. Accept legacy and
+  // current forms so old drafts keep working.
   bool get isDoctor => categorySlug == 'doctors';
-  bool get isRestaurant => categorySlug == 'restaurants';
-  bool get isHotel => categorySlug == 'hotels';
-  bool get isSalon => categorySlug == 'salons' || categorySlug == 'barber';
+  bool get isRestaurant => categorySlug == 'restaurants' || categorySlug == 'dining';
+  bool get isHotel => categorySlug == 'hotel' || categorySlug == 'hotels';
+  bool get isSalon =>
+      categorySlug == 'salons' || categorySlug == 'salon' || categorySlug == 'barber' || categorySlug == 'barbers';
 
   Map<String, dynamic> toBody() => {
         'businessName': businessName.trim(),

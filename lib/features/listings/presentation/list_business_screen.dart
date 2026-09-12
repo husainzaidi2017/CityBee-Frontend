@@ -1052,14 +1052,14 @@ class _AddressStepState extends ConsumerState<_AddressStep> {
   }
 }
 
-class _LocationPickerCard extends StatelessWidget {
+class _LocationPickerCard extends ConsumerWidget {
   const _LocationPickerCard({required this.draft, required this.onChanged});
 
   final ListingDraft draft;
   final VoidCallback onChanged;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final hasPin = draft.bizLat != null && draft.bizLng != null;
     return Pressable(
       onTap: () async {
@@ -1069,6 +1069,23 @@ class _LocationPickerCard extends StatelessWidget {
         if (picked != null && picked.length >= 2) {
           draft.bizLat = picked[0];
           draft.bizLng = picked[1];
+          // Pin se city auto-fill: reverse geocode the pin into the City
+          // field (user can still edit it afterwards).
+          try {
+            final loc = await ref
+                .read(cityRepositoryProvider)
+                .reverseGeocode(picked[0], picked[1]);
+            if (loc != null && loc.displayName.trim().isNotEmpty) {
+              draft.cityName = loc.displayName.trim();
+              draft.cityLat ??= loc.latitude;
+              draft.cityLng ??= loc.longitude;
+              if (draft.locality.isEmpty && loc.locality != null) {
+                draft.locality = loc.locality!.trim();
+              }
+            }
+          } catch (_) {
+            // City stays as typed — pin coordinates still save.
+          }
           onChanged();
         }
       },

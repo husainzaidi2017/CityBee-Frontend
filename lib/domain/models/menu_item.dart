@@ -4,8 +4,8 @@ class MenuItem {
     required this.name,
     required this.description,
     required this.price,
-    required this.image,
-    this.isVeg = true,
+    this.image,
+    this.isVeg,
   });
 
   final String name;
@@ -13,6 +13,10 @@ class MenuItem {
 
   /// Display-ready price text, e.g. "₹340".
   final String price;
-  final String image;
-  final bool isVeg;
+
+  /// Dish photos (restaurants); null for service items (rooms, plans…).
+  final String? image;
+
+  /// Veg marker (restaurants only); null hides the dot for other kinds.
+  final bool? isVeg;
 }

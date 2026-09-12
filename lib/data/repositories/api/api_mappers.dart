@@ -78,8 +78,8 @@ abstract final class ApiMappers {
                 name: _s(e['name']),
                 description: _s(e['description']),
                 price: _s(e['price']),
-                image: _s(e['image']),
-                isVeg: e['isVeg'] as bool? ?? true,
+                image: _s(e['image']).isEmpty ? null : _s(e['image']),
+                isVeg: e['isVeg'] as bool?,
               )
             : null)
         .whereType<MenuItem>()

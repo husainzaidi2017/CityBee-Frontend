@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -54,7 +55,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         SnackBar(
           content: const Row(
             children: [
-              Icon(Icons.logout_rounded, size: 16, color: Colors.white),
+              Iconify(AppUiIcons.logout, size: 16, color: Colors.white),
               SizedBox(width: 8),
               Text('Press back again to exit'),
             ],

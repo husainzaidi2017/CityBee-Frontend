@@ -409,7 +409,7 @@ class _CategoryStep extends ConsumerWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CategoryIcon(visual: visual, size: 40),
+                        CategoryIcon(visual: visual, size: 40, color: AppColors.primary),
                         const SizedBox(height: 6),
                         Text(
                           category.name,

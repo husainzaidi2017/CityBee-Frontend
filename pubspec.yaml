@@ -86,3 +86,8 @@ flutter:
           weight: 600
         - asset: assets/fonts/HankenGrotesk-Bold.ttf
           weight: 700
+
+dependency_overrides:
+  # 0.8.13+17 (pulled by image_picker 1.2.3) fails to compile on AGP 9;
+  # +23 has the fix. Drop once image_picker publishes a compatible range.
+  image_picker_android: ^0.8.13+23

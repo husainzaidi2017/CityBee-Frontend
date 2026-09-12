@@ -144,7 +144,11 @@ class SkeletonCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SkeletonBox(height: imageHeight, radius: 0),
+          // Image flexes so the text block always fits the fixed card
+          // height (a fixed imageHeight overflows short cards by ~19px).
+          Expanded(
+            child: SkeletonBox(height: imageHeight, radius: 0),
+          ),
           Padding(
             padding: const EdgeInsets.all(10),
             child: Column(

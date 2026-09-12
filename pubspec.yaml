@@ -30,7 +30,7 @@ dependencies:
   url_launcher: ^6.3.1
 
   # Native share sheet
-  share_plus: ^10.1.4
+  share_plus: 13.2.1
 
   # Location
   geolocator: ^13.0.3
@@ -46,11 +46,12 @@ dependencies:
   mime: ^2.0.0
 
   # Local persistence (selected location, guest state)
-  shared_preferences: ^2.3.2
+  shared_preferences: ^2.5.5
 
   # Authentication (Supabase Auth: email OTP, native Google Sign-In)
   supabase_flutter: ^2.8.0
   google_sign_in: ^7.2.0
+  iconify_flutter: ^0.0.7
 
 dev_dependencies:
   flutter_test:
@@ -85,3 +86,9 @@ flutter:
           weight: 600
         - asset: assets/fonts/HankenGrotesk-Bold.ttf
           weight: 700
+
+dependency_overrides:
+  # AGP 8.12 keeps every plugin compiling; some (google_sign_in_android,
+  # share_plus 13.3) don't build on AGP 9 / built-in Kotlin yet. Drop the
+  # overrides and bump AGP once they publish compatible versions.
+  share_plus: 13.2.1

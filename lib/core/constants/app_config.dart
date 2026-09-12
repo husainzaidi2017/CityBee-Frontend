@@ -12,12 +12,12 @@ abstract final class AppConfig {
 
   /// NestJS backend base URL (no trailing slash).
   ///
-  /// - dev default serves the local API (Chrome/web)
-  /// - Android emulator should use http://10.0.2.2:3000/api
-  /// - production uses the deployed API domain
+  /// - default: the deployed Cloud Run API — plain `flutter run` works
+  /// - local dev: pass --dart-define=API_BASE_URL=http://localhost:3000/api
+  ///   (Android emulator: http://10.0.2.2:3000/api)
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:3000/api',
+    defaultValue: 'https://citybee-918786981660.asia-south2.run.app/api',
   );
 
   /// Supabase project URL. Public by design (anon key is a publishable key;

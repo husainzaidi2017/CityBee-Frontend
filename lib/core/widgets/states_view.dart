@@ -2,24 +2,36 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'app_icons.dart';
+import 'skeleton.dart';
 
 /// Loading / empty / error states so screens never render blank.
 abstract final class StatesView {
-  static Widget loading({String? message}) => Center(
+  /// Content loading: a shimmer skeleton shaped like the incoming page
+  /// (header image card + rows), with the message as a subtle caption.
+  static Widget loading({String? message}) => SingleChildScrollView(
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2.4),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: SkeletonCard(height: 180, width: double.infinity, imageHeight: 180, radius: 18),
+            ),
+            const SizedBox(height: 12),
+            const SkeletonList(itemCount: 3, itemHeight: 108),
             if (message != null) ...[
               const SizedBox(height: 12),
-              Text(message, style: AppTypography.caption),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Text(message, style: AppTypography.caption),
+              ),
             ],
           ],
         ),
       );
 
   static Widget empty({
-    IconData icon = Icons.search_off,
+    String icon = AppUiIcons.magnify_remove_outline,
     String message = 'Nothing here yet.',
     String? actionLabel,
     VoidCallback? onAction,
@@ -37,7 +49,7 @@ abstract final class StatesView {
                   color: AppColors.primarySoft,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.search_off, color: AppColors.primary, size: 28),
+                child: Iconify(AppUiIcons.magnify_remove_outline, color: AppColors.primary, size: 24),
               ),
               const SizedBox(height: 16),
               Text(
@@ -54,7 +66,7 @@ abstract final class StatesView {
                     side: const BorderSide(color: AppColors.primary, width: 1.2),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
                   ),
-                  icon: Icon(icon, size: 16),
+                  icon: Iconify(icon, size: 14),
                   label: Text(actionLabel),
                 ),
               ],
@@ -69,7 +81,7 @@ abstract final class StatesView {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.wifi_off_rounded, color: AppColors.textMuted, size: 40),
+              Iconify(AppUiIcons.wifi_strength_off_outline, color: AppColors.textMuted, size: 34),
               const SizedBox(height: 14),
               Text(message, textAlign: TextAlign.center, style: AppTypography.body),
               if (onRetry != null) ...[

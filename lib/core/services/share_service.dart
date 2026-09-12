@@ -52,5 +52,7 @@ abstract final class ShareService {
     ].join('\n'));
   }
 
-  static Future<void> _share(String body) => Share.share('$body\n\n$_signature');
+  // share_plus 13: Share.share is deprecated — SharePlus.instance instead.
+  static Future<void> _share(String body) =>
+      SharePlus.instance.share(ShareParams(text: '$body\n\n$_signature'));
 }

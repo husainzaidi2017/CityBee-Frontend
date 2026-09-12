@@ -11,6 +11,8 @@ import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/buttons.dart';
 import '../../../../core/widgets/pressable.dart';
 import '../../../../domain/models/business.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../../core/widgets/app_icons.dart';
 
 /// Compact row card used ONLY on the doctors listing — small photo on the
 /// left, doctor identity and speciality info on the right (the same shape
@@ -50,7 +52,7 @@ class DoctorCard extends StatelessWidget {
                       url: business.images.firstOrNull ?? '',
                       width: 84,
                       height: 104,
-                      fallbackIcon: Icons.medical_services_outlined,
+                      fallbackIcon: AppUiIcons.medical_bag,
                     ),
                   ),
                   Positioned(
@@ -62,9 +64,9 @@ class DoctorCard extends StatelessWidget {
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        Icons.circle,
-                        size: 8,
+                      child: Iconify(
+                        AppUiIcons.circle,
+                        size: 7,
                         color: business.isOpen
                             ? AppColors.openGreen
                             : AppColors.textMuted,
@@ -106,9 +108,9 @@ class DoctorCard extends StatelessWidget {
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.location_on_outlined,
-                        size: 12,
+                      Iconify(
+                        AppUiIcons.map_marker_outline,
+                        size: 10,
                         color: AppColors.textSecondary,
                       ),
                       const SizedBox(width: 2),
@@ -148,13 +150,13 @@ class DoctorCard extends StatelessWidget {
                     children: [
                       CardActionButton(
                         label: 'Call',
-                        icon: Icons.call_outlined,
+                        icon: AppUiIcons.phone_outline,
                         onTap: () => AppLauncher.call(business.phone),
                       ),
                       const SizedBox(width: 6),
                       CardActionButton(
                         label: 'Route',
-                        icon: Icons.near_me_outlined,
+                        icon: AppUiIcons.near_me,
                         onTap: () => AppLauncher.directions(
                           business.latitude,
                           business.longitude,
@@ -164,7 +166,7 @@ class DoctorCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       CardActionButton(
                         label: 'Details',
-                        icon: Icons.info_outline_rounded,
+                        icon: AppUiIcons.information_outline,
                         filled: true,
                         onTap: () => context.push('/business/${business.id}'),
                       ),

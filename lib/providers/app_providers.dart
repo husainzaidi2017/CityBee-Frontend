@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide OtpChannel;
@@ -34,6 +33,7 @@ import '../domain/models/offer.dart';
 import '../domain/models/place.dart';
 import '../domain/models/service_item.dart';
 import '../domain/models/user_profile.dart';
+import '../core/widgets/app_icons.dart';
 
 // ── Repositories (API-backed; swap back to mocks for offline dev) ─────────
 final authRepositoryProvider = Provider<AuthRepository>(
@@ -604,10 +604,10 @@ AppNotification _notification(Map<String, dynamic> json) {
       json['payload'] is Map<String, dynamic> ? json['payload'] as Map<String, dynamic> : const <String, dynamic>{};
   final payload = NotificationPayload.fromData(payloadJson);
   final (icon, color) = switch (payload.target) {
-    NotificationTarget.offer => (Icons.local_offer_rounded, 0xFFF4691F),
-    NotificationTarget.business => (Icons.verified, 0xFF0E6B4F),
-    NotificationTarget.place => (Icons.location_on_outlined, 0xFFE23A2E),
-    _ => (Icons.notifications_active_outlined, 0xFF1A73E8),
+    NotificationTarget.offer => (AppUiIcons.tag, 0xFFF4691F),
+    NotificationTarget.business => (AppUiIcons.check_decagram, 0xFF0E6B4F),
+    NotificationTarget.place => (AppUiIcons.map_marker_outline, 0xFFE23A2E),
+    _ => (AppUiIcons.bell_ring_outline, 0xFF1A73E8),
   };
   return AppNotification(
     id: json['id']?.toString() ?? '',

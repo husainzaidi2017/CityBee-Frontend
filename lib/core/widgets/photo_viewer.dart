@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_image.dart';
+import 'app_icons.dart';
 
 /// Full-screen photo viewer with pinch-zoom, double-tap zoom, swipe
 /// between photos, and a dark blurred backdrop. Opened by tapping a hero
@@ -76,8 +77,7 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
                   child: Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                            color: Colors.white, size: 20),
+                        icon: AppUiIcons.show(AppUiIcons.back, color: Colors.white, size: 17),
                         onPressed: () => Navigator.of(context).maybePop(),
                       ),
                       const Spacer(),

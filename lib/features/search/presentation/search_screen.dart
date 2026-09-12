@@ -10,6 +10,8 @@ import '../../../core/widgets/search_bar.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/business.dart';
 import '../../../providers/app_providers.dart';
+import '../../../core/widgets/app_icons.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 
 /// Full search screen: live results across businesses with a filter chip
 /// row and recent-searches/trending content when the query is empty.
@@ -56,7 +58,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+                    icon: AppUiIcons.show(AppUiIcons.back, size: 15),
                     onPressed: () => context.pop(),
                   ),
                   Expanded(
@@ -96,8 +98,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         ..._trending.map((term) => ListTile(
                               contentPadding: EdgeInsets.zero,
                               dense: true,
-                              leading: const Icon(Icons.trending_up_rounded,
-                                  size: 18, color: AppColors.primary),
+                              leading: Iconify(AppUiIcons.trending_up,
+                                  size: 15, color: AppColors.primary),
                               title: Text(term, style: AppTypography.body),
                               onTap: () {
                                 _controller.text = term;
@@ -207,7 +209,7 @@ class _SearchResultTile extends StatelessWidget {
                         ),
                       ),
                       if (business.isVerified)
-                        const Icon(Icons.verified, size: 14, color: AppColors.verifiedGreen),
+                        Iconify(AppUiIcons.check_decagram, size: 12, color: AppColors.verifiedGreen),
                     ],
                   ),
                   const SizedBox(height: 2),
@@ -220,9 +222,9 @@ class _SearchResultTile extends StatelessWidget {
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      Icon(
-                        Icons.star_rounded,
-                        size: 12,
+                      Iconify(
+                        AppUiIcons.star,
+                        size: 10,
                         color: business.rating >= 4.0
                             ? AppColors.starAmber
                             : AppColors.textMuted,

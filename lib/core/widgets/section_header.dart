@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'app_icons.dart';
 
 /// Section title with optional trailing link ("See All (86) →"),
 /// the app-wide reusable header for every Home/Explore/Offers section.
@@ -69,9 +71,9 @@ class SectionHeader extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 1),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        size: 16,
+                      Iconify(
+                        AppUiIcons.chevron_right,
+                        size: 14,
                         color: AppColors.primary,
                       ),
                     ],

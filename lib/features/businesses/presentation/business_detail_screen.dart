@@ -17,6 +17,7 @@ import '../../../domain/models/business.dart';
 import '../../../domain/models/menu_item.dart';
 import '../../../domain/models/review.dart';
 import '../../../providers/app_providers.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 
 /// Business detail page — works for restaurants, doctors, hotels, salons…
 /// Category-specific sections render from the same [Business] model.
@@ -59,7 +60,7 @@ class _MissingBusiness extends StatelessWidget {
         const BackButton(),
         Expanded(
           child: StatesView.empty(
-            icon: Icons.storefront_outlined,
+            icon: AppUiIcons.storefront_outline,
             message: 'This listing is no longer available.',
           ),
         ),
@@ -122,7 +123,7 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                 title: business.name,
                 image: business.images.firstOrNull ?? '',
                 imageList: business.images,
-                fallbackIcon: Icons.storefront_outlined,
+                fallbackIcon: AppUiIcons.storefront_outline,
                 isFavorite: isFavorite,
                 onFavoriteTap: _toggleFavorite,
                 onShareTap: () => ShareService.shareBusiness(business),
@@ -177,9 +178,9 @@ class _BusinessDetailBodyState extends ConsumerState<BusinessDetailBody> {
                               style: AppTypography.label,
                             ),
                             const SizedBox(width: 10),
-                            const Icon(
-                              Icons.location_on_outlined,
-                              size: 12,
+                            Iconify(
+                              AppUiIcons.map_marker_outline,
+                              size: 10,
                               color: AppColors.textSecondary,
                             ),
                             const SizedBox(width: 2),
@@ -427,7 +428,7 @@ class _ActionRow extends StatelessWidget {
       ),
       if (business.website != null)
         _ActionData(
-          Icons.language_rounded,
+          AppUiIcons.earth,
           'Website',
           () => AppLauncher.openWebsite(business.website!),
         ),
@@ -447,7 +448,7 @@ class _ActionRow extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.call_rounded, size: 20, color: Colors.white),
+                  Iconify(AppUiIcons.phone, size: 17, color: Colors.white),
                   const SizedBox(width: 8),
                   Text(
                     business.kind == BusinessKind.hotel ? 'Call Venue' : 'Call',
@@ -601,9 +602,9 @@ class _HighlightsRow extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.check_circle_outline,
-                        size: 13,
+                      Iconify(
+                        AppUiIcons.check_circle_outline,
+                        size: 11,
                         color: AppColors.primary,
                       ),
                       const SizedBox(width: 5),
@@ -640,25 +641,25 @@ class _DoctorInfoCard extends StatelessWidget {
       child: Column(
         children: [
           _InfoRow(
-            icon: Icons.school_outlined,
+            icon: AppUiIcons.school_outline,
             label: 'Qualification',
             value: business.qualification ?? '-',
           ),
           const Divider(height: 18),
           _InfoRow(
-            icon: Icons.work_history_outlined,
+            icon: AppUiIcons.briefcase_clock_outline,
             label: 'Experience',
             value: '${business.experienceYears ?? 0} years',
           ),
           const Divider(height: 18),
           _InfoRow(
-            icon: Icons.payments_outlined,
+            icon: AppUiIcons.credit_card_outline,
             label: 'Fee',
             value: business.consultationFee ?? '-',
           ),
           const Divider(height: 18),
           _InfoRow(
-            icon: Icons.schedule_outlined,
+            icon: AppUiIcons.clock_outline,
             label: 'Timings',
             value: business.timings ?? business.openingHours,
           ),
@@ -696,9 +697,9 @@ class _AmenitiesCard extends StatelessWidget {
                   (amenity) => Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.check_circle,
-                        size: 14,
+                      Iconify(
+                        AppUiIcons.check_circle,
+                        size: 12,
                         color: AppColors.primary,
                       ),
                       const SizedBox(width: 5),
@@ -745,7 +746,7 @@ class _InfoCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  _RoundInfoIcon(icon: Icons.location_on_rounded),
+                  _RoundInfoIcon(icon: AppUiIcons.map_marker),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -783,9 +784,9 @@ class _InfoCard extends StatelessWidget {
               const Divider(height: 24, color: AppColors.divider),
               Row(
                 children: [
-                  const Icon(
-                    Icons.schedule_rounded,
-                    size: 19,
+                  Iconify(
+                    AppUiIcons.clock_outline,
+                    size: 16,
                     color: AppColors.openGreen,
                   ),
                   const SizedBox(width: 10),
@@ -810,7 +811,7 @@ class _InfoCard extends StatelessWidget {
 class _RoundInfoIcon extends StatelessWidget {
   const _RoundInfoIcon({required this.icon});
 
-  final IconData icon;
+  final String icon;
 
   @override
   Widget build(BuildContext context) {
@@ -821,7 +822,7 @@ class _RoundInfoIcon extends StatelessWidget {
         color: AppColors.background,
         shape: BoxShape.circle,
       ),
-      child: Icon(icon, size: 20, color: AppColors.primary),
+      child: Iconify(icon, size: 17, color: AppColors.primary),
     );
   }
 }
@@ -845,9 +846,9 @@ class _MapPill extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.directions_rounded,
-              size: 17,
+            Iconify(
+              AppUiIcons.navigation,
+              size: 14,
               color: AppColors.primary,
             ),
             const SizedBox(width: 6),
@@ -868,7 +869,7 @@ class _InfoRow extends StatelessWidget {
     required this.value,
   });
 
-  final IconData icon;
+  final String icon;
   final String label;
   final String value;
 
@@ -877,7 +878,7 @@ class _InfoRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: AppColors.primary),
+        Iconify(icon, size: 14, color: AppColors.primary),
         const SizedBox(width: 9),
         SizedBox(width: 84, child: Text(label, style: AppTypography.caption)),
         Expanded(
@@ -922,9 +923,9 @@ class _MenuHeader extends StatelessWidget {
           style: AppTypography.label.copyWith(color: AppColors.primary),
         ),
         const SizedBox(width: 2),
-        const Icon(
-          Icons.chevron_right_rounded,
-          size: 15,
+        Iconify(
+          AppUiIcons.chevron_right,
+          size: 13,
           color: AppColors.primary,
         ),
       ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,11 +10,11 @@ import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_launcher.dart';
 import '../../../core/widgets/app_image.dart';
-import '../../../core/widgets/city_picker_sheet.dart';
 import '../../../core/widgets/map_preview.dart';
 import '../../../core/widgets/pressable.dart';
 import '../../../domain/models/user_profile.dart';
 import '../../../providers/app_providers.dart';
+import '../../../core/widgets/app_icons.dart';
 
 /// More tab — the unified Account + More experience.
 ///
@@ -96,18 +97,7 @@ class MoreScreen extends ConsumerWidget {
                     title: 'Your City Tools',
                     children: [
                       _MenuTile(
-                        icon: Icons.location_city_outlined,
-                        iconColor: AppColors.primary,
-                        iconBg: AppColors.primarySoft,
-                        label: 'Change City',
-                        value:
-                            '${location.displayName}, ${location.state ?? ""}',
-                        onTap: () => showCityPickerSheet(context),
-                      ),
-                      _MenuTile(
-                        icon: Icons.favorite_border_rounded,
-                        iconColor: AppColors.brandRed,
-                        iconBg: const Color(0xFFFDECEC),
+                        icon: AppUiIcons.heartOutline,
                         label: 'My Favorites',
                         value: '$bookmarkCount saved places',
                         onTap: () => context.push('/favorites'),
@@ -116,17 +106,13 @@ class MoreScreen extends ConsumerWidget {
                       // My Business instead of Explore).
                       if (isOwner)
                         _MenuTile(
-                          icon: Icons.explore_outlined,
-                          iconColor: AppColors.primary,
-                          iconBg: AppColors.primarySoft,
+                          icon: AppUiIcons.compass_outline,
                           label: 'Explore City',
                           value: 'Places, food & heritage',
                           onTap: () => context.push('/explore-city'),
                         ),
                       _MenuTile(
-                        icon: Icons.map_outlined,
-                        iconColor: AppColors.primary,
-                        iconBg: AppColors.primarySoft,
+                        icon: AppUiIcons.map_outline,
                         label: 'Download City Map',
                         value: 'Offline map of ${location.displayName}',
                         onTap: () => _showMapDownloadSheet(
@@ -135,9 +121,7 @@ class MoreScreen extends ConsumerWidget {
                         ),
                       ),
                       _MenuTile(
-                        icon: Icons.settings_outlined,
-                        iconColor: AppColors.primary,
-                        iconBg: AppColors.primarySoft,
+                        icon: AppUiIcons.cog_outline,
                         label: 'Settings',
                         value: 'Notifications & location',
                         onTap: () => context.push('/settings'),
@@ -151,9 +135,7 @@ class MoreScreen extends ConsumerWidget {
                     title: 'Refer & Earn',
                     children: [
                       _MenuTile(
-                        icon: Icons.card_giftcard_rounded,
-                        iconColor: AppColors.primary,
-                        iconBg: AppColors.primarySoft,
+                        icon: AppUiIcons.gift_outline,
                         label: 'Invite Friends',
                         value: 'Get ₹100 per verified friend',
                         onTap: () => ShareService.shareApp(
@@ -171,45 +153,33 @@ class MoreScreen extends ConsumerWidget {
                     title: 'Support & About',
                     children: [
                       _MenuTile(
-                        icon: Icons.help_outline_rounded,
-                        iconColor: AppColors.primary,
-                        iconBg: AppColors.primarySoft,
+                        icon: AppUiIcons.help_circle_outline,
                         label: 'Help & FAQ',
                         onTap: () => context.push('/faq'),
                       ),
                       _MenuTile(
-                        icon: Icons.chat_bubble_outline_rounded,
-                        iconColor: AppColors.primary,
-                        iconBg: AppColors.primarySoft,
+                        icon: AppUiIcons.message_outline,
                         label: 'Contact Support',
                         value: 'WhatsApp us anytime',
                         onTap: () => context.push('/support'),
                       ),
                       _MenuTile(
-                        icon: Icons.info_outline_rounded,
-                        iconColor: AppColors.primary,
-                        iconBg: AppColors.primarySoft,
+                        icon: AppUiIcons.information_outline,
                         label: 'About CityBee',
                         onTap: () => context.push('/about'),
                       ),
                       _MenuTile(
-                        icon: Icons.shield_outlined,
-                        iconColor: AppColors.primary,
-                        iconBg: AppColors.primarySoft,
+                        icon: AppUiIcons.shield_outline,
                         label: 'Privacy Policy',
                         onTap: () => context.push('/privacy'),
                       ),
                       _MenuTile(
-                        icon: Icons.description_outlined,
-                        iconColor: AppColors.primary,
-                        iconBg: AppColors.primarySoft,
+                        icon: AppUiIcons.file_document_outline,
                         label: 'Terms & Conditions',
                         onTap: () => context.push('/terms'),
                       ),
                       _MenuTile(
-                        icon: Icons.star_border_rounded,
-                        iconColor: AppColors.primary,
-                        iconBg: AppColors.primarySoft,
+                        icon: AppUiIcons.star_outline,
                         label: 'Rate CityBee',
                         onTap: () => _openPlayStore(context),
                       ),
@@ -414,9 +384,9 @@ class _SignedInCard extends StatelessWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(
-                                  Icons.military_tech_rounded,
-                                  size: 12,
+                                Iconify(
+                                  AppUiIcons.medal_outline,
+                                  size: 10,
                                   color: Colors.white,
                                 ),
                                 const SizedBox(width: 4),
@@ -458,10 +428,9 @@ class _SignedInCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textMuted,
-                ),
+                Iconify(
+                  AppUiIcons.chevron_right,
+                  color: AppColors.textMuted, size: 14),
               ],
             ),
           ),
@@ -504,9 +473,8 @@ class _AccountQuickGrid extends StatelessWidget {
                 child: _StatTile(
                   value: profile.savedAmount,
                   label: 'Saved',
-                  icon: Icons.account_balance_wallet_outlined,
+                  icon: AppUiIcons.wallet_outline,
                   background: const Color(0xFFFFFCF7),
-                  accent: AppColors.primary,
                 ),
               ),
               const SizedBox(width: 8),
@@ -514,9 +482,8 @@ class _AccountQuickGrid extends StatelessWidget {
                 child: _StatTile(
                   value: '$bookmarkCount',
                   label: 'Bookmarks',
-                  icon: Icons.bookmark_border_rounded,
+                  icon: AppUiIcons.bookmark_outline,
                   background: const Color(0xFFF6FDFF),
-                  accent: const Color(0xFF168AAD),
                 ),
               ),
               const SizedBox(width: 8),
@@ -524,9 +491,8 @@ class _AccountQuickGrid extends StatelessWidget {
                 child: _StatTile(
                   value: '${profile.reviewsGiven}',
                   label: 'Reviews',
-                  icon: Icons.star_border_rounded,
+                  icon: AppUiIcons.star_outline,
                   background: const Color(0xFFFFFCF4),
-                  accent: AppColors.starAmber,
                 ),
               ),
             ],
@@ -539,28 +505,22 @@ class _AccountQuickGrid extends StatelessWidget {
             children: [
               Expanded(
                 child: _QuickLinkButton(
-                  icon: Icons.edit_square,
+                  icon: AppUiIcons.square_edit_outline,
                   label: 'Edit Profile',
-                  iconBg: const Color(0xFFF4F6FB),
-                  iconColor: AppColors.textPrimary,
                   onTap: onEdit,
                 ),
               ),
               Expanded(
                 child: _QuickLinkButton(
-                  icon: Icons.favorite_border_rounded,
+                  icon: AppUiIcons.heartOutline,
                   label: 'Favorites',
-                  iconBg: const Color(0xFFFFF1F6),
-                  iconColor: AppColors.brandRed,
                   onTap: onFavorites,
                 ),
               ),
               Expanded(
                 child: _QuickLinkButton(
-                  icon: Icons.sell_outlined,
+                  icon: AppUiIcons.tag_outline,
                   label: 'My Offers',
-                  iconBg: const Color(0xFFEFFFF8),
-                  iconColor: const Color(0xFF0F9F75),
                   onTap: onCoupons,
                 ),
               ),
@@ -596,9 +556,9 @@ class _GuestCard extends StatelessWidget {
               color: AppColors.primarySoft,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.person_rounded,
-              size: 26,
+            child: Iconify(
+              AppUiIcons.account,
+              size: 22,
               color: AppColors.primary,
             ),
           ),
@@ -646,14 +606,12 @@ class _StatTile extends StatelessWidget {
     required this.label,
     required this.icon,
     this.background = AppColors.surface,
-    this.accent = AppColors.primary,
   });
 
   final String value;
   final String label;
-  final IconData icon;
+  final String icon;
   final Color background;
-  final Color accent;
 
   @override
   Widget build(BuildContext context) {
@@ -666,15 +624,7 @@ class _StatTile extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 15, color: accent),
-          ),
+          Iconify(icon, size: 20, color: AppColors.primary),
           const SizedBox(height: 5),
           Text(value, style: AppTypography.titleSm.copyWith(fontSize: 13)),
           Text(
@@ -693,15 +643,11 @@ class _QuickLinkButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.iconBg = AppColors.primarySoft,
-    this.iconColor = AppColors.primary,
   });
 
-  final IconData icon;
+  final String icon;
   final String label;
   final VoidCallback onTap;
-  final Color iconBg;
-  final Color iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -713,15 +659,7 @@ class _QuickLinkButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
         child: Column(
           children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: iconBg,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, size: 16, color: iconColor),
-            ),
+            Iconify(icon, size: 22, color: AppColors.primary),
             const SizedBox(height: 6),
             Text(
               label,
@@ -767,13 +705,15 @@ class _SubmissionStatusTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: AppShadows.card,
       ),
-      child: ListTile(
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
         dense: true,
         visualDensity: VisualDensity.compact,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14),
-        leading: const Icon(
-          Icons.assignment_outlined,
-          size: 20,
+        leading: Iconify(
+          AppUiIcons.clipboard_text_outline,
+          size: 17,
           color: AppColors.primary,
         ),
         title: Text('Submission Status', style: AppTypography.bodyStrong),
@@ -786,13 +726,14 @@ class _SubmissionStatusTile extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-        trailing: const Icon(
-          Icons.chevron_right_rounded,
-          size: 19,
+        trailing: Iconify(
+          AppUiIcons.chevron_right,
+          size: 16,
           color: AppColors.textMuted,
         ),
         onTap: () => context.push('/submission-status'),
       ),
+    ),
     );
   }
 }
@@ -826,10 +767,10 @@ class _BusinessPromoCard extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(11),
                 ),
-                child: const Icon(
-                  Icons.storefront,
+                child: Iconify(
+                  AppUiIcons.storefront,
                   color: Colors.white,
-                  size: 20,
+                  size: 17,
                 ),
               ),
               const SizedBox(width: 11),
@@ -891,8 +832,8 @@ class _BusinessPromoCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 4),
-                  Icon(
-                    Icons.open_in_new,
+                  Iconify(
+                    AppUiIcons.open_in_new,
                     size: 13,
                     color: AppColors.primaryDark,
                   ),
@@ -935,16 +876,12 @@ class _MenuCard extends StatelessWidget {
 class _MenuTile extends StatelessWidget {
   const _MenuTile({
     required this.icon,
-    required this.iconColor,
-    required this.iconBg,
     required this.label,
     required this.onTap,
     this.value,
   });
 
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBg;
+  final String icon;
   final String label;
   final String? value;
   final VoidCallback onTap;
@@ -953,29 +890,25 @@ class _MenuTile extends StatelessWidget {
   Widget build(BuildContext context) {
     // Compact tile: dense vertical padding keeps rows comfortable (>48dp
     // with leading icon) while showing more content per screen.
-    return ListTile(
+    // Material wrapper keeps ink splashes visible over the parent card.
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
       onTap: onTap,
       dense: true,
       visualDensity: VisualDensity.compact,
       contentPadding: const EdgeInsets.symmetric(horizontal: 13),
-      minLeadingWidth: 34,
-      leading: Container(
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(
-          color: iconBg,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: iconColor, size: 17),
-      ),
+      minLeadingWidth: 24,
+      leading: Iconify(icon, color: AppColors.primary, size: 20),
       title: Text(label, style: AppTypography.bodyStrong),
       subtitle: value == null
           ? null
           : Text(value!, style: AppTypography.label.copyWith(fontSize: 10)),
-      trailing: const Icon(
-        Icons.chevron_right_rounded,
-        size: 19,
+      trailing: Iconify(
+        AppUiIcons.chevron_right,
+        size: 16,
         color: AppColors.textMuted,
+      ),
       ),
     );
   }
@@ -1002,7 +935,7 @@ class _LogoutTile extends StatelessWidget {
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.logout_rounded, size: 17, color: AppColors.brandRed),
+            Iconify(AppUiIcons.logout, size: 14, color: AppColors.brandRed),
             SizedBox(width: 7),
             Text(
               'Log Out',
@@ -1039,7 +972,7 @@ class _LoginTile extends StatelessWidget {
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.login_rounded, size: 17, color: Colors.white),
+            Iconify(AppUiIcons.login, size: 14, color: Colors.white),
             SizedBox(width: 7),
             Text(
               'Sign in / Register',

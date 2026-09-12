@@ -16,6 +16,9 @@ import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/listing_submission.dart';
 import '../../../providers/app_providers.dart';
 import '../../home/presentation/widgets/category_visual.dart';
+import '../../../core/widgets/app_icons.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../core/widgets/skeleton.dart';
 
 /// List Your Business — 6-step wizard:
 /// 1 Category → 2 Details → 3 Address & Location → 4 Category Details
@@ -84,8 +87,21 @@ class _ListBusinessScreenState extends ConsumerState<ListBusinessScreen> {
       return Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(backgroundColor: AppColors.surface),
-        body: const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
+        body: const Shimmer(
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: SkeletonBox(height: 120, width: double.infinity, radius: 16),
+                  ),
+                  SizedBox(height: 14),
+                  SkeletonList(itemCount: 3, itemHeight: 96),
+                ],
+              ),
+            ),
+          ),
         ),
       );
     }
@@ -110,9 +126,9 @@ class _ListBusinessScreenState extends ConsumerState<ListBusinessScreen> {
                     color: AppColors.primarySoft,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.storefront_outlined,
-                    size: 40,
+                  child: Iconify(
+                    AppUiIcons.storefront_outline,
+                    size: 34,
                     color: AppColors.primary,
                   ),
                 ),
@@ -158,7 +174,7 @@ class _ListBusinessScreenState extends ConsumerState<ListBusinessScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+          icon: AppUiIcons.show(AppUiIcons.back, size: 15),
           onPressed: () {
             if (_step > 0) {
               setState(() => _step--); // Back keeps all entered data.
@@ -700,7 +716,7 @@ class _DetailsStepState extends State<_DetailsStep> {
                     Text(_flagFor(_phoneDialCode)),
                     const SizedBox(width: 6),
                     Text(_phoneDialCode, style: AppTypography.bodyStrong),
-                    const Icon(Icons.keyboard_arrow_down_rounded, size: 16),
+                    Iconify(AppUiIcons.chevron_down, size: 14),
                   ],
                 ),
               ),
@@ -783,7 +799,7 @@ class _DetailsStepState extends State<_DetailsStep> {
                       Text(_flagFor(_whatsappDialCode)),
                       const SizedBox(width: 6),
                       Text(_whatsappDialCode, style: AppTypography.bodyStrong),
-                      const Icon(Icons.keyboard_arrow_down_rounded, size: 16),
+                      Iconify(AppUiIcons.chevron_down, size: 14),
                     ],
                   ),
                 ),
@@ -858,9 +874,9 @@ class _DetailsStepState extends State<_DetailsStep> {
             ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Icon(
-                Icons.arrow_forward_rounded,
-                size: 14,
+              child: Iconify(
+                AppUiIcons.arrow_right,
+                size: 12,
                 color: AppColors.textMuted,
               ),
             ),
@@ -903,9 +919,9 @@ class _TimeField extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.schedule_rounded,
-              size: 15,
+            Iconify(
+              AppUiIcons.clock_outline,
+              size: 13,
               color: AppColors.primary,
             ),
             const SizedBox(width: 8),
@@ -944,7 +960,7 @@ class _SamePhoneTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.chat_outlined, size: 18, color: AppColors.primary),
+            Iconify(AppUiIcons.message_outline, size: 15, color: AppColors.primary),
             const SizedBox(width: 9),
             Expanded(
               child: Text(
@@ -1036,14 +1052,14 @@ class _AddressStepState extends ConsumerState<_AddressStep> {
   }
 }
 
-class _LocationPickerCard extends StatelessWidget {
+class _LocationPickerCard extends ConsumerWidget {
   const _LocationPickerCard({required this.draft, required this.onChanged});
 
   final ListingDraft draft;
   final VoidCallback onChanged;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final hasPin = draft.bizLat != null && draft.bizLng != null;
     return Pressable(
       onTap: () async {
@@ -1053,6 +1069,23 @@ class _LocationPickerCard extends StatelessWidget {
         if (picked != null && picked.length >= 2) {
           draft.bizLat = picked[0];
           draft.bizLng = picked[1];
+          // Pin se city auto-fill: reverse geocode the pin into the City
+          // field (user can still edit it afterwards).
+          try {
+            final loc = await ref
+                .read(cityRepositoryProvider)
+                .reverseGeocode(picked[0], picked[1]);
+            if (loc != null && loc.displayName.trim().isNotEmpty) {
+              draft.cityName = loc.displayName.trim();
+              draft.cityLat ??= loc.latitude;
+              draft.cityLng ??= loc.longitude;
+              if (draft.locality.isEmpty && loc.locality != null) {
+                draft.locality = loc.locality!.trim();
+              }
+            }
+          } catch (_) {
+            // City stays as typed — pin coordinates still save.
+          }
           onChanged();
         }
       },
@@ -1066,9 +1099,9 @@ class _LocationPickerCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              hasPin ? Icons.location_on : Icons.add_location_alt_outlined,
-              size: 34,
+            Iconify(
+              hasPin ? AppUiIcons.map_marker : AppUiIcons.map_marker_plus_outline,
+              size: 29,
               color: AppColors.primary,
             ),
             const SizedBox(height: 6),
@@ -1117,7 +1150,7 @@ class _PinMapScreenState extends State<_PinMapScreen> {
         backgroundColor: AppColors.surface,
         title: Text('Set Location', style: AppTypography.title),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+          icon: AppUiIcons.show(AppUiIcons.back, size: 15),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
       ),
@@ -1156,9 +1189,9 @@ class _PinMapScreenState extends State<_PinMapScreen> {
                         width: 40,
                         height: 40,
                         alignment: Alignment.topCenter,
-                        child: const Icon(
-                          Icons.location_on,
-                          size: 40,
+                        child: Iconify(
+                          AppUiIcons.map_marker,
+                          size: 34,
                           color: AppColors.brandRed,
                         ),
                       ),
@@ -1516,7 +1549,7 @@ class _CategoryDetailsStepState extends State<_CategoryDetailsStep> {
               widget.onChanged();
             }
           },
-          icon: const Icon(Icons.add_rounded, color: Colors.white),
+          icon: Iconify(AppUiIcons.plus, color: Colors.white, size: 15),
         ),
       ],
     ),
@@ -1594,9 +1627,9 @@ class _PhotosStepState extends ConsumerState<_PhotosStep> {
                     color: AppColors.primarySoft,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(
-                    Icons.add_photo_alternate_outlined,
-                    size: 26,
+                  child: Iconify(
+                    AppUiIcons.image_plus,
+                    size: 22,
                     color: AppColors.primary,
                   ),
                 ),
@@ -1629,9 +1662,9 @@ class _PhotosStepState extends ConsumerState<_PhotosStep> {
                         color: Colors.black54,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        Icons.close_rounded,
-                        size: 14,
+                      child: Iconify(
+                        AppUiIcons.close,
+                        size: 12,
                         color: Colors.white,
                       ),
                     ),
@@ -1850,9 +1883,9 @@ class SubmissionSuccessScreen extends ConsumerWidget {
                   color: AppColors.openGreenSoft,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.check_rounded,
-                  size: 44,
+                child: Iconify(
+                  AppUiIcons.check,
+                  size: 37,
                   color: AppColors.openGreen,
                 ),
               ),

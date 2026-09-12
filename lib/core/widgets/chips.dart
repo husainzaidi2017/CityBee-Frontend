@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_typography.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'app_icons.dart';
 
 /// Chip selection styles used across the app.
 enum ChipStyle { dark, green, outline }
@@ -63,7 +65,7 @@ class SelectChip extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (showCheck && selected) ...[
-              Icon(Icons.check, size: 15, color: fg),
+              Iconify(AppUiIcons.check, size: 13, color: fg),
               const SizedBox(width: 5),
             ],
             Text(
@@ -117,7 +119,7 @@ class RemovableFilterChip extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             child: const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              child: Icon(Icons.close, size: 14, color: AppColors.textSecondary),
+              child: Iconify(AppUiIcons.close, size: 12, color: AppColors.textSecondary),
             ),
           ),
         ],

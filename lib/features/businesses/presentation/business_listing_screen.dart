@@ -13,6 +13,8 @@ import '../../../domain/models/business.dart';
 import '../../../providers/app_providers.dart';
 import 'widgets/doctor_card.dart';
 import 'widgets/listing_business_card.dart';
+import '../../../core/widgets/app_icons.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 
 enum _SortOption { relevance, rating, distance }
 
@@ -130,7 +132,7 @@ class _BusinessListingScreenState extends ConsumerState<BusinessListingScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+                    icon: AppUiIcons.show(AppUiIcons.back, size: 15),
                     onPressed: () => Navigator.of(context).maybePop(),
                   ),
                   Expanded(
@@ -300,8 +302,8 @@ class _BusinessListingScreenState extends ConsumerState<BusinessListingScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.tune_rounded,
-                                size: 15, color: AppColors.primary),
+                            Iconify(AppUiIcons.tune,
+                                size: 13, color: AppColors.primary),
                             const SizedBox(width: 5),
                             Text(
                               _filters.isEmpty ? 'Filters' : '${_filters.length}',
@@ -337,8 +339,8 @@ class _BusinessListingScreenState extends ConsumerState<BusinessListingScreen> {
                   if (nothingMatches) {
                     return StatesView.empty(
                       icon: _speciality != null
-                          ? Icons.medical_services_outlined
-                          : Icons.filter_alt_off_outlined,
+                          ? AppUiIcons.medical_bag
+                          : AppUiIcons.filter_off_outline,
                       message: _speciality != null
                           ? 'No $_speciality doctors listed here yet.'
                           : 'No places match your filters.',
@@ -352,7 +354,7 @@ class _BusinessListingScreenState extends ConsumerState<BusinessListingScreen> {
                   }
                   if (filtered.isEmpty) {
                     return StatesView.empty(
-                      icon: Icons.storefront_outlined,
+                      icon: AppUiIcons.storefront_outline,
                       message: 'No businesses found here yet.',
                     );
                   }
@@ -532,9 +534,9 @@ class _ListMapToggle extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              isMap ? Icons.list_rounded : Icons.map_outlined,
-              size: 14,
+            Iconify(
+              isMap ? AppUiIcons.format_list_bulleted : AppUiIcons.map_outline,
+              size: 12,
               color: AppColors.primary,
             ),
             const SizedBox(width: 5),

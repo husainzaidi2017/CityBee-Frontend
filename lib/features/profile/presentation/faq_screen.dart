@@ -6,6 +6,8 @@ import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/pressable.dart';
 import '../../../core/widgets/sub_page_scaffold.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../core/widgets/app_icons.dart';
 
 /// Help & FAQ with expandable question cards.
 class FaqScreen extends StatelessWidget {
@@ -115,8 +117,8 @@ class _FaqTileState extends State<_FaqTile> {
                     turns: _expanded ? 0.5 : 0,
                     duration: AppAnimation.normal,
                     curve: AppAnimation.curve,
-                    child: const Icon(Icons.keyboard_arrow_down_rounded,
-                        size: 20, color: AppColors.textSecondary),
+                    child: Iconify(AppUiIcons.chevron_down,
+                        size: 17, color: AppColors.textSecondary),
                   ),
                 ],
               ),

@@ -8,6 +8,8 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/listing_submission.dart';
 import '../../../providers/app_providers.dart';
+import '../../../core/widgets/app_icons.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 
 /// Submission Status screen — every listing the signed-in user submitted,
 /// with live status (Pending / Approved / Needs Changes) and resubmit.
@@ -24,7 +26,7 @@ class SubmissionStatusScreen extends ConsumerWidget {
         backgroundColor: AppColors.surface,
         title: Text('Submission Status', style: AppTypography.title),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+          icon: AppUiIcons.show(AppUiIcons.back, size: 15),
           // When there is no page to pop (opened via go()), fall back to
           // the More tab so the button always works.
           onPressed: () {
@@ -42,7 +44,7 @@ class SubmissionStatusScreen extends ConsumerWidget {
           data: (list) {
             if (list.isEmpty) {
               return StatesView.empty(
-                icon: Icons.add_business_outlined,
+                icon: AppUiIcons.store_plus,
                 message:
                     'You have not submitted any business yet. Use "List Your Business" to get started.',
               );
@@ -75,10 +77,10 @@ class _SubmissionCard extends ConsumerWidget {
     final status = submission.status;
     final rejected = status == 'rejected';
     final (label, color, icon) = switch (status) {
-      'pending' => ('Pending Review', AppColors.starAmber, Icons.hourglass_top_rounded),
-      'approved' => ('Live on CityBee', AppColors.openGreen, Icons.check_circle_rounded),
-      'rejected' => ('Needs Changes', AppColors.brandRed, Icons.error_outline_rounded),
-      _ => (status, AppColors.textSecondary, Icons.info_outline_rounded),
+      'pending' => ('Pending Review', AppColors.starAmber, AppUiIcons.hourglass_empty),
+      'approved' => ('Live on CityBee', AppColors.openGreen, AppUiIcons.check_circle),
+      'rejected' => ('Needs Changes', AppColors.brandRed, AppUiIcons.alert_circle_outline),
+      _ => (status, AppColors.textSecondary, AppUiIcons.information_outline),
     };
     final submitted = DateTime.tryParse(submission.submittedAt);
 
@@ -95,7 +97,7 @@ class _SubmissionCard extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 22, color: color),
+              Iconify(icon, size: 19, color: color),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -173,7 +175,7 @@ class _SubmissionCard extends ConsumerWidget {
                 // back to pending.
                 onPressed: () =>
                     context.push('/list-business?edit=${submission.id}'),
-                icon: const Icon(Icons.edit_rounded, size: 16),
+                icon: Iconify(AppUiIcons.pencil, size: 14),
                 label: const Text('Edit & Resubmit'),
               ),
             ),

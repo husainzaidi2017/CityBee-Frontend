@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import '../../../../core/widgets/app_icons.dart';
 
 /// "For Owners" CTA card at the bottom of the Home screen. Opens the
 /// in-app List Your Business wizard.
@@ -37,7 +39,7 @@ class OwnerCtaCard extends ConsumerWidget {
                   color: Colors.white.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(11),
                 ),
-                child: const Icon(Icons.storefront, color: Colors.white, size: 20),
+                child: Iconify(AppUiIcons.storefront, color: Colors.white, size: 17),
               ),
               const SizedBox(width: 11),
               const Expanded(
@@ -78,7 +80,7 @@ class OwnerCtaCard extends ConsumerWidget {
                         color: AppColors.primaryDark),
                   ),
                   SizedBox(width: 4),
-                  Icon(Icons.open_in_new, size: 13, color: AppColors.primaryDark),
+                  Iconify(AppUiIcons.open_in_new, size: 11, color: AppColors.primaryDark),
                 ],
               ),
             ),

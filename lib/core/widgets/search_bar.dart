@@ -4,6 +4,8 @@ import '../theme/app_animation.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_typography.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'app_icons.dart';
 
 /// Rounded pill search bar used on Home, Offers, Services, Explore and
 /// Listing screens.
@@ -98,10 +100,10 @@ class _AppSearchBarState extends State<AppSearchBar> {
               duration: AppAnimation.fast,
               transitionBuilder: (child, animation) =>
                   FadeTransition(opacity: animation, child: child),
-              child: Icon(
-                Icons.search_rounded,
+              child: Iconify(
+                AppUiIcons.magnify,
                 key: ValueKey(_focused),
-                size: 20,
+                size: 17,
                 color: _focused ? AppColors.primary : AppColors.textMuted,
               ),
             ),

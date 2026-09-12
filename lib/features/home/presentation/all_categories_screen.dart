@@ -5,11 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/fade_slide_in.dart';
+import '../../../core/widgets/pressable.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/states_view.dart';
 import '../../../domain/models/app_category.dart';
 import '../../../providers/app_providers.dart';
-import 'widgets/animated_category_tile.dart';
 import 'widgets/category_visual.dart';
 import '../../../core/widgets/app_icons.dart';
 
@@ -65,9 +66,8 @@ class AllCategoriesScreen extends ConsumerWidget {
                     childAspectRatio: 1.05,
                   ),
                   itemCount: list.length,
-                  itemBuilder: (context, index) => AnimatedCategoryTile(
-                    index: index,
-                    onTap: () => context.push('/category/${list[index].id}'),
+                  itemBuilder: (context, index) => FadeSlideIn(
+                    delay: Duration(milliseconds: 30 * index),
                     child: _CategoryTile(category: list[index]),
                   ),
                 ),
@@ -104,26 +104,30 @@ class _CategoryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final visual = CategoryVisual.of(category.id);
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: AppShadows.card,
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CategoryIcon(visual: visual, size: 52, color: AppColors.primary),
-          const SizedBox(height: 9),
-          Text(
-            category.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: AppTypography.bodyStrong.copyWith(fontSize: 12),
-          ),
-        ],
+    return Pressable(
+      onTap: () => context.push('/category/${category.id}'),
+      pressedScale: 0.95,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: AppShadows.card,
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CategoryIcon(visual: visual, size: 52, color: AppColors.primary),
+            const SizedBox(height: 9),
+            Text(
+              category.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyStrong.copyWith(fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }

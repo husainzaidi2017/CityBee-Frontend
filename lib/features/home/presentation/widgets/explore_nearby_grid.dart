@@ -5,8 +5,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/pressable.dart';
 import '../../../../domain/models/app_category.dart';
-import 'animated_category_tile.dart';
 import 'category_visual.dart';
 
 /// "Explore Near You" 4-column category grid (8 tiles on Home).
@@ -30,11 +30,7 @@ class ExploreNearbyGrid extends StatelessWidget {
       itemCount: categories.take(8).length,
       itemBuilder: (context, index) {
         final category = categories[index];
-        return AnimatedCategoryTile(
-          index: index,
-          onTap: () => context.push('/category/${category.id}'),
-          child: _CategoryTile(category: category),
-        );
+        return _CategoryTile(category: category);
       },
     );
   }
@@ -48,7 +44,10 @@ class _CategoryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final visual = CategoryVisual.of(category.id);
-    return Container(
+    return Pressable(
+      onTap: () => context.push('/category/${category.id}'),
+      pressedScale: 0.96,
+      child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -74,6 +73,7 @@ class _CategoryTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
     );
   }
 }
